@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { CameraOff, ChevronLeft, X } from "lucide-react";
-import { Button } from "./ui";
+import { Button, useNow } from "./ui";
+import { fmtRemain } from "@/lib/util";
 
 interface Detector {
   detect: (source: HTMLVideoElement) => Promise<{ rawValue: string }[]>;
@@ -15,7 +17,20 @@ const TOKEN = /\/s\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12
  * 브라우저가 QR 인식을 지원하면 그것을 쓰고(안드로이드 크롬), 지원하지 않으면(아이폰 사파리 등)
  * 카메라 화면을 직접 읽어 해석한다. 카메라 자체를 쓸 수 없을 때만 기본 카메라 앱 사용을 안내한다.
  */
-export function QrScanner({ onToken, onClose }: { onToken: (token: string) => void; onClose: () => void }) {
+export function QrScanner({
+  onToken,
+  onClose,
+  seat,
+  deadline,
+}: {
+  onToken: (token: string) => void;
+  onClose: () => void;
+  /** 스캔할 내 좌석: 어느 자리의 QR을 찍어야 하는지 알려 준다 */
+  seat?: { label: string; room: string };
+  /** 남은 시간 표시 (예: 체크인 마감) */
+  deadline?: { label: string; at: string };
+}) {
+  const now = useNow();
   const video = useRef<HTMLVideoElement>(null);
   const [problem, setProblem] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
@@ -111,16 +126,22 @@ export function QrScanner({ onToken, onClose }: { onToken: (token: string) => vo
   useEffect(() => {
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+    // 아래 메뉴 등 다른 고정 요소가 스캐너 위로 올라오지 않게 표시해 둔다 (globals.css)
+    document.body.dataset.scanner = "on";
     const esc = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     document.addEventListener("keydown", esc);
     return () => {
       document.body.style.overflow = prev;
+      delete document.body.dataset.scanner;
       document.removeEventListener("keydown", esc);
     };
   }, [onClose]);
 
-  return (
-    <div role="dialog" aria-modal="true" aria-label="QR코드 스캔" className="fixed inset-0 z-[60] flex flex-col bg-du-black">
+  const left = deadline ? new Date(deadline.at).getTime() - now : 0;
+
+  // 화면 맨 위 계층(body)에 직접 그려서 어떤 화면에서 열어도 전체를 덮는다
+  return createPortal(
+    <div role="dialog" aria-modal="true" aria-label="QR코드 스캔" className="scanner fixed inset-0 z-[100] flex h-dvh flex-col bg-du-black">
       <div className="relative flex h-14 shrink-0 items-center justify-center bg-surface pt-[env(safe-area-inset-top)] text-du-black">
         <button type="button" aria-label="뒤로" onClick={onClose} className="absolute left-2 grid size-11 place-items-center rounded-lg hover:bg-canvas">
           <ChevronLeft size={24} aria-hidden />
@@ -145,6 +166,22 @@ export function QrScanner({ onToken, onClose }: { onToken: (token: string) => vo
           <div aria-hidden className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
             <div className="aspect-square w-[62%] max-w-[300px] rounded-sm border border-white/70 shadow-[0_0_0_200vmax_rgb(0_0_0/0.55)]" />
           </div>
+          {/* 어느 좌석의 QR을 찍어야 하는지, 시간이 얼마나 남았는지 */}
+          {(seat || deadline) && (
+            <div className="absolute inset-x-0 bottom-[calc(50%+min(31vw,150px)+20px)] flex flex-col items-center px-6 text-center text-white">
+              {seat && (
+                <>
+                  <p className="text-[13px] font-medium text-white/85">{seat.room} · 내 좌석</p>
+                  <p className="text-[34px] font-bold leading-tight tracking-tight">{seat.label}</p>
+                </>
+              )}
+              {deadline && (
+                <p className={left < 3 * 60_000 ? "tabular mt-1 rounded-full bg-danger px-3 py-1 text-sm font-bold" : "tabular mt-1 rounded-full bg-white/20 px-3 py-1 text-sm font-semibold"}>
+                  {deadline.label} {fmtRemain(left)}
+                </p>
+              )}
+            </div>
+          )}
           <div className="absolute inset-x-0 top-[calc(50%+min(31vw,150px)+28px)] flex flex-col items-center gap-10 px-6">
             <p className="text-center text-[15px] font-semibold text-white" role="status">
               {ready ? "QR 코드를 스캔해 주세요." : "카메라를 켜는 중…"}
@@ -155,6 +192,7 @@ export function QrScanner({ onToken, onClose }: { onToken: (token: string) => vo
           </div>
         </div>
       )}
-    </div>
+    </div>,
+    document.body,
   );
 }

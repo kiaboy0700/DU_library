@@ -108,7 +108,24 @@ export default function MePage() {
         </Notice>
       )}
 
-      {open === "scan" && <QrScanner onToken={(t) => router.push(`/s/${t}`)} onClose={() => setOpen(null)} />}
+      {open === "scan" && (
+        <QrScanner
+          onToken={(t) => router.push(`/s/${t}`)}
+          onClose={() => setOpen(null)}
+          seat={res ? { label: res.seat_label, room: res.room_name } : undefined}
+          deadline={
+            res
+              ? res.report_deadline
+                ? { label: "자리 확인까지", at: res.report_deadline }
+                : res.status === "reserved"
+                  ? { label: "체크인 마감까지", at: res.checkin_deadline }
+                  : res.status === "away" && res.away_deadline
+                    ? { label: "복귀 마감까지", at: res.away_deadline }
+                    : { label: "남은 이용 시간", at: res.end_at }
+              : undefined
+          }
+        />
+      )}
 
       {res ? (
         <Panel className="overflow-hidden">

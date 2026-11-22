@@ -161,3 +161,9 @@ h3 {
 .pop {
   animation: pop 0.18s var(--ease-out-expo);
 }
+
+/* QR 스캐너가 열려 있는 동안에는 아래 메뉴와 상단 바를 숨긴다 */
+body[data-scanner] header,
+body[data-scanner] nav {
+  display: none;
+}
