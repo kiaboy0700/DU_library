@@ -24,7 +24,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const router = useRouter();
 
   useEffect(() => {
-    if (status === null) router.replace(`/login?next=${path}`);
+    if (status === null) router.replace("/login");
   }, [status, router, path]);
 
   if (status === undefined || status === null) return <Skeleton className="h-64 !rounded-[var(--radius-panel)]" />;

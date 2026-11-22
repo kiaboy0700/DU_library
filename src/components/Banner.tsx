@@ -8,7 +8,8 @@ import { cx } from "@/lib/util";
  * 좌우로 넘겨 보는 배너. 한 번에 한 장만 보이고, 건드리지 않으면 자동으로 다음 장으로 넘어간다.
  *  - 손가락으로 밀거나, 양옆의 화살표·아래 점·키보드 좌우 키로 넘긴다
  *  - 마우스를 올리고 있는 동안에는 잠깐 멈추고, 누르거나 밀면 자동 넘김이 꺼진다 (재생 버튼으로 다시 켠다)
- *  - 화살표는 마우스가 있는 기기에서만 보이며, 배너에 마우스를 올리면 또렷해진다
+ *  - 화살표는 마우스가 있는 기기에서만, 넘길 장이 있는 쪽에만 나타난다
+ *  - 넓은 화면(PC)에서는 넘기지 않고 전부 나란히 보여 준다
  */
 export function Banner({ label, names, interval = 5000, children }: { label: string; names: string[]; interval?: number; children: React.ReactNode }) {
   const slides = Children.toArray(children);
@@ -37,12 +38,20 @@ export function Banner({ label, names, interval = 5000, children }: { label: str
   useEffect(() => {
     if (paused || count < 2) return;
     const calm = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const wide = window.matchMedia("(min-width: 768px)");
     const t = setInterval(() => {
-      if (calm.matches || document.hidden || hovering.current) return;
+      if (wide.matches || calm.matches || document.hidden || hovering.current) return;
       go(current() + 1);
     }, interval);
     return () => clearInterval(t);
   }, [paused, count, interval, go]);
+
+  // 화면 너비가 바뀌면 지금 보이는 장을 다시 계산한다 (화살표 방향이 어긋나지 않게)
+  useEffect(() => {
+    const sync = () => setIndex(Math.min(count - 1, current()));
+    window.addEventListener("resize", sync);
+    return () => window.removeEventListener("resize", sync);
+  }, [count]);
 
   const stop = () => setPaused(true);
   const step = (d: number) => {
@@ -65,8 +74,8 @@ export function Banner({ label, names, interval = 5000, children }: { label: str
         hovering.current = false;
       }}
       onKeyDown={(e) => {
-        if (e.key === "ArrowRight") step(1);
-        if (e.key === "ArrowLeft") step(-1);
+        if (e.key === "ArrowRight" && index < count - 1) step(1);
+        if (e.key === "ArrowLeft" && index > 0) step(-1);
       }}
     >
       <div
@@ -75,10 +84,10 @@ export function Banner({ label, names, interval = 5000, children }: { label: str
         onPointerDown={stop}
         onTouchStart={stop}
         onFocusCapture={stop}
-        className="no-scrollbar -mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth px-4"
+        className="no-scrollbar -mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth px-4 md:mx-0 md:grid md:grid-cols-2 md:overflow-visible md:px-0"
       >
         {slides.map((s, i) => (
-          <div key={i} role="group" aria-roledescription="slide" aria-label={`${names[i] ?? ""} (${i + 1} / ${count})`} className="w-full shrink-0 snap-center">
+          <div key={i} role="group" aria-roledescription="slide" aria-label={`${names[i] ?? ""} (${i + 1} / ${count})`} className="w-full shrink-0 snap-center md:w-auto md:shrink">
             {s}
           </div>
         ))}
@@ -87,14 +96,18 @@ export function Banner({ label, names, interval = 5000, children }: { label: str
       {count > 1 && (
         <>
           {/* 양옆 화살표: 마우스를 올리면 나타난다 */}
-          <button type="button" aria-label={`이전: ${names[(index - 1 + count) % count] ?? ""}`} onClick={() => step(-1)} className={cx(arrow, "-left-3 sm:-left-5")}>
-            <ChevronLeft size={20} aria-hidden />
-          </button>
-          <button type="button" aria-label={`다음: ${names[(index + 1) % count] ?? ""}`} onClick={() => step(1)} className={cx(arrow, "-right-3 sm:-right-5")}>
-            <ChevronRight size={20} aria-hidden />
-          </button>
+          {index > 0 && (
+            <button type="button" aria-label={`이전: ${names[index - 1] ?? ""}`} onClick={() => step(-1)} className={cx(arrow, "-left-3 sm:-left-5 md:!hidden")}>
+              <ChevronLeft size={20} aria-hidden />
+            </button>
+          )}
+          {index < count - 1 && (
+            <button type="button" aria-label={`다음: ${names[index + 1] ?? ""}`} onClick={() => step(1)} className={cx(arrow, "-right-3 sm:-right-5 md:!hidden")}>
+              <ChevronRight size={20} aria-hidden />
+            </button>
+          )}
 
-          <div className="mt-3 flex items-center justify-center gap-3">
+          <div className="mt-3 flex items-center justify-center gap-3 md:hidden">
             <div className="flex items-center gap-1">
               {slides.map((_, i) => (
                 <button

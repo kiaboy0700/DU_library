@@ -145,7 +145,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
 
   // 모든 화면은 로그인 후에 볼 수 있다
   useEffect(() => {
-    if (status === null && !bare) router.replace(path === "/" ? "/login" : `/login?next=${encodeURIComponent(path)}`);
+    if (status === null && !bare) router.replace("/login");
   }, [status, bare, path, router]);
   const items = isAdmin ? ADMIN_NAV : NAV;
   // 관리자 화면은 넓게, 좌석 배치도 화면은 중간 너비로

@@ -52,7 +52,7 @@ export default function MePage() {
     load();
   }, [load, pulse]);
   useEffect(() => {
-    if (status === null) router.replace("/login?next=/me");
+    if (status === null) router.replace("/login");
   }, [status, router]);
 
   if (!status)

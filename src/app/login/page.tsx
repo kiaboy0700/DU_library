@@ -16,13 +16,9 @@ export default function LoginPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const nextUrl = () => {
-    const n = new URLSearchParams(window.location.search).get("next");
-    return n && n.startsWith("/") && !n.startsWith("//") ? n : null;
-  };
-
   useEffect(() => {
-    if (status) router.replace(nextUrl() ?? (status.profile.role === "admin" ? "/admin" : "/"));
+    // 로그인하면 이전에 보던 화면과 상관없이 처음 화면으로 간다
+    if (status) router.replace(status.profile.role === "admin" ? "/admin" : "/");
   }, [status, router]);
 
   async function submit(e: React.FormEvent) {
