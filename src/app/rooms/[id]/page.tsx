@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { DoorClosed, X, Zap } from "lucide-react";
 import { OccupancyMeter } from "@/components/OccupancyMeter";
+import { QuickConfirm } from "@/components/RoomCards";
 import { useApp } from "@/components/Providers";
 import { LEGEND, LegendSwatch, SeatMap, useWideHover, type SeatVisual } from "@/components/SeatMap";
 import { Button, Empty, Notice, Panel, Skeleton, Tag, TimeLeft, useAction, useNow } from "@/components/ui";
@@ -101,11 +102,14 @@ export default function RoomPage() {
       setSelected(null);
       toast(`${r.seat_label} 좌석을 ${r.minutes}분 동안 맡아 뒀습니다. 그 좌석의 QR을 찍으면 이동합니다.`, "ok");
     });
-  const quick = () =>
-    run("quick", async () => {
+  const [ask, setAsk] = useState(false);
+  const quick = async () => {
+    await run("quick", async () => {
       const r = await rpc<{ seat_label: string }>("quick_reserve", { p_room: roomId, p_minutes: hours * 60 });
       await after(r.seat_label);
     });
+    setAsk(false);
+  };
 
   if (room === null)
     return (
@@ -306,11 +310,12 @@ export default function RoomPage() {
             ))}
           </ul>
           {!mine && (
-            <Button size="sm" busy={busy === "quick"} disabled={blocked || free === 0} onClick={quick} title="옆자리가 비어 있는 좌석을 골라 바로 예약합니다">
+            <Button size="sm" busy={busy === "quick"} disabled={blocked || free === 0} onClick={() => setAsk(true)}>
               <Zap size={15} aria-hidden />
-              빈자리 바로 예약
+              빠른 예약
             </Button>
           )}
+          {ask && room && <QuickConfirm roomName={room.name} busy={busy === "quick"} onClose={() => setAsk(false)} onConfirm={quick} />}
         </div>
         {room ? (
           <SeatMap

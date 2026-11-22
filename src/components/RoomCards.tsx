@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { Bell, BellRing, ChevronRight, Zap } from "lucide-react";
 import { OccupancyMeter } from "./OccupancyMeter";
 import { useApp } from "./Providers";
@@ -12,7 +13,7 @@ import { rpc, supabase } from "@/lib/supabase";
 import type { RoomSummary } from "@/lib/types";
 import { cx, errMsg, fmtTime, level } from "@/lib/util";
 
-/** 열람실 카드에서 쓰는 동작: 빈자리 알림 켜고 끄기, 빈자리 바로 예약 */
+/** 열람실 카드에서 쓰는 동작: 빈자리 알림 켜고 끄기, 빠른 예약 */
 export function useRoomActions(settings: Settings | null) {
   const { status, toast, refresh } = useApp();
   const router = useRouter();
@@ -60,7 +61,36 @@ export function useRoomActions(settings: Settings | null) {
 }
 
 
-/** 열람실 한 곳의 요약: 남은 좌석, 혼잡도 눈금, 좌석 고르기·바로 예약·빈자리 알림 */
+/** 빠른 예약 확인 창: 잘못 눌러 예약되는 일을 막는다 */
+export function QuickConfirm({ roomName, busy, onConfirm, onClose }: { roomName: string; busy?: boolean; onConfirm: () => void; onClose: () => void }) {
+  useEffect(() => {
+    const key = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", key);
+    return () => window.removeEventListener("keydown", key);
+  }, [onClose]);
+  return createPortal(
+    <div className="fixed inset-0 z-[90] grid place-items-center bg-du-black/45 p-5" onClick={onClose}>
+      <div role="alertdialog" aria-modal="true" aria-labelledby="quick-h" aria-describedby="quick-d" className="pop w-full max-w-[340px] rounded-2xl bg-surface p-5 shadow-[0_16px_40px_-12px_rgb(0_40_34/0.45)]" onClick={(e) => e.stopPropagation()}>
+        <h2 id="quick-h" className="flex items-center gap-1.5 text-lg font-bold">
+          <Zap size={18} className="text-du-deep" aria-hidden />
+          빠른 예약
+        </h2>
+        <p id="quick-d" className="mt-2 text-[15px] leading-relaxed">
+          <b>{roomName}</b>의 빈 좌석 중 한 자리가 무작위로 예약됩니다.
+        </p>
+        <div className="mt-5 grid grid-cols-2 gap-2">
+          <Button onClick={onClose}>취소</Button>
+          <Button variant="primary" busy={busy} autoFocus onClick={onConfirm}>
+            예약
+          </Button>
+        </div>
+      </div>
+    </div>,
+    document.body,
+  );
+}
+
+/** 열람실 한 곳의 요약: 남은 좌석, 혼잡도 눈금, 좌석 고르기·빠른 예약·빈자리 알림 */
 export function RoomCard({
   room,
   actions,
@@ -73,6 +103,7 @@ export function RoomCard({
   const lv = level(room.pct);
   const free = room.total - room.occupied;
   const on = actions.watching.has(room.id);
+  const [ask, setAsk] = useState(false);
   return (
     <Panel className={cx("flex flex-col overflow-hidden", className)}>
       {/* 제목 띠 */}
@@ -109,9 +140,9 @@ export function RoomCard({
           <ChevronRight size={16} aria-hidden />
         </Link>
         {free > 0 && room.is_open && !actions.hasSeat ? (
-          <Button busy={actions.busy === `q${room.id}`} onClick={() => actions.quick(room)} title="옆자리가 비어 있는 좌석을 골라 바로 예약합니다">
+          <Button busy={actions.busy === `q${room.id}`} onClick={() => setAsk(true)}>
             <Zap size={16} aria-hidden />
-            바로 예약
+            빠른 예약
           </Button>
         ) : null}
         <Button
@@ -125,6 +156,17 @@ export function RoomCard({
         </Button>
       </div>
       </div>
+      {ask && (
+        <QuickConfirm
+          roomName={room.name}
+          busy={actions.busy === `q${room.id}`}
+          onClose={() => setAsk(false)}
+          onConfirm={async () => {
+            await actions.quick(room);
+            setAsk(false);
+          }}
+        />
+      )}
     </Panel>
   );
 }
