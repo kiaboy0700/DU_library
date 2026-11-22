@@ -67,7 +67,9 @@ export default function SeatQrPage() {
 
   const { seat } = ctx;
   const r = ctx.my_reservation;
-  const loggedIn = !!status;
+  const isAdmin = status?.profile.role === "admin";
+  // 좌석을 쓰는 동작은 학생 계정만
+  const loggedIn = !!status && !isAdmin;
   const endLeft = r ? new Date(r.end_at).getTime() - now : 0;
   const canExtend = !!r && r.status === "in_use" && endLeft <= ctx.extend_window_min * 60_000;
 
@@ -101,7 +103,16 @@ export default function SeatQrPage() {
         )}
 
         <div className="mt-4 space-y-2.5">
-          {!loggedIn && (
+          {isAdmin && (
+            <Notice>
+              관리자 계정입니다. 이 좌석은{" "}
+              <Link href="/admin" className="font-semibold underline underline-offset-2">
+                관제 화면
+              </Link>
+              에서 처리할 수 있습니다.
+            </Notice>
+          )}
+          {!status && (
             <>
               <Button variant="primary" size="lg" className="w-full" onClick={() => router.push(`/login?next=/s/${token}`)}>
                 로그인
@@ -276,12 +287,14 @@ export default function SeatQrPage() {
       </Panel>
 
       <div className="flex gap-2">
-        <Link href="/me" className="inline-flex min-h-11 flex-1 items-center justify-center rounded-[var(--radius-ctl)] border border-line bg-surface text-sm font-semibold hover:bg-canvas">
-          내 좌석
+        <Link href={isAdmin ? "/admin" : "/me"} className="inline-flex min-h-11 flex-1 items-center justify-center rounded-[var(--radius-ctl)] border border-line bg-surface text-sm font-semibold hover:bg-canvas">
+          {isAdmin ? "관제" : "내 좌석"}
         </Link>
-        <Link href={`/rooms/${seat.room_id}`} className="inline-flex min-h-11 flex-1 items-center justify-center rounded-[var(--radius-ctl)] border border-line bg-surface text-sm font-semibold hover:bg-canvas">
-          {seat.room_name} 좌석 보기
-        </Link>
+        {!isAdmin && (
+          <Link href={`/rooms/${seat.room_id}`} className="inline-flex min-h-11 flex-1 items-center justify-center rounded-[var(--radius-ctl)] border border-line bg-surface text-sm font-semibold hover:bg-canvas">
+            {seat.room_name} 좌석 보기
+          </Link>
+        )}
       </div>
     </div>
   );

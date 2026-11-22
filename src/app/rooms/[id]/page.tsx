@@ -3,15 +3,15 @@
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
-import { ArrowLeft, DoorClosed, X, Zap } from "lucide-react";
+import { DoorClosed, X, Zap } from "lucide-react";
 import { OccupancyMeter } from "@/components/OccupancyMeter";
 import { useApp } from "@/components/Providers";
 import { LEGEND, LegendSwatch, SeatMap, useWideHover, type SeatVisual } from "@/components/SeatMap";
-import { Button, Empty, Notice, Panel, Skeleton, useAction, useNow } from "@/components/ui";
+import { Button, Empty, Notice, Panel, Skeleton, Tag, useAction, useNow } from "@/components/ui";
 import { ruleTexts, useHome, useSettings } from "@/lib/hooks";
 import { rpc, supabase } from "@/lib/supabase";
-import { SEAT_TYPE_LABEL, type Room, type Seat, type SeatState } from "@/lib/types";
-import { cx, fmtTime, level } from "@/lib/util";
+import { SEAT_TYPE_LABEL, STATE_LABEL, type Room, type Seat, type SeatInfo } from "@/lib/types";
+import { cx, fmtLeft, fmtTime, level } from "@/lib/util";
 
 export default function RoomPage() {
   const { id } = useParams<{ id: string }>();
@@ -23,19 +23,21 @@ export default function RoomPage() {
   const wide = useWideHover();
   const [room, setRoom] = useState<Room | null | undefined>(undefined);
   const [seats, setSeats] = useState<Seat[]>([]);
-  const [states, setStates] = useState<Map<number, SeatState>>(new Map());
+  const [states, setStates] = useState<Map<number, SeatInfo>>(new Map());
   const [selected, setSelected] = useState<Seat | null>(null);
   const [hours, setHours] = useState(4);
   const { busy, run } = useAction((m) => toast(m, "error"));
   const now = useNow(30000);
 
   const loadStates = useCallback(async () => {
-    const { data } = await supabase.from("seat_state").select("seat_id,state").eq("room_id", roomId);
-    if (data) setStates(new Map(data.map((s) => [s.seat_id, s.state as SeatState])));
+    const { data } = await supabase.from("seat_state").select("seat_id,state,end_at,until_at,extend_count").eq("room_id", roomId);
+    if (data) setStates(new Map((data as SeatInfo[]).map((s) => [s.seat_id, s])));
   }, [roomId]);
 
   useEffect(() => {
     if (!Number.isFinite(roomId)) return setRoom(null);
+    setRoom(undefined);
+    setSelected(null);
     (async () => {
       const [r, s] = await Promise.all([
         supabase.from("rooms").select("*").eq("id", roomId).maybeSingle(),
@@ -48,8 +50,8 @@ export default function RoomPage() {
     const ch = supabase
       .channel(`room-${roomId}`)
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "seat_state", filter: `room_id=eq.${roomId}` }, (p) => {
-        const row = p.new as { seat_id: number; state: SeatState };
-        setStates((m) => new Map(m).set(row.seat_id, row.state));
+        const row = p.new as SeatInfo;
+        setStates((m) => new Map(m).set(row.seat_id, row));
       })
       .subscribe();
     const poll = setInterval(loadStates, 45000);
@@ -66,18 +68,10 @@ export default function RoomPage() {
     (seat: Seat): SeatVisual => {
       if (mine?.seat_id === seat.id) return "mine";
       if (!seat.is_active) return "inactive";
-      return states.get(seat.id) ?? "free";
+      return states.get(seat.id)?.state ?? "free";
     },
     [mine, states],
   );
-
-  // 선택한 좌석을 다른 사람이 먼저 잡으면 선택 해제
-  useEffect(() => {
-    if (selected && states.has(selected.id) && states.get(selected.id) !== "free" && mine?.seat_id !== selected.id) {
-      setSelected(null);
-      toast(`${selected.label} 좌석이 방금 예약되었습니다. 다른 좌석을 골라 주세요.`);
-    }
-  }, [states, selected, mine, toast]);
 
   // Esc 로 팝업 닫기
   useEffect(() => {
@@ -118,6 +112,18 @@ export default function RoomPage() {
   const free = summary ? summary.total - summary.occupied : null;
   const banned = !!status?.profile.banned_until && new Date(status.profile.banned_until).getTime() > now;
   const blocked = banned || (!!summary && !summary.is_open);
+  const exam = home?.mode === "exam";
+
+  // 사용 중인 좌석: 누가 쓰는지는 알 수 없고, 언제 비는지만 알려 준다
+  const info = selected ? states.get(selected.id) : undefined;
+  const taken = !!selected && !!info && info.state !== "free" && mine?.seat_id !== selected.id;
+  const extendsLeft = info ? Math.max(0, Number(settings?.max_extends ?? 2) - info.extend_count) : 0;
+  const hint = (seat: Seat) => {
+    const i = states.get(seat.id);
+    if (!i || i.state === "free" || !i.until_at) return null;
+    const left = fmtLeft(new Date(i.until_at).getTime() - now);
+    return i.state === "reserved" ? `체크인 마감 ${left} 전` : i.state === "away" ? `복귀 마감 ${left} 전` : `${left} 남음`;
+  };
 
   const form = selected && (
     <>
@@ -132,7 +138,37 @@ export default function RoomPage() {
           <X size={18} aria-hidden />
         </button>
       </div>
-      {mine ? (
+      {taken && info ? (
+        <>
+          <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2.5 text-sm">
+            <div>
+              <dt className="text-xs text-muted">상태</dt>
+              <dd className="mt-0.5">
+                <Tag tone={info.state === "in_use" ? "neutral" : "warn"}>{STATE_LABEL[info.state]}</Tag>
+              </dd>
+            </div>
+            <div>
+              <dt className="text-xs text-muted">{info.state === "reserved" ? "체크인 마감까지" : info.state === "away" ? "복귀 마감까지" : "남은 시간"}</dt>
+              <dd className="tabular font-bold">{info.until_at ? fmtLeft(new Date(info.until_at).getTime() - now) : "–"}</dd>
+            </div>
+            <div>
+              <dt className="text-xs text-muted">이용 종료</dt>
+              <dd className="tabular font-semibold">{info.end_at ? fmtTime(info.end_at) : "–"}</dd>
+            </div>
+            <div>
+              <dt className="text-xs text-muted">남은 연장</dt>
+              <dd className="tabular font-semibold">{exam ? "제한 없음" : `${extendsLeft}회`}</dd>
+            </div>
+          </dl>
+          <p className="mt-3 text-xs text-muted">
+            {info.state === "in_use" && !exam && extendsLeft === 0 && info.end_at
+              ? `연장이 끝나 ${fmtTime(info.end_at)}에 비워집니다.`
+              : info.state === "in_use"
+                ? "연장하면 종료 시각이 늦어질 수 있습니다."
+                : "시간 안에 오지 않으면 자동으로 빈자리가 됩니다."}
+          </p>
+        </>
+      ) : mine ? (
         <p className="mt-3 text-sm text-[#3d4744]">
           {mine.seat_label} 이용 중 ·{" "}
           <Link href="/me" className="font-semibold text-du-deep-dark underline underline-offset-2">
@@ -172,11 +208,28 @@ export default function RoomPage() {
   return (
     <div className={cx("space-y-4", selected && !wide && "pb-52")}>
       <div>
-        <Link href="/" className="-ml-1 inline-flex h-9 items-center gap-1 rounded-md px-1 text-sm font-semibold text-muted hover:text-du-black">
-          <ArrowLeft size={16} aria-hidden />
-          열람실 목록
-        </Link>
-        <div className="mt-1 flex flex-wrap items-end justify-between gap-x-4 gap-y-1">
+        {/* 열람실 바로 이동: 뒤로 가지 않고 층을 바꾼다 */}
+        <nav aria-label="열람실 선택" className="flex gap-1.5 overflow-x-auto">
+          {(home?.rooms ?? []).map((x) => {
+            const on = x.id === roomId;
+            return (
+              <Link
+                key={x.id}
+                href={`/rooms/${x.id}`}
+                aria-current={on ? "page" : undefined}
+                className={cx(
+                  "flex min-h-10 shrink-0 items-center gap-1.5 rounded-full border px-4 text-sm font-semibold transition-colors duration-150",
+                  on ? "border-du-deep bg-du-deep text-white" : "border-line bg-surface hover:bg-canvas",
+                )}
+              >
+                {x.name}
+                <span className={cx("tabular font-normal", on ? "text-white/85" : "text-muted")}>{x.total - x.occupied}석</span>
+              </Link>
+            );
+          })}
+          {!home && <Skeleton className="h-10 w-56 !rounded-full" />}
+        </nav>
+        <div className="mt-3 flex flex-wrap items-end justify-between gap-x-4 gap-y-1">
           <h1 className="text-[22px] font-bold">{room?.name ?? <Skeleton className="h-7 w-32" />}</h1>
           {summary && lv && (
             <p className="tabular text-sm">
@@ -237,7 +290,8 @@ export default function RoomPage() {
             visual={visual}
             selectedId={selected?.id}
             onSelect={(s) => setSelected((cur) => (cur?.id === s.id ? null : s))}
-            selectable={(v) => v === "free"}
+            selectable={(v) => v !== "inactive" && v !== "mine"}
+            hint={hint}
             popover={wide ? form : undefined}
             focusId={mine?.room_id === roomId ? mine.seat_id : null}
           />

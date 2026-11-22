@@ -118,6 +118,7 @@ export function SeatMap({
   title,
   popover,
   focusId,
+  hint,
 }: {
   width: number;
   height: number;
@@ -134,6 +135,8 @@ export function SeatMap({
   popover?: React.ReactNode;
   /** 처음에 이 좌석이 보이도록 스크롤 (내 좌석) */
   focusId?: number | null;
+  /** 이름표에 덧붙일 한마디 (예: 남은 시간) */
+  hint?: (seat: Seat) => string | null;
 }) {
   // 배치도의 빈 가장자리를 잘라 좁은 화면에서도 좌석이 바로 보이게 한다
   const { seats, decor, width, height } = useMemo(() => {
@@ -261,7 +264,8 @@ export function SeatMap({
                 transformOrigin: "50% 100%",
               }}
             >
-              {hovered.label} · {SEAT_TYPE_LABEL[hovered.seat_type]} · {stateName(visual(hovered))}
+              {hovered.label} · {stateName(visual(hovered))}
+              {hint?.(rawSeats.find((x) => x.id === hovered.id) ?? hovered) ? ` · ${hint(rawSeats.find((x) => x.id === hovered.id) ?? hovered)}` : ""}
             </div>
           )}
 

@@ -54,6 +54,27 @@ export default function AdminReports() {
   const [ov, setOv] = useState<Overview | null>(null);
   const [text, setText] = useState<Record<string, string>>({});
   const { busy, run } = useAction((m) => toast(m, "error"));
+  // 이 화면을 마지막으로 본 시각. 그 뒤에 들어온 건은 '새로 들어옴'으로 표시한다
+  const [seenAt] = useState(() => {
+    try {
+      return Number(localStorage.getItem("du-admin-reports-seen") ?? 0);
+    } catch {
+      return 0;
+    }
+  });
+  useEffect(() => {
+    const mark = () => {
+      try {
+        localStorage.setItem("du-admin-reports-seen", String(Date.now()));
+      } catch {}
+    };
+    window.addEventListener("pagehide", mark);
+    return () => {
+      window.removeEventListener("pagehide", mark);
+      mark();
+    };
+  }, []);
+  const fresh = (iso: string) => new Date(iso).getTime() > seenAt && <Tag tone="danger">새로 들어옴</Tag>;
 
   const load = useCallback(() => rpc<Overview>("admin_overview").then(setOv).catch(() => {}), []);
   useEffect(() => {
@@ -97,8 +118,9 @@ export default function AdminReports() {
                   <div>
                     <div className="flex flex-wrap items-start justify-between gap-2">
                       <div>
-                        <p className="text-lg font-bold">
+                        <p className="flex flex-wrap items-center gap-2 text-lg font-bold">
                           {r.room_name} {r.seat_label}
+                          {fresh(r.created_at)}
                         </p>
                         <p className="text-sm text-[#3d4744]">
                           이용자 {r.owner_name} <span className="tabular text-muted">{r.owner_sid}</span> · 신고자 {r.reporter_name} <span className="tabular text-muted">{r.reporter_sid}</span>
@@ -139,7 +161,10 @@ export default function AdminReports() {
             {ov.helps.map((h) => (
               <Panel key={h.id} className="p-4">
                 <div>
-                  <p className="text-lg font-bold">{h.reason}</p>
+                  <p className="flex flex-wrap items-center gap-2 text-lg font-bold">
+                    {h.reason}
+                    {fresh(h.created_at)}
+                  </p>
                   <p className="text-sm text-[#3d4744]">
                     {h.name} <span className="tabular text-muted">{h.student_id}</span>
                     {h.seat_label && ` · ${h.room_name} ${h.seat_label} (${h.res_status === "reserved" ? "체크인 대기" : h.res_status === "away" ? "외출" : h.res_status === "in_use" ? "이용 중" : "종료"})`}
@@ -192,8 +217,9 @@ export default function AdminReports() {
             {ov.appeals.map((a) => (
               <Panel key={a.id} className="p-4">
                 <div>
-                  <p className="font-bold">
+                  <p className="flex flex-wrap items-center gap-2 font-bold">
                     {a.name} <span className="tabular font-normal text-muted">{a.student_id}</span>
+                    {fresh(a.created_at)}
                   </p>
                   <p className="text-sm text-[#3d4744]">
                     대상 벌점: <span className="tabular">{a.points}점</span> · {a.note} <span className="tabular text-muted">({fmtDateTime(a.penalty_at)})</span>

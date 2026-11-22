@@ -79,8 +79,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
         setPulse((p) => p + 1);
       })
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${uid}` }, (payload) => {
-        const n = payload.new as { title: string };
-        toast(n.title, "info");
+        const n = payload.new as { title: string; url: string };
+        // 관리자용 알림은 닫을 때까지 남는 팝업(Shell의 AdminAlerts)으로 보여 준다
+        if (!n.url?.startsWith("/admin")) toast(n.title, "info");
         refresh();
         setPulse((p) => p + 1);
       })

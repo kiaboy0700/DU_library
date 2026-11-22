@@ -20,6 +20,13 @@ export function fmtRemain(ms: number) {
   return `${m}:${String(sec).padStart(2, "0")}`;
 }
 
+/** 남은 시간을 분 단위로: "1시간 20분", "35분" */
+export function fmtLeft(ms: number) {
+  const m = Math.max(0, Math.ceil(ms / 60000));
+  if (m >= 60) return m % 60 ? `${Math.floor(m / 60)}시간 ${m % 60}분` : `${Math.floor(m / 60)}시간`;
+  return `${m}분`;
+}
+
 /** 혼잡도 단계: 색과 이름 */
 export function level(pct: number) {
   if (pct >= 80) return { name: "혼잡", color: "#b3261e", bg: "#fbeceb" };

@@ -43,6 +43,14 @@ export interface Seat {
   is_active: boolean;
   inactive_reason: string | null;
 }
+/** 누구나 볼 수 있는 좌석 상태. 이용자가 누구인지는 담기지 않는다 */
+export interface SeatInfo {
+  seat_id: number;
+  state: SeatState;
+  end_at: string | null;
+  until_at: string | null;
+  extend_count: number;
+}
 export interface RoomSummary {
   id: number;
   floor: number;
