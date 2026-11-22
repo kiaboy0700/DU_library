@@ -1,10 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ArrowDown, ArrowUp, Play, Plus, RotateCcw, Square, X } from "lucide-react";
+import { ArrowDown, ArrowUp, Play, Plus, RotateCcw, Shuffle, Square, Trash2, X } from "lucide-react";
 import { OccupancyMeter } from "@/components/OccupancyMeter";
 import { useApp } from "@/components/Providers";
-import { Button, Panel, Skeleton, Tag, TimeLeft, inputClass, useAction } from "@/components/ui";
+import { Button, Confirm, Panel, Skeleton, Tag, TimeLeft, inputClass, useAction } from "@/components/ui";
 import { useHome } from "@/lib/hooks";
 import { rpc, supabase } from "@/lib/supabase";
 import { MODE_LABEL, STATE_LABEL, type Mode, type RoomSummary } from "@/lib/types";
@@ -94,7 +94,10 @@ interface Step {
   key: string;
   /** 앞 상황이 끝난 뒤 이 상황을 실행하기까지 기다리는 시간(초) */
   delay: number;
+  /** 누구에게 일어나는 상황인가. A~D 는 같은 글자끼리 같은 학생, R 은 그때마다 다른 학생 */
+  who: string;
 }
+const SLOTS = ["A", "B", "C", "D"];
 /** 자주 보여 주는 흐름 */
 const FLOWS: { label: string; keys: string[] }[] = [
   { label: "미체크인", keys: ["reset", "reserved", "checkin_soon", "no_show"] },
@@ -105,7 +108,7 @@ const FLOWS: { label: string; keys: string[] }[] = [
 ];
 const SEQ_KEY = "du-demo-seq";
 let stepId = 1;
-const toSteps = (keys: string[], delay: number): Step[] => keys.map((key, i) => ({ id: stepId++, key, delay: i === 0 ? 0 : delay }));
+const toSteps = (keys: string[], delay: number): Step[] => keys.map((key, i) => ({ id: stepId++, key, delay: i === 0 ? 0 : delay, who: "A" }));
 
 function RoomFill({ room, onDone }: { room: RoomSummary; onDone: () => void }) {
   const { toast } = useApp();
@@ -176,8 +179,23 @@ export default function DemoPage() {
   const [seq, setSeq] = useState<Step[]>([]);
   const [gap, setGap] = useState(5);
   const [playing, setPlaying] = useState<{ index: number; left: number } | null>(null);
-  const stop = useRef(false);
   const [sid, setSid] = useState("");
+  const stop = useRef(false);
+  const pool = useRef<{ student_id: string; name: string }[]>([]);
+  const [wipe, setWipe] = useState(false);
+  // 자동 시연에서 각 상황에 들어간 학생 이름 (상황 id → 이름)
+  const [cast, setCast] = useState<Record<number, string>>({});
+  const [shownName, setShownName] = useState<string | null>(null);
+
+  // 가상 학생을 무작위로 다시 뽑는다. 뽑힌 학번을 돌려준다
+  const shuffle = useCallback(() => {
+    const list = pool.current;
+    if (list.length === 0) return null;
+    const v = list[Math.floor(Math.random() * list.length)];
+    setStudents((cur) => [{ ...v, virtual: true }, ...cur.filter((x) => !x.virtual)]);
+    setSid(v.student_id);
+    return v.student_id;
+  }, []);
   const [roomId, setRoomId] = useState<number | null>(null);
   const [state, setState] = useState<DemoState | null>(null);
   const [flags, setFlags] = useState<Record<string, boolean>>({});
@@ -198,26 +216,24 @@ export default function DemoPage() {
       // 시연 전용 가상 학생: 실제 계정을 건드리지 않고 보여 줄 수 있다
       supabase.from("profiles").select("student_id,name").eq("is_virtual", true).like("student_id", "2599%").limit(140),
     ]).then(([real, virt]) => {
-      const pool = virt.data ?? [];
-      const v = pool.length ? [{ ...pool[Math.floor(Math.random() * pool.length)], virtual: true }] : [];
-      const list = [...v, ...(real.data ?? [])];
-      setStudents(list);
-      if (list[0]) setSid(list[0].student_id);
+      pool.current = virt.data ?? [];
+      setStudents(real.data ?? []);
+      if (!shuffle() && real.data?.[0]) setSid(real.data[0].student_id);
     });
     loadOps();
     try {
-      const saved = JSON.parse(localStorage.getItem(SEQ_KEY) ?? "[]") as { key: string; delay: number }[];
-      setSeq(saved.filter((x) => itemOf(x.key)).map((x) => ({ id: stepId++, key: x.key, delay: Number(x.delay) || 0 })));
+      const saved = JSON.parse(localStorage.getItem(SEQ_KEY) ?? "[]") as { key: string; delay: number; who?: string }[];
+      setSeq(saved.filter((x) => itemOf(x.key)).map((x) => ({ id: stepId++, key: x.key, delay: Number(x.delay) || 0, who: x.who ?? "A" })));
     } catch {}
     return () => {
       stop.current = true;
     };
-  }, [loadOps]);
+  }, [loadOps, shuffle]);
 
   const saveSeq = (next: Step[]) => {
     setSeq(next);
     try {
-      localStorage.setItem(SEQ_KEY, JSON.stringify(next.map(({ key, delay }) => ({ key, delay }))));
+      localStorage.setItem(SEQ_KEY, JSON.stringify(next.map(({ key, delay, who }) => ({ key, delay, who }))));
     } catch {}
   };
   const swap = (i: number, j: number) => {
@@ -241,6 +257,7 @@ export default function DemoPage() {
     run(key, async () => {
       const r = await rpc<DemoResult>("admin_demo", { p_action: action, p_student: sid, p_room: room, p_arg: arg ?? null });
       if (r.state) setState(r.state);
+      setShownName(null);
       if (r.message) toast(r.message, "ok");
       reload();
     });
@@ -261,6 +278,19 @@ export default function DemoPage() {
   async function play() {
     if (!sid || seq.length === 0 || playing) return;
     stop.current = false;
+    // 학생 A 는 위에서 고른 학생(가상 학생이면 시작할 때마다 새로 뽑는다), B~D 와 '랜덤'은 가상 학생 중에서 무작위
+    const first = (students.find((x) => x.student_id === sid)?.virtual && shuffle()) || sid;
+    const nameOf = (id: string) => [...students, ...pool.current].find((x) => x.student_id === id)?.name ?? id;
+    const slots: Record<string, string> = { A: first };
+    const used = new Set([first]);
+    const pick = () => {
+      const rest = pool.current.filter((x) => !used.has(x.student_id));
+      const v = (rest.length ? rest : pool.current)[Math.floor(Math.random() * (rest.length || pool.current.length))];
+      if (!v) return first;
+      used.add(v.student_id);
+      return v.student_id;
+    };
+    setCast({});
     try {
       for (let i = 0; i < seq.length; i++) {
         for (let left = seq[i].delay; left > 0; left--) {
@@ -271,9 +301,14 @@ export default function DemoPage() {
         setPlaying({ index: i, left: 0 });
         const it = itemOf(seq[i].key);
         if (!it) continue;
-        const r = await rpc<DemoResult>("admin_demo", { p_action: it.action, p_student: sid, p_room: room, p_arg: it.arg ?? null });
+        const tag = seq[i].who;
+        const who = tag === "R" ? pick() : (slots[tag] ??= pick());
+        const stepKey = seq[i].id;
+        setCast((c) => ({ ...c, [stepKey]: nameOf(who) }));
+        const r = await rpc<DemoResult>("admin_demo", { p_action: it.action, p_student: who, p_room: room, p_arg: it.arg ?? null });
         if (stop.current) return;
         if (r.state) setState(r.state);
+        setShownName(nameOf(who));
         if (r.message) toast(r.message, "ok");
         reload();
       }
@@ -284,12 +319,40 @@ export default function DemoPage() {
     }
   }
 
+  const wipeAll = () =>
+    run("wipe", async () => {
+      await rpc("admin_demo_reset");
+      setWipe(false);
+      setState(null);
+      shuffle();
+      await loadOps();
+      reload();
+      toast("전체를 처음 상태로 되돌렸습니다.", "ok");
+    });
+
   const res = state?.res;
   const deadline = res ? (res.report_deadline ?? (res.status === "reserved" ? res.checkin_deadline : res.status === "away" && res.away_deadline ? res.away_deadline : res.end_at)) : null;
 
   return (
     <div className="space-y-8">
-      <h1 className="text-[24px] font-bold leading-tight">시연</h1>
+      <div className="flex items-center justify-between gap-3">
+        <h1 className="text-[24px] font-bold leading-tight">시연</h1>
+        <Button variant="danger" disabled={!!busy || !!playing} onClick={() => setWipe(true)}>
+          <Trash2 size={16} aria-hidden />
+          전체 초기화
+        </Button>
+      </div>
+      {wipe && (
+        <Confirm title="전체 초기화" confirmLabel="초기화" danger busy={busy === "wipe"} onConfirm={wipeAll} onClose={() => setWipe(false)}>
+          <ul className="list-disc space-y-0.5 pl-5">
+            <li>모든 좌석의 예약·이용·외출</li>
+            <li>모든 학생의 벌점·예약 정지·이의신청</li>
+            <li>신고·도움 요청·알림</li>
+            <li>사용 중지한 좌석·임시 폐쇄·장애 모드</li>
+          </ul>
+          <p className="mt-2 font-semibold text-danger">되돌릴 수 없습니다.</p>
+        </Confirm>
+      )}
 
       <section aria-labelledby="occ-h">
         <h2 id="occ-h" className="mb-3 border-l-4 border-du-deep pl-2.5 text-[18px] font-bold">
@@ -358,7 +421,7 @@ export default function DemoPage() {
           학생 시나리오
         </h2>
         <Panel className="overflow-hidden">
-          <div className="grid grid-cols-2 gap-2 p-4">
+          <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] gap-2 p-4">
             <select aria-label="학생" className={inputClass} value={sid} disabled={!!playing} onChange={(e) => setSid(e.target.value)}>
               {students.map((s) => (
                 <option key={s.student_id} value={s.student_id}>
@@ -367,6 +430,9 @@ export default function DemoPage() {
                 </option>
               ))}
             </select>
+            <Button aria-label="가상 학생 다시 뽑기" title="가상 학생 다시 뽑기" className="w-11 shrink-0 !px-0" disabled={!!busy || !!playing} onClick={shuffle}>
+              <Shuffle size={17} aria-hidden />
+            </Button>
             <select aria-label="열람실" className={inputClass} value={room ?? ""} onChange={(e) => setRoomId(Number(e.target.value))}>
               {rooms.map((r) => (
                 <option key={r.id} value={r.id}>
@@ -378,6 +444,7 @@ export default function DemoPage() {
 
           {/* 이 학생의 지금 상태 */}
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 bg-du-tint px-4 py-3" aria-live="polite">
+            {shownName && <span className="text-sm font-semibold text-du-deep-dark">{shownName}</span>}
             {res ? (
               <>
                 <span className="font-bold">
@@ -437,9 +504,26 @@ export default function DemoPage() {
                   const on = playing?.index === i;
                   const done = !!playing && playing.index > i;
                   return (
-                    <li key={st.id} aria-current={on ? "step" : undefined} className={cx("flex items-center gap-2 px-3 py-2 transition-colors duration-150", on && "bg-du-tint", done && "text-muted")}>
+                    <li key={st.id} aria-current={on ? "step" : undefined} className={cx("flex flex-wrap items-center justify-end gap-2 px-3 py-2 transition-colors duration-150", on && "bg-du-tint", done && "text-muted")}>
                       <span className={cx("tabular grid size-6 shrink-0 place-items-center rounded-full text-xs font-bold", on ? "bg-du-deep text-white" : "bg-[#eaefed]")}>{i + 1}</span>
-                      <span className={cx("min-w-0 flex-1 truncate text-sm font-semibold", it?.danger && !done && "text-danger")}>{it?.label}</span>
+                      <span className="min-w-0 flex-1 basis-[55%] sm:basis-0">
+                        <span className={cx("block truncate text-sm font-semibold", it?.danger && !done && "text-danger")}>{it?.label}</span>
+                        {cast[st.id] && <span className="block truncate text-xs text-muted">{cast[st.id]}</span>}
+                      </span>
+                      <select
+                        aria-label={`${i + 1}번 상황의 학생`}
+                        disabled={!!playing}
+                        value={st.who}
+                        onChange={(e) => saveSeq(seq.map((x) => (x.id === st.id ? { ...x, who: e.target.value } : x)))}
+                        className="h-9 shrink-0 rounded-md border border-line bg-surface px-1.5 text-[13px] font-semibold"
+                      >
+                        {SLOTS.map((w) => (
+                          <option key={w} value={w}>
+                            학생 {w}
+                          </option>
+                        ))}
+                        <option value="R">랜덤</option>
+                      </select>
                       {on && playing.left > 0 ? (
                         <span className="tabular shrink-0 text-sm font-bold text-du-deep-dark">{playing.left}초</span>
                       ) : (
@@ -485,7 +569,7 @@ export default function DemoPage() {
                   className={cx(inputClass, "pl-9")}
                   value=""
                   disabled={!!playing}
-                  onChange={(e) => e.target.value && saveSeq([...seq, { id: stepId++, key: e.target.value, delay: seq.length ? gap : 0 }])}
+                  onChange={(e) => e.target.value && saveSeq([...seq, { id: stepId++, key: e.target.value, delay: seq.length ? gap : 0, who: seq[seq.length - 1]?.who ?? "A" }])}
                 >
                   <option value="">상황 추가</option>
                   {ITEMS.map((it) => (
