@@ -4,15 +4,16 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { Armchair, BellRing, ChartNoAxesColumn, ChevronDown, ClipboardList, House, Inbox, LogOut, MonitorDot, QrCode, Settings, TriangleAlert, UserRound, Users, X } from "lucide-react";
+import { Armchair, BellRing, ChartNoAxesColumn, ChevronDown, ClipboardList, Inbox, LayoutGrid, LogOut, MonitorDot, QrCode, ScanLine, Settings, TriangleAlert, UserRound, Users, X } from "lucide-react";
 import { NotificationBell } from "./NotificationBell";
+import { QrScanner } from "./QrScanner";
 import { useApp } from "./Providers";
 import { useSettings } from "@/lib/hooks";
 import { rpc } from "@/lib/supabase";
 import { cx, fmtTime } from "@/lib/util";
 
 const NAV = [
-  { href: "/", label: "홈", icon: House, match: (p: string) => p === "/" || p.startsWith("/rooms") },
+  { href: "/", label: "열람실", icon: LayoutGrid, match: (p: string) => p === "/" || p.startsWith("/rooms") },
   { href: "/me", label: "내 좌석", icon: Armchair, match: (p: string) => p.startsWith("/me") || p.startsWith("/s/") },
   { href: "/stats", label: "혼잡도", icon: ChartNoAxesColumn, match: (p: string) => p.startsWith("/stats") },
 ];
@@ -131,6 +132,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
   const { status, pulse } = useApp();
   const bare = path === "/login";
   const isAdmin = status?.profile.role === "admin";
+  const [scan, setScan] = useState(false);
   const pendingItems = usePending(isAdmin, pulse);
   const pending = pendingItems.length;
   // 관리자가 학생용 화면(홈·좌석 선택·내 좌석)에 들어오면 관제로 보낸다
@@ -161,13 +163,11 @@ export function Shell({ children }: { children: React.ReactNode }) {
       <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-50 focus:rounded-md focus:bg-surface focus:px-3 focus:py-2 focus:text-sm focus:font-semibold">
         본문으로 건너뛰기
       </a>
-      <header className="on-deep no-print sticky top-0 z-40 bg-du-deep text-white">
-        <div className={cx("mx-auto flex h-14 items-center gap-3 px-4", width)}>
-          <Link href={isAdmin ? "/admin" : "/"} className="flex min-w-0 items-center gap-2.5 rounded-md">
-            <span className="grid size-9 shrink-0 place-items-center rounded-full bg-white">
-              <Image src="/brand/symbol.png" alt="대구대학교" width={32} height={32} priority />
-            </span>
-            <span className="truncate text-[17px] font-bold tracking-[-0.02em] max-[430px]:sr-only">창파도서관 좌석예약</span>
+      <header className="no-print sticky top-0 z-40 border-b border-line bg-surface text-du-black">
+        <div className={cx("mx-auto flex h-[60px] items-center gap-2 px-4", isAdmin ? "max-w-7xl" : "max-w-5xl")}>
+          <Link href={isAdmin ? "/admin" : "/"} aria-label="대구대학교 창파도서관 좌석예약, 처음 화면으로" className="flex shrink-0 items-center gap-3 rounded-md">
+            <Image src="/brand/signature.png" alt="대구대학교" width={500} height={147} priority className="h-9 w-auto" />
+            <span className="hidden border-l border-line pl-3 text-[15px] font-bold tracking-[-0.02em] text-[#3d4744] lg:block">창파도서관 좌석예약</span>
           </Link>
           <nav aria-label="주 메뉴" className="ml-auto hidden items-center gap-1 sm:flex">
             {items.map((it) => {
@@ -178,13 +178,13 @@ export function Shell({ children }: { children: React.ReactNode }) {
                   href={it.href}
                   aria-current={on ? "page" : undefined}
                   className={cx(
-                    "relative flex h-9 items-center gap-1.5 rounded-lg px-3 text-sm font-semibold transition-colors duration-150",
-                    on ? "bg-white text-du-deep-dark" : "text-white/90 hover:bg-white/15",
+                    "relative flex h-9 items-center gap-1.5 whitespace-nowrap rounded-lg px-3 text-sm font-semibold transition-colors duration-150",
+                    on ? "bg-du-tint text-du-deep-dark" : "text-[#3d4744] hover:bg-canvas",
                   )}
                 >
                   <it.icon size={16} aria-hidden />
                   {it.label}
-                  {it.href === "/me" && active && <span className={cx("size-1.5 rounded-full", on ? "bg-du-deep" : "bg-du-light")} aria-label="이용 중" />}
+                  {it.href === "/me" && active && <span className="size-1.5 rounded-full bg-du-green" aria-label="이용 중" />}
                   {it.href === "/admin/reports" && pending > 0 && (
                     <span className="tabular grid h-[18px] min-w-[18px] place-items-center rounded-full bg-danger px-1 text-[11px] font-bold text-white" aria-label={`${pending}건 대기`}>
                       {pending}
@@ -195,13 +195,27 @@ export function Shell({ children }: { children: React.ReactNode }) {
             })}
           </nav>
           {!isAdmin && (
-            <div className="ml-auto sm:ml-1">
+            <div className="ml-auto flex items-center sm:ml-1">
+              <button type="button" aria-label="좌석 QR 스캔" title="좌석 QR 스캔" onClick={() => setScan(true)} className="grid size-11 place-items-center rounded-lg transition-colors duration-150 hover:bg-canvas">
+                <ScanLine size={24} strokeWidth={1.9} aria-hidden />
+              </button>
               <NotificationBell />
             </div>
           )}
           <ProfileMenu pending={pending} />
         </div>
       </header>
+
+      {scan && (
+        <QrScanner
+          onToken={(t) => {
+            setScan(false);
+            router.push(`/s/${t}`);
+          }}
+          onClose={() => setScan(false)}
+          seat={active ? { label: active.seat_label, room: active.room_name } : undefined}
+        />
+      )}
 
       {active?.report_deadline && !path.startsWith("/me") && (
         <Link href="/me" className="no-print flex items-center justify-center gap-2 bg-danger px-4 py-2.5 text-sm font-semibold text-white">
@@ -290,23 +304,23 @@ function ProfileMenu({ pending }: { pending: number }) {
       : [];
 
   return (
-    <div ref={box} className={cx("relative min-w-0 max-w-[68%] shrink sm:max-w-72", admin && "ml-auto sm:ml-2")}>
+    <div ref={box} className={cx("relative min-w-0 shrink-0 sm:max-w-72", admin && "ml-auto sm:ml-2")}>
       <button
         type="button"
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label={`${admin ? "관리자 메뉴" : "내 프로필"}: ${p.name}, ${sub}`}
         onClick={() => setOpen((o) => !o)}
-        className={cx("flex w-full min-w-0 items-center gap-2 rounded-lg py-1 pl-1 pr-1.5 transition-colors duration-150 hover:bg-white/15", open && "bg-white/15")}
+        className={cx("flex w-full min-w-0 items-center gap-2 rounded-lg p-1 transition-colors duration-150 hover:bg-canvas sm:pr-1.5", open && "bg-canvas")}
       >
-        <span aria-hidden className="grid size-8 shrink-0 place-items-center rounded-full bg-white/20 text-sm font-bold">
+        <span aria-hidden className="grid size-9 shrink-0 place-items-center rounded-full bg-du-deep text-sm font-bold text-white">
           {p.name.slice(0, 1)}
         </span>
-        <span className="min-w-0 text-left leading-tight">
+        <span className="hidden min-w-0 text-left leading-tight md:block">
           <span className="block truncate text-[13px] font-bold">{p.name}</span>
-          <span className="tabular block truncate text-[11px] text-white/85">{sub}</span>
+          <span className="tabular block truncate text-[11px] text-muted">{sub}</span>
         </span>
-        <ChevronDown size={14} aria-hidden className={cx("shrink-0 transition-transform duration-150", open && "rotate-180")} />
+        <ChevronDown size={14} aria-hidden className={cx("hidden shrink-0 text-muted transition-transform duration-150 sm:block", open && "rotate-180")} />
       </button>
       {open && (
         <div role="menu" className="rise absolute right-0 top-[calc(100%+8px)] w-64 overflow-hidden rounded-[var(--radius-panel)] border border-line bg-surface text-du-black shadow-[var(--shadow-float)]">

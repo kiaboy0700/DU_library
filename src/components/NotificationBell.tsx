@@ -82,11 +82,11 @@ export function NotificationBell() {
         aria-expanded={open}
         aria-label={unread > 0 ? `알림, 읽지 않은 알림 ${unread}개` : "알림"}
         onClick={() => setOpen((o) => !o)}
-        className={cx("relative grid size-10 place-items-center rounded-lg transition-colors duration-150 hover:bg-white/15", open && "bg-white/15")}
+        className={cx("relative grid size-11 place-items-center rounded-lg transition-colors duration-150 hover:bg-canvas", open && "bg-canvas")}
       >
-        {unread > 0 ? <BellRing size={21} aria-hidden /> : <Bell size={21} aria-hidden />}
+        {unread > 0 ? <BellRing size={24} strokeWidth={1.9} aria-hidden /> : <Bell size={24} strokeWidth={1.9} aria-hidden />}
         {unread > 0 && (
-          <span className="tabular absolute right-0.5 top-0.5 grid h-[18px] min-w-[18px] place-items-center rounded-full bg-danger px-1 text-[11px] font-bold text-white ring-2 ring-du-deep">
+          <span className="tabular absolute right-0.5 top-0.5 grid h-[18px] min-w-[18px] place-items-center rounded-full bg-danger px-1 text-[11px] font-bold text-white ring-2 ring-surface">
             {unread > 99 ? "99+" : unread}
           </span>
         )}
@@ -96,7 +96,7 @@ export function NotificationBell() {
         <div
           role="dialog"
           aria-label="알림"
-          className="rise fixed inset-x-3 top-[60px] z-50 flex max-h-[min(72vh,560px)] flex-col overflow-hidden rounded-[var(--radius-panel)] border border-line bg-surface text-du-black shadow-[var(--shadow-float)] sm:absolute sm:inset-x-auto sm:right-0 sm:top-[calc(100%+8px)] sm:w-[380px]"
+          className="rise fixed inset-x-3 top-[66px] z-50 flex max-h-[min(72vh,560px)] flex-col overflow-hidden rounded-[var(--radius-panel)] border border-line bg-surface text-du-black shadow-[var(--shadow-float)] sm:absolute sm:inset-x-auto sm:right-0 sm:top-[calc(100%+8px)] sm:w-[380px]"
         >
           <div className="flex items-center justify-between gap-3 border-b border-line px-4 py-3">
             <h2 className="font-bold">알림</h2>

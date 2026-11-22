@@ -3,9 +3,10 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
-import { Bell, BellRing, ChevronRight, Megaphone, TriangleAlert, WifiOff, Zap } from "lucide-react";
+import { Bell, BellRing, ChevronRight, Megaphone, QrCode, TriangleAlert, WifiOff, Zap } from "lucide-react";
 import { OccupancyMeter } from "@/components/OccupancyMeter";
 import { useApp } from "@/components/Providers";
+import { QrScanner } from "@/components/QrScanner";
 import { Button, Notice, Panel, Skeleton, Tag, useAction, useNow } from "@/components/ui";
 import { ruleTexts, useHome, useSettings } from "@/lib/hooks";
 import { rpc, supabase } from "@/lib/supabase";
@@ -27,6 +28,7 @@ export default function HomePage() {
   const { settings } = useSettings();
   const [notices, setNotices] = useState<Announcement[]>([]);
   const [watching, setWatching] = useState<Set<number>>(new Set());
+  const [scan, setScan] = useState(false);
   const now = useNow();
   const uid = status?.profile.id;
 
@@ -80,10 +82,42 @@ export default function HomePage() {
 
   return (
     <div className="space-y-5">
+      {/* 내 프로필: 이름과 소속, 오른쪽에는 가장 자주 쓰는 QR 스캔 */}
+      {status && (
+        <section aria-label="내 프로필" className="relative flex items-center gap-4 overflow-hidden rounded-[var(--radius-panel)] bg-du-tint p-5">
+          <span aria-hidden className="absolute -right-10 -top-16 size-48 rounded-full bg-white/45" />
+          <span aria-hidden className="absolute -bottom-20 right-24 size-40 rounded-full bg-white/35" />
+          <div className="relative min-w-0 flex-1">
+            <p className="text-[26px] font-bold leading-tight tracking-[-0.02em]">{status.profile.name}</p>
+            <p className="mt-1 text-sm font-medium text-du-deep-dark">{status.profile.department ?? "학과 미등록"}</p>
+            <p className="tabular mt-0.5 text-[13px] text-[#3d4744]">
+              {status.profile.student_id}
+              {status.profile.grade && ` · ${status.profile.grade}학년`}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setScan(true)}
+            className="relative flex size-[84px] shrink-0 flex-col items-center justify-center gap-1 rounded-xl bg-surface text-du-deep-dark shadow-[0_2px_8px_-2px_rgb(0_60_50/0.18)] transition-transform duration-150 hover:-translate-y-0.5 active:translate-y-0"
+          >
+            <QrCode size={34} strokeWidth={1.8} aria-hidden />
+            <span className="text-[13px] font-semibold">QR 스캔</span>
+          </button>
+        </section>
+      )}
+      {scan && (
+        <QrScanner
+          onToken={(t) => {
+            setScan(false);
+            router.push(`/s/${t}`);
+          }}
+          onClose={() => setScan(false)}
+          seat={res ? { label: res.seat_label, room: res.room_name } : undefined}
+        />
+      )}
+
       <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-1">
-        <h1 className="text-[22px] font-bold leading-snug">
-          열람실
-        </h1>
+        <h1 className="text-[20px] font-bold leading-snug">열람실</h1>
         {mode && (
           <p className="text-sm text-muted">
             {MODE_LABEL[mode]} 운영
