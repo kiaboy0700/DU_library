@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { Minus, Plus } from "lucide-react";
 import type { Decor, Seat, SeatState, SeatType } from "@/lib/types";
 import { SEAT_TYPE_LABEL, STATE_LABEL } from "@/lib/types";
@@ -24,6 +24,22 @@ export const LEGEND: { key: SeatVisual; label: string }[] = [
   { key: "away", label: "외출" },
   { key: "mine", label: "내 좌석" },
 ];
+
+const stateName = (v: SeatVisual) => (v === "mine" ? "내 좌석" : v === "inactive" ? "사용 중지" : STATE_LABEL[v]);
+
+/** 마우스가 있는 넓은 화면인지: 좌석 옆 팝업을 쓸지, 아래 시트를 쓸지 정한다 */
+const WIDE = "(min-width: 640px) and (hover: hover)";
+export function useWideHover() {
+  return useSyncExternalStore(
+    (cb) => {
+      const m = window.matchMedia(WIDE);
+      m.addEventListener("change", cb);
+      return () => m.removeEventListener("change", cb);
+    },
+    () => window.matchMedia(WIDE).matches,
+    () => false,
+  );
+}
 
 export function LegendSwatch({ kind }: { kind: SeatVisual }) {
   const p = PAINT[kind];
@@ -57,7 +73,7 @@ function DecorShape({ d, c }: { d: Decor; c: number }) {
     return (
       <g>
         <line x1={x} y1={y + h / 2} x2={x + w} y2={y + h / 2} stroke="#8d9995" strokeWidth={2} strokeDasharray="6 4" />
-        <rect x={x + w / 2 - c * 1.2} y={y + h * 0.1} width={c * 2.4} height={h * 0.8} rx={4} fill="#f3f6f4" />
+        <rect x={x + w / 2 - c * 1.2} y={y + h * 0.1} width={c * 2.4} height={h * 0.8} rx={4} fill="#f8faf9" />
         <text x={x + w / 2} y={y + h * 0.68} fontSize={Math.max(10, c * 0.38)} fontWeight={600} fill="#5b6663" textAnchor="middle">
           {d.text}
         </text>
@@ -87,18 +103,21 @@ function SeatShape({ type, s, paint, selected }: { type: SeatType; s: number; pa
   );
 }
 
+const POP_W = 276;
+
 export function SeatMap({
-  width,
-  height,
-  decor,
-  seats,
+  width: fullW,
+  height: fullH,
+  decor: rawDecor,
+  seats: rawSeats,
   visual,
   selectedId,
   onSelect,
-  dimTypes,
   badge,
   selectable = (v) => v === "free" || v === "mine",
   title,
+  popover,
+  focusId,
 }: {
   width: number;
   height: number;
@@ -107,16 +126,37 @@ export function SeatMap({
   visual: (seat: Seat) => SeatVisual;
   selectedId?: number | null;
   onSelect?: (seat: Seat) => void;
-  /** 필터로 흐리게 처리할 좌석 종류 */
-  dimTypes?: Set<SeatType>;
   /** 좌석 위에 작은 점 표시 (관리자: 신고·보류) */
   badge?: (seat: Seat) => "report" | "hold" | null;
   selectable?: (v: SeatVisual, seat: Seat) => boolean;
   title: string;
+  /** 선택한 좌석 바로 옆에 띄울 내용 (넓은 화면용) */
+  popover?: React.ReactNode;
+  /** 처음에 이 좌석이 보이도록 스크롤 (내 좌석) */
+  focusId?: number | null;
 }) {
+  // 배치도의 빈 가장자리를 잘라 좁은 화면에서도 좌석이 바로 보이게 한다
+  const { seats, decor, width, height } = useMemo(() => {
+    const xs = [...rawSeats.map((v) => v.x), ...rawDecor.map((d) => d.x)];
+    const ys = [...rawSeats.map((v) => v.y), ...rawDecor.map((d) => d.y)];
+    if (!xs.length) return { seats: rawSeats, decor: rawDecor, width: fullW, height: fullH };
+    const ox = Math.min(...xs) - 0.5;
+    const oy = Math.min(...ys) - 0.5;
+    const mx = Math.max(...rawSeats.map((v) => v.x + 1), ...rawDecor.map((d) => d.x + d.w)) + 0.5;
+    const my = Math.max(...rawSeats.map((v) => v.y + 1), ...rawDecor.map((d) => d.y + d.h)) + 0.5;
+    return {
+      seats: rawSeats.map((v) => ({ ...v, x: v.x - ox, y: v.y - oy })),
+      decor: rawDecor.map((d) => ({ ...d, x: d.x - ox, y: d.y - oy })),
+      width: mx - ox,
+      height: my - oy,
+    };
+  }, [rawSeats, rawDecor, fullW, fullH]);
+
   const wrap = useRef<HTMLDivElement>(null);
+  const pop = useRef<HTMLDivElement>(null);
   const [cell, setCell] = useState(30);
   const [fit, setFit] = useState(30);
+  const [hoverId, setHoverId] = useState<number | null>(null);
 
   useEffect(() => {
     const el = wrap.current;
@@ -124,7 +164,7 @@ export function SeatMap({
     const measure = () => {
       const f = Math.floor((el.clientWidth - 24) / width);
       setFit(f);
-      setCell((c) => (c === 30 ? Math.min(34, Math.max(22, f)) : c));
+      setCell((c) => (c === 30 ? (window.matchMedia(WIDE).matches ? Math.min(34, Math.max(22, f)) : 34) : c));
     };
     measure();
     const ro = new ResizeObserver(measure);
@@ -132,59 +172,115 @@ export function SeatMap({
     return () => ro.disconnect();
   }, [width]);
 
+  // 내 좌석이 화면 가운데 오도록 한 번 스크롤
+  const focused = useRef(false);
+  useEffect(() => {
+    const el = wrap.current;
+    const f = focusId != null ? seats.find((x) => x.id === focusId) : undefined;
+    if (!el || !f || focused.current || cell === 30) return;
+    focused.current = true;
+    el.scrollTo({ left: f.x * cell - el.clientWidth / 2, top: f.y * cell - el.clientHeight / 2 });
+  }, [focusId, seats, cell]);
+
+  const selected = selectedId != null ? seats.find((x) => x.id === selectedId) : undefined;
+  const showPop = !!popover && !!selected;
+  useEffect(() => {
+    if (showPop) pop.current?.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "smooth" });
+  }, [showPop, selectedId]);
+
   const s = cell - 5;
+  const W = width * cell;
+  const H = height * cell;
   const zoom = (d: number) => setCell((c) => Math.min(44, Math.max(Math.min(14, Math.max(fit, 10)), c + d)));
+  const hovered = hoverId != null && hoverId !== selectedId ? seats.find((x) => x.id === hoverId) : undefined;
+  const above = !!selected && selected.y > height * 0.5;
 
   return (
     <div className="relative">
       <div ref={wrap} className="overflow-auto overscroll-x-contain rounded-[var(--radius-ctl)] bg-[#f8faf9] p-3" style={{ maxHeight: "68vh" }} tabIndex={0} aria-label={`${title} 좌석 배치도, 스크롤 가능`}>
-        <svg width={width * cell} height={height * cell} viewBox={`0 0 ${width * cell} ${height * cell}`} role="group" aria-label={title} className="block">
-          {decor.map((d, i) => (
-            <DecorShape key={i} d={d} c={cell} />
-          ))}
-          {seats.map((seat) => {
-            const v = visual(seat);
-            const paint = PAINT[v];
-            const can = !!onSelect && selectable(v, seat);
-            const dim = dimTypes?.has(seat.seat_type);
-            const num = String(Number(seat.label.split("-")[1]));
-            const b = badge?.(seat);
-            const stateName = v === "mine" ? "내 좌석" : v === "inactive" ? "사용 중지" : STATE_LABEL[v];
-            return (
-              <g
-                key={seat.id}
-                transform={`translate(${seat.x * cell + 2.5} ${seat.y * cell + 2.5})`}
-                role={can ? "button" : "img"}
-                tabIndex={can ? 0 : undefined}
-                aria-label={`${seat.label} ${SEAT_TYPE_LABEL[seat.seat_type]}, ${stateName}`}
-                aria-pressed={can ? selectedId === seat.id : undefined}
-                onClick={can ? () => onSelect(seat) : undefined}
-                onKeyDown={
-                  can
-                    ? (e) => {
-                        if (e.key === "Enter" || e.key === " ") {
-                          e.preventDefault();
-                          onSelect(seat);
+        <div className="relative" style={{ width: W, height: H }}>
+          <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} role="group" aria-label={title} className="block">
+            {decor.map((d, i) => (
+              <DecorShape key={i} d={d} c={cell} />
+            ))}
+            {seats.map((seat) => {
+              const v = visual(seat);
+              const paint = PAINT[v];
+              const can = !!onSelect && selectable(v, seat);
+              const num = String(Number(seat.label.split("-")[1]));
+              const b = badge?.(seat);
+              return (
+                <g
+                  key={seat.id}
+                  transform={`translate(${seat.x * cell + 2.5} ${seat.y * cell + 2.5})`}
+                  role={can ? "button" : "img"}
+                  tabIndex={can ? 0 : undefined}
+                  aria-label={`${seat.label} ${SEAT_TYPE_LABEL[seat.seat_type]}, ${stateName(v)}`}
+                  aria-pressed={can ? selectedId === seat.id : undefined}
+                  onClick={can ? () => onSelect(seat) : undefined}
+                  onKeyDown={
+                    can
+                      ? (e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            onSelect(seat);
+                          }
                         }
-                      }
-                    : undefined
-                }
-                opacity={dim ? 0.25 : 1}
-                className={cx(can && "cursor-pointer outline-none [&:focus-visible>rect:first-of-type]:stroke-[#231f20] [&:focus-visible>rect:first-of-type]:stroke-[3px] [&:focus-visible>circle]:stroke-[#231f20] [&:focus-visible>circle]:stroke-[3px]", v === "reserved" && "seat-pulse")}
-              >
-                <SeatShape type={seat.seat_type} s={s} paint={paint} selected={selectedId === seat.id} />
-                {cell >= 22 && (
-                  <text x={s / 2} y={s / 2 + (seat.seat_type === "partition" ? 5 : 3.5)} fontSize={Math.min(11, s * 0.42)} fontWeight={600} fill={paint.text} textAnchor="middle" className="tabular pointer-events-none select-none">
-                    {num}
-                  </text>
-                )}
-                {v === "inactive" && <line x1={4} y1={4} x2={s - 4} y2={s - 4} stroke="#9aa5a2" strokeWidth={1.5} />}
-                {b && <circle cx={s - 1} cy={1} r={4.5} fill={b === "report" ? "#b3261e" : "#8a5a00"} stroke="#fff" strokeWidth={1.5} />}
-                <title>{`${seat.label} · ${SEAT_TYPE_LABEL[seat.seat_type]} · ${stateName}`}</title>
-              </g>
-            );
-          })}
-        </svg>
+                      : undefined
+                  }
+                  onPointerEnter={(e) => e.pointerType === "mouse" && setHoverId(seat.id)}
+                  onPointerLeave={() => setHoverId((h) => (h === seat.id ? null : h))}
+                  onFocus={() => setHoverId(seat.id)}
+                  onBlur={() => setHoverId((h) => (h === seat.id ? null : h))}
+                  className={cx("seat", can && "seat-can cursor-pointer outline-none", v === "reserved" && "seat-pulse")}
+                >
+                  <g className="seat-in">
+                    <SeatShape type={seat.seat_type} s={s} paint={paint} selected={selectedId === seat.id} />
+                    {cell >= 22 && (
+                      <text x={s / 2} y={s / 2 + (seat.seat_type === "partition" ? 5 : 3.5)} fontSize={Math.min(11, s * 0.42)} fontWeight={600} fill={paint.text} textAnchor="middle" className="tabular pointer-events-none select-none">
+                        {num}
+                      </text>
+                    )}
+                    {v === "inactive" && <line x1={4} y1={4} x2={s - 4} y2={s - 4} stroke="#9aa5a2" strokeWidth={1.5} />}
+                    {b && <circle cx={s - 1} cy={1} r={4.5} fill={b === "report" ? "#b3261e" : "#8a5a00"} stroke="#fff" strokeWidth={1.5} />}
+                  </g>
+                </g>
+              );
+            })}
+          </svg>
+
+          {/* 마우스를 올리면 좌석 이름표 */}
+          {hovered && (
+            <div
+              aria-hidden
+              className="pop pointer-events-none absolute z-10 whitespace-nowrap rounded-md bg-du-black px-2 py-1 text-xs font-semibold text-white shadow-[0_4px_12px_rgb(0_0_0/0.25)]"
+              style={{
+                left: Math.min(Math.max(hovered.x * cell + cell / 2, 60), W - 60),
+                top: hovered.y * cell - 6,
+                transform: "translate(-50%, -100%)",
+                transformOrigin: "50% 100%",
+              }}
+            >
+              {hovered.label} · {SEAT_TYPE_LABEL[hovered.seat_type]} · {stateName(visual(hovered))}
+            </div>
+          )}
+
+          {/* 좌석을 누르면 바로 옆에 뜨는 팝업 */}
+          {showPop && selected && (
+            <div
+              ref={pop}
+              key={selected.id}
+              className="pop absolute z-20 rounded-[var(--radius-panel)] border border-line bg-surface p-3.5 shadow-[var(--shadow-float)]"
+              style={{
+                width: POP_W,
+                left: Math.min(Math.max(selected.x * cell + cell / 2 - POP_W / 2, 0), Math.max(W - POP_W, 0)),
+                ...(above ? { bottom: H - selected.y * cell + 6, transformOrigin: "50% 100%" } : { top: (selected.y + 1) * cell + 4, transformOrigin: "50% 0%" }),
+              }}
+            >
+              {popover}
+            </div>
+          )}
+        </div>
       </div>
       <div className="no-print absolute right-2 top-2 flex overflow-hidden rounded-lg border border-line bg-surface shadow-[0_1px_3px_rgb(0_60_50/0.12)]">
         <button type="button" aria-label="좌석 배치도 축소" onClick={() => zoom(-4)} className="grid size-9 place-items-center hover:bg-canvas">

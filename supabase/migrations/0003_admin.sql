@@ -370,7 +370,7 @@ begin
       'role', p.role, 'banned_until', p.banned_until, 'ban_reason', p.ban_reason, 'points', penalty_points(p.id),
       'active', exists (select 1 from reservations r where r.user_id = p.id and r.status in ('reserved','in_use','away'))) x
     from profiles p
-    where coalesce(trim(p_q), '') = '' and (p.banned_until > now() or penalty_points(p.id) > 0 or p.role = 'admin')
+    where coalesce(trim(p_q), '') = '' and p.role = 'student' and (p.banned_until > now() or p.report_banned_until > now() or penalty_points(p.id) > 0)
        or coalesce(trim(p_q), '') <> '' and (p.student_id ilike '%' || trim(p_q) || '%' or p.name ilike '%' || trim(p_q) || '%')
     order by p.student_id limit 50) q), '[]'::jsonb);
 end $$;

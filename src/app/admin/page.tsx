@@ -121,7 +121,7 @@ export default function AdminHome() {
         })}
       </div>
 
-      <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_340px]">
+      <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-4 lg:grid-cols-[minmax(0,1fr)_340px]">
         <Panel className="p-3 sm:p-4">
           {summary && (
             <div className="mb-4">

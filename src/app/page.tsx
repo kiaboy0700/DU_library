@@ -1,15 +1,16 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
-import { Bell, BellRing, ChevronRight, Megaphone, TriangleAlert, WifiOff } from "lucide-react";
+import { Bell, BellRing, ChevronRight, Megaphone, TriangleAlert, WifiOff, Zap } from "lucide-react";
 import { OccupancyMeter } from "@/components/OccupancyMeter";
 import { useApp } from "@/components/Providers";
-import { Button, Notice, Panel, Skeleton, Tag, useNow } from "@/components/ui";
+import { Button, Notice, Panel, Skeleton, Tag, useAction, useNow } from "@/components/ui";
 import { ruleTexts, useHome, useSettings } from "@/lib/hooks";
-import { supabase } from "@/lib/supabase";
+import { rpc, supabase } from "@/lib/supabase";
 import { MODE_LABEL, type RoomSummary } from "@/lib/types";
-import { errMsg, fmtRemain, fmtTime, level } from "@/lib/util";
+import { cx, errMsg, fmtRemain, fmtTime, level } from "@/lib/util";
 
 interface Announcement {
   id: number;
@@ -19,7 +20,9 @@ interface Announcement {
 }
 
 export default function HomePage() {
-  const { status, toast } = useApp();
+  const { status, toast, refresh } = useApp();
+  const router = useRouter();
+  const { busy, run } = useAction((m) => toast(m, "error"));
   const { home, error, reload } = useHome();
   const { settings } = useSettings();
   const [notices, setNotices] = useState<Announcement[]>([]);
@@ -62,6 +65,15 @@ export default function HomePage() {
       toast(errMsg(e), "error");
     }
   }
+
+  // 빠른 예약: 좌석을 고르지 않고 빈자리 하나를 바로 배정
+  const quick = (room: RoomSummary) =>
+    run(`q${room.id}`, async () => {
+      const r = await rpc<{ seat_label: string }>("quick_reserve", { p_room: room.id });
+      await refresh();
+      toast(`${room.name} ${r.seat_label} 좌석을 예약했습니다. ${settings?.checkin_minutes ?? 15}분 안에 좌석 QR을 스캔하세요.`, "ok");
+      router.push("/me");
+    });
 
   const res = status?.reservation;
   const mode = home?.mode;
@@ -162,9 +174,20 @@ export default function HomePage() {
                   좌석 고르기
                   <ChevronRight size={16} aria-hidden />
                 </Link>
-                <Button onClick={() => toggleWatch(room)} aria-pressed={on} className={on ? "border-du-deep/40 bg-du-tint text-du-deep-dark" : undefined}>
-                  {on ? <BellRing size={16} aria-hidden /> : <Bell size={16} aria-hidden />}
-                  {on ? "알림 켜짐" : "빈자리 알림"}
+                {free > 0 && room.is_open && !res ? (
+                  <Button busy={busy === `q${room.id}`} onClick={() => quick(room)} title="옆자리가 비어 있는 좌석을 골라 바로 예약합니다">
+                    <Zap size={16} aria-hidden />
+                    바로 예약
+                  </Button>
+                ) : null}
+                <Button
+                  onClick={() => toggleWatch(room)}
+                  aria-pressed={on}
+                  aria-label={on ? `${room.name} 빈자리 알림 끄기` : `${room.name} 빈자리 알림 받기`}
+                  title={on ? "빈자리 알림 켜짐" : "자리가 나면 알림 받기"}
+                  className={cx("w-11 shrink-0 !px-0", on && "border-du-deep/40 bg-du-tint text-du-deep-dark")}
+                >
+                  {on ? <BellRing size={18} aria-hidden /> : <Bell size={18} aria-hidden />}
                 </Button>
               </div>
             </Panel>

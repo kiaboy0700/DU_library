@@ -54,7 +54,7 @@ export default function AdminUsers() {
   return (
     <div className="space-y-4">
       <h1 className="text-[22px] font-bold">학생·제재</h1>
-      <div className="grid items-start gap-4 lg:grid-cols-[360px_minmax(0,1fr)]">
+      <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-4 lg:grid-cols-[360px_minmax(0,1fr)]">
         <div className="space-y-4">
           <Panel>
             <div className="relative p-3">
@@ -69,7 +69,7 @@ export default function AdminUsers() {
               <p className="px-4 pb-5 pt-1 text-sm text-muted">{q.trim() ? "검색 결과가 없습니다." : "벌점이 있거나 예약이 정지된 학생이 없습니다. 학번이나 이름으로 검색해 보세요."}</p>
             ) : (
               <>
-                {!q.trim() && <p className="px-4 pb-1 text-xs text-muted">벌점이 있거나 정지된 학생, 관리자</p>}
+                {!q.trim() && <p className="px-4 pb-1 text-xs text-muted">벌점이 있거나 정지된 학생</p>}
                 <ul className="max-h-[52vh] divide-y divide-line overflow-auto border-t border-line">
                   {rows.map((r) => (
                     <li key={r.id}>
@@ -188,7 +188,7 @@ export default function AdminUsers() {
                 </p>
               )}
 
-              <div className="mt-4 grid gap-4 border-t border-line pt-4 sm:grid-cols-2">
+              <div className={cx("mt-4 grid gap-4 border-t border-line pt-4 sm:grid-cols-2", d.profile.role === "admin" && "hidden")}>
                 <form
                   className="space-y-2"
                   onSubmit={(e) => {

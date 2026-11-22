@@ -149,14 +149,17 @@ export default function StatsPage() {
             </table>
           </div>
         )}
-        <div className="mt-3 flex items-center gap-2 text-xs text-muted" aria-hidden>
-          한산
-          <span className="flex overflow-hidden rounded">
-            {[10, 30, 50, 70, 90].map((v) => (
-              <span key={v} className="h-3 w-7" style={{ background: shade(v) }} />
-            ))}
+        <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted" aria-hidden>
+          <span className="flex items-center gap-2 whitespace-nowrap">
+            한산
+            <span className="flex overflow-hidden rounded">
+              {[10, 30, 50, 70, 90].map((v) => (
+                <span key={v} className="h-3 w-7" style={{ background: shade(v) }} />
+              ))}
+            </span>
+            혼잡
           </span>
-          혼잡 <span className="ml-auto">가로: 시(7~22시) · 굵은 테두리: 지금</span>
+          <span className="whitespace-nowrap">테두리 칸이 지금</span>
         </div>
       </Panel>
     </div>

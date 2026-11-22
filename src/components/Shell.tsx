@@ -26,7 +26,8 @@ export function Shell({ children }: { children: React.ReactNode }) {
     if (status === null && !bare) router.replace(path === "/" ? "/login" : `/login?next=${encodeURIComponent(path)}`);
   }, [status, bare, path, router]);
   const items = status?.profile.role === "admin" ? [...NAV, ADMIN] : NAV;
-  const wide = path.startsWith("/admin");
+  // 관리자 화면은 넓게, 좌석 배치도 화면은 중간 너비로
+  const width = path.startsWith("/admin") ? "max-w-7xl" : path.startsWith("/rooms") ? "max-w-5xl" : "max-w-3xl";
   const active = status?.reservation;
 
   if (bare) return <>{children}</>;
@@ -43,7 +44,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
         본문으로 건너뛰기
       </a>
       <header className="on-deep no-print sticky top-0 z-40 bg-du-deep text-white">
-        <div className={cx("mx-auto flex h-14 items-center gap-3 px-4", wide ? "max-w-7xl" : "max-w-3xl")}>
+        <div className={cx("mx-auto flex h-14 items-center gap-3 px-4", width)}>
           <Link href="/" className="flex min-w-0 items-center gap-2.5 rounded-md">
             <span className="grid size-9 shrink-0 place-items-center rounded-full bg-white">
               <Image src="/brand/symbol.png" alt="대구대학교" width={32} height={32} priority />
@@ -83,7 +84,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
         </Link>
       )}
 
-      <main id="main" className={cx("mx-auto w-full flex-1 px-4 pb-28 pt-5 sm:pb-12", wide ? "max-w-7xl" : "max-w-3xl")}>
+      <main id="main" className={cx("mx-auto w-full flex-1 px-4 pb-28 pt-5 sm:pb-12", width)}>
         {children}
       </main>
 

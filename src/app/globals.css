@@ -131,3 +131,33 @@ h3 {
     background: #fff;
   }
 }
+
+/* 좌석: 마우스를 올리거나 포커스하면 살짝 커진다 */
+.seat-in {
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: transform 0.14s var(--ease-out-expo);
+}
+.seat-can:hover .seat-in,
+.seat-can:focus-visible .seat-in {
+  transform: scale(1.16);
+}
+.seat-can:active .seat-in {
+  transform: scale(0.96);
+}
+.seat-can:focus-visible .seat-in > rect:first-of-type,
+.seat-can:focus-visible .seat-in > circle:first-of-type {
+  stroke: #231f20;
+  stroke-width: 3px;
+}
+
+/* 팝업: 붙어 있는 쪽에서 자라나듯 */
+@keyframes pop {
+  from {
+    opacity: 0;
+    scale: 0.92;
+  }
+}
+.pop {
+  animation: pop 0.18s var(--ease-out-expo);
+}
