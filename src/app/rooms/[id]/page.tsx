@@ -7,7 +7,7 @@ import { DoorClosed, X, Zap } from "lucide-react";
 import { OccupancyMeter } from "@/components/OccupancyMeter";
 import { useApp } from "@/components/Providers";
 import { LEGEND, LegendSwatch, SeatMap, useWideHover, type SeatVisual } from "@/components/SeatMap";
-import { Button, Empty, Notice, Panel, Skeleton, Tag, useAction, useNow } from "@/components/ui";
+import { Button, Empty, Notice, Panel, Skeleton, Tag, TimeLeft, useAction, useNow } from "@/components/ui";
 import { ruleTexts, useHome, useSettings } from "@/lib/hooks";
 import { rpc, supabase } from "@/lib/supabase";
 import { SEAT_TYPE_LABEL, STATE_LABEL, type Room, type Seat, type SeatInfo } from "@/lib/types";
@@ -149,7 +149,7 @@ export default function RoomPage() {
             </div>
             <div>
               <dt className="text-xs text-muted">{info.state === "reserved" ? "체크인 마감까지" : info.state === "away" ? "복귀 마감까지" : "남은 시간"}</dt>
-              <dd className="tabular font-bold">{info.until_at ? fmtLeft(new Date(info.until_at).getTime() - now) : "–"}</dd>
+              <dd className="tabular font-bold">{info.until_at ? <TimeLeft at={info.until_at} /> : "–"}</dd>
             </div>
             <div>
               <dt className="text-xs text-muted">이용 종료</dt>

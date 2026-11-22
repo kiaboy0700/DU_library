@@ -315,7 +315,10 @@ function SeatPanel(p: {
           {r.report && <p className="mt-2 rounded-md bg-danger-tint px-2.5 py-2 text-[13px] font-semibold text-[#7d1a14]">자리비움 신고가 접수되어 응답을 기다리고 있습니다.</p>}
           {r.on_hold && <p className="mt-2 rounded-md bg-warn-tint px-2.5 py-2 text-[13px] font-semibold text-[#5c3d00]">도움 요청 중이라 자동 취소가 멈춰 있습니다.</p>}
 
-          <div className="mt-3 grid grid-cols-2 gap-2">
+          <div className="mt-4 border-t border-line pt-3">
+            <h3 className="text-xs font-bold text-muted">대신 처리</h3>
+          </div>
+          <div className="mt-2 grid grid-cols-2 gap-2">
             {r.status === "reserved" && (
               <Button variant="primary" className="col-span-2" busy={p.busy === "ci"} onClick={() => p.onAct("ci", "check_in", "체크인을 대신 처리했습니다.")}>
                 대리 체크인
@@ -336,13 +339,11 @@ function SeatPanel(p: {
             </Button>
           </div>
 
-          <div className="mt-4 space-y-3 border-t border-line pt-3">
-            <Field label="사유 (학생에게 함께 전달됩니다)">
-              <input className={inputClass} value={p.reason} onChange={(e) => p.setReason(e.target.value)} placeholder="예: 휴대폰 고장으로 대리 처리" />
-            </Field>
+          <div className="mt-4 space-y-2 border-t border-line pt-3">
+            <h3 className="text-xs font-bold text-muted">좌석 옮기기</h3>
             <div className="flex items-end gap-2">
               <div className="min-w-0 flex-1">
-                <Field label="좌석 이동">
+                <Field label="옮길 좌석">
                   <input className={inputClass} value={p.moveTo} onChange={(e) => p.setMoveTo(e.target.value)} placeholder="옮길 좌석 번호 (예: B-012)" />
                 </Field>
               </div>
@@ -350,6 +351,12 @@ function SeatPanel(p: {
                 이동
               </Button>
             </div>
+          </div>
+          <div className="mt-4 space-y-2 border-t border-line pt-3">
+            <h3 className="text-xs font-bold text-muted">반납시키기</h3>
+            <Field label="사유 (학생에게 전달됩니다)">
+              <input className={inputClass} value={p.reason} onChange={(e) => p.setReason(e.target.value)} placeholder="예: 장시간 자리비움" />
+            </Field>
             <div className="flex items-end gap-2">
               <div className="w-24">
                 <Field label="벌점">
@@ -403,8 +410,9 @@ function SeatPanel(p: {
         </form>
       )}
 
-      <div className="mt-4 border-t border-line pt-3">
-        {!seat.is_active && <p className="mb-2 text-sm text-muted">중지 사유: {seat.inactive_reason ?? "-"}</p>}
+      <div className="mt-4 space-y-2 border-t border-line pt-3">
+        <h3 className="text-xs font-bold text-muted">좌석 상태</h3>
+        {!seat.is_active && <p className="text-sm text-muted">중지 사유: {seat.inactive_reason ?? "-"}</p>}
         <Button className="w-full" busy={p.busy === "toggle"} onClick={p.onToggle}>
           {seat.is_active ? "이 좌석 사용 중지" : "이 좌석 다시 열기"}
         </Button>

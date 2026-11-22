@@ -197,7 +197,8 @@ export default function AdminUsers() {
                 </p>
               )}
 
-              <div className={cx("mt-4 grid gap-4 border-t border-line pt-4 sm:grid-cols-2", d.profile.role === "admin" && "hidden")}>
+              <h3 className={cx("mt-5 border-t border-line pt-4 text-xs font-bold text-muted", d.profile.role === "admin" && "hidden")}>제재</h3>
+              <div className={cx("mt-2 grid gap-4 sm:grid-cols-2", d.profile.role === "admin" && "hidden")}>
                 <form
                   className="space-y-2"
                   onSubmit={(e) => {
@@ -251,7 +252,8 @@ export default function AdminUsers() {
                 </form>
               </div>
 
-              <div className="mt-4 flex flex-wrap items-end gap-2 border-t border-line pt-4">
+              <h3 className="mt-5 border-t border-line pt-4 text-xs font-bold text-muted">계정</h3>
+              <div className="mt-2 flex flex-wrap items-end gap-2">
                 <div className="w-56">
                   <Field label="비밀번호 초기화">
                     <input className={inputClass} type="password" autoComplete="new-password" placeholder="새 비밀번호 (8자 이상)" value={form.pw} onChange={(e) => setForm({ ...form, pw: e.target.value })} />

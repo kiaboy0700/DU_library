@@ -17,11 +17,15 @@ export function fmtRemain(ms: number) {
   const m = Math.floor((s % 3600) / 60);
   const sec = s % 60;
   if (h > 0) return `${h}시간 ${String(m).padStart(2, "0")}분`;
+  // 1시간 미만은 분:초, 마지막 1분은 초만
+  if (m === 0) return `${sec}초`;
   return `${m}:${String(sec).padStart(2, "0")}`;
 }
 
 /** 남은 시간을 분 단위로: "1시간 20분", "35분" */
 export function fmtLeft(ms: number) {
+  // 마지막 1분은 초로 센다
+  if (ms < 60000) return `${Math.max(0, Math.ceil(ms / 1000))}초`;
   const m = Math.max(0, Math.ceil(ms / 60000));
   if (m >= 60) return m % 60 ? `${Math.floor(m / 60)}시간 ${m % 60}분` : `${Math.floor(m / 60)}시간`;
   return `${m}분`;

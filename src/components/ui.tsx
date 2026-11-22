@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { LoaderCircle } from "lucide-react";
-import { cx } from "@/lib/util";
+import { cx, fmtLeft } from "@/lib/util";
 
 type Variant = "primary" | "secondary" | "danger" | "quiet";
 
@@ -136,4 +136,10 @@ export function useNow(intervalMs = 1000) {
     return () => clearInterval(t);
   }, [intervalMs]);
   return now;
+}
+
+/** 남은 시간. 1분 넘게 남았으면 분 단위, 마지막 1분은 초 단위로 줄어든다 */
+export function TimeLeft({ at }: { at: string }) {
+  const now = useNow(1000);
+  return <>{fmtLeft(new Date(at).getTime() - now)}</>;
 }
