@@ -70,7 +70,6 @@ export function QrScanner({
       try {
         await el.play();
       } catch {}
-      setReady(true);
 
       const Ctor = (window as unknown as { BarcodeDetector?: new (o: { formats: string[] }) => Detector }).BarcodeDetector;
       let detector: Detector | null = null;
@@ -161,7 +160,16 @@ export function QrScanner({
         </div>
       ) : (
         <div className="relative flex-1 overflow-hidden">
-          <video ref={video} muted playsInline autoPlay className="absolute inset-0 size-full object-cover" />
+          {/* 카메라 화면은 첫 장면이 실제로 그려진 뒤에 보여 준다. 그 전에 보이면 작게 떴다가 커지는 것처럼 보인다 */}
+          <video
+            ref={video}
+            muted
+            playsInline
+            autoPlay
+            onPlaying={() => setReady(true)}
+            className="absolute inset-0 h-full w-full object-cover transition-opacity duration-200"
+            style={{ opacity: ready ? 1 : 0 }}
+          />
           {/* 가운데 네모만 밝게, 바깥은 어둡게 */}
           <div aria-hidden className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
             <div className="aspect-square w-[62%] max-w-[300px] rounded-sm border border-white/70 shadow-[0_0_0_200vmax_rgb(0_0_0/0.55)]" />

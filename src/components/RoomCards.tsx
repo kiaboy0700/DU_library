@@ -59,6 +59,7 @@ export function useRoomActions(settings: Settings | null) {
   return { watching, toggleWatch, quick, busy, hasSeat: !!status?.reservation };
 }
 
+
 /** 열람실 한 곳의 요약: 남은 좌석, 혼잡도 눈금, 좌석 고르기·바로 예약·빈자리 알림 */
 export function RoomCard({
   room,
@@ -73,17 +74,19 @@ export function RoomCard({
   const free = room.total - room.occupied;
   const on = actions.watching.has(room.id);
   return (
-    <Panel className={cx("flex flex-col p-4", className)}>
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
+    <Panel className={cx("flex flex-col overflow-hidden", className)}>
+      {/* 제목 띠 */}
+      <div className="flex items-center justify-between gap-3 bg-du-deep px-4 py-3 text-white">
+        <div className="flex min-w-0 items-baseline gap-2">
           <h2 className="text-lg font-bold">{room.name}</h2>
-          {room.is_open && room.closes_at && <p className="tabular text-[13px] text-muted">{fmtTime(room.closes_at)} 폐관</p>}
-          {!room.is_open && <p className="text-[13px] text-muted">{room.reason}</p>}
+          {room.is_open && room.closes_at && <p className="tabular truncate text-[13px] text-white/85">{fmtTime(room.closes_at)} 폐관</p>}
+          {!room.is_open && <p className="truncate text-[13px] text-white/85">{room.reason}</p>}
         </div>
         {room.is_open ? <Tag tone={room.pct >= 80 ? "danger" : room.pct >= 50 ? "warn" : "deep"}>{lv.name}</Tag> : <Tag>운영 종료</Tag>}
       </div>
 
-      <div className="mt-4 flex items-baseline gap-2">
+      <div className="flex flex-1 flex-col p-4">
+      <div className="flex items-baseline gap-2">
         <p className="tabular text-[40px] font-bold leading-none tracking-tight">{free}</p>
         <p className="text-sm text-muted">
           석 남음 <span className="tabular">/ 전체 {room.total}석</span>
@@ -120,6 +123,7 @@ export function RoomCard({
         >
           {on ? <BellRing size={18} aria-hidden /> : <Bell size={18} aria-hidden />}
         </Button>
+      </div>
       </div>
     </Panel>
   );
