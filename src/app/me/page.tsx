@@ -162,6 +162,17 @@ export default function MePage() {
                     예약 취소
                   </Button>
                 </div>
+                <Button
+                  className="mt-2 w-full"
+                  disabled={status.help_open}
+                  onClick={() => {
+                    setOpen("help");
+                    document.getElementById("help-h")?.scrollIntoView({ behavior: "smooth", block: "center" });
+                  }}
+                >
+                  <LifeBuoy size={16} aria-hidden />
+                  {status.help_open ? "도움 요청 접수됨" : "QR이 안 찍혀요 · 도움 요청"}
+                </Button>
               </>
             )}
 

@@ -12,7 +12,7 @@ import { Button, Notice, Skeleton, useNow } from "@/components/ui";
 import { useHome, useSettings } from "@/lib/hooks";
 import { supabase } from "@/lib/supabase";
 import { MODE_LABEL } from "@/lib/types";
-import { NOTICE_SEEN_KEY, fmtRemain } from "@/lib/util";
+import { NOTICE_SEEN_KEY, cx, fmtRemain } from "@/lib/util";
 
 interface Announcement {
   id: number;
@@ -56,6 +56,23 @@ export default function HomePage() {
 
   const res = status?.reservation;
   const mode = home?.mode;
+  // 내 자리 칸: 좌석이 있든 없든 같은 크기
+  const tile = "relative flex h-[104px] w-[136px] shrink-0 flex-col justify-center rounded-xl px-3.5 shadow-[0_2px_8px_-2px_rgb(0_60_50/0.18)] transition-transform duration-150 hover:-translate-y-0.5 active:translate-y-0";
+  const needScan = !!res && res.status !== "in_use";
+  const deadline = res ? (res.status === "reserved" ? res.checkin_deadline : res.status === "away" && res.away_deadline ? res.away_deadline : res.end_at) : null;
+  const tileInfo = res && deadline && (
+    <>
+      <span className="truncate pr-7 text-xs font-medium text-white/85">
+        {/* QR 아이콘이 들어가는 상태에서는 자리가 좁아 층 이름을 줄인다 */}
+        {res.status === "reserved" ? "체크인 대기" : res.status === "away" ? "외출 중" : `${res.room_name.replace(" 열람실", "")} · 이용 중`}
+      </span>
+      <span className="text-[24px] font-bold leading-tight tracking-tight">{res.seat_label}</span>
+      <span className="tabular text-[13px] font-semibold">
+        {fmtRemain(new Date(deadline).getTime() - now)}
+        <span className="font-normal text-white/85"> 남음</span>
+      </span>
+    </>
+  );
 
   return (
     <div className="space-y-5">
@@ -76,19 +93,19 @@ export default function HomePage() {
           </div>
           {/* 내 자리 칸: 좌석이 있든 없든 같은 크기라 화면이 들썩이지 않는다 */}
           {res ? (
-            <Link
-              href="/me"
-              className="relative flex h-[104px] w-[136px] shrink-0 flex-col justify-center rounded-xl bg-du-deep px-3.5 text-white shadow-[0_2px_8px_-2px_rgb(0_60_50/0.18)] transition-transform duration-150 hover:-translate-y-0.5 active:translate-y-0"
-            >
-              <span className="truncate text-xs font-medium text-white/85">
-                {res.room_name.replace(" 열람실", "")} · {res.status === "reserved" ? "체크인 대기" : res.status === "away" ? "외출 중" : "이용 중"}
-              </span>
-              <span className="text-[24px] font-bold leading-tight tracking-tight">{res.seat_label}</span>
-              <span className="tabular text-[13px] font-semibold">
-                {fmtRemain(new Date(res.status === "reserved" ? res.checkin_deadline : res.status === "away" && res.away_deadline ? res.away_deadline : res.end_at).getTime() - now)}
-                <span className="font-normal text-white/85"> 남음</span>
-              </span>
-            </Link>
+            needScan ? (
+              // 체크인 대기·외출 중: QR을 찍어야 하는 상태이므로 누르면 바로 스캐너가 열린다
+              <button type="button" onClick={() => setScan(true)} aria-label={`${res.seat_label} ${res.status === "reserved" ? "QR 체크인" : "QR 찍고 복귀"}`} className={cx(tile, "bg-du-deep text-left text-white")}>
+                {tileInfo}
+                <span className="absolute right-2.5 top-2.5 grid size-7 place-items-center rounded-md bg-white/20">
+                  <QrCode size={17} aria-hidden />
+                </span>
+              </button>
+            ) : (
+              <Link href="/me" className={cx(tile, "bg-du-deep text-white")}>
+                {tileInfo}
+              </Link>
+            )
           ) : (
             <div className="relative flex h-[104px] w-[136px] shrink-0 flex-col overflow-hidden rounded-xl bg-surface shadow-[0_2px_8px_-2px_rgb(0_60_50/0.18)]">
               <button
@@ -116,6 +133,8 @@ export default function HomePage() {
             router.push(`/s/${t}`);
           }}
           onClose={() => setScan(false)}
+          seat={res ? { label: res.seat_label, room: res.room_name } : undefined}
+          deadline={res && deadline ? { label: res.status === "reserved" ? "체크인 마감까지" : res.status === "away" ? "복귀 마감까지" : "남은 이용 시간", at: deadline } : undefined}
         />
       )}
 
