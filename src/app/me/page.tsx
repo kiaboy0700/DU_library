@@ -171,7 +171,7 @@ export default function MePage() {
                   }}
                 >
                   <LifeBuoy size={16} aria-hidden />
-                  {status.help_open ? "도움 요청 접수됨" : "QR이 안 찍혀요 · 도움 요청"}
+                  {status.help_open ? "도움 요청 접수됨" : "도움 요청"}
                 </Button>
               </>
             )}
@@ -421,10 +421,10 @@ export default function MePage() {
             </form>
           ) : (
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-sm text-[#3d4744]">QR이나 휴대폰이 안 될 때</p>
+              
               <Button className="w-full sm:w-auto" onClick={() => setOpen("help")}>
                 <LifeBuoy size={16} aria-hidden />
-                관리자에게 요청
+                도움 요청
               </Button>
             </div>
           )}
