@@ -7,7 +7,7 @@ import { Bell, BellRing, ChevronRight, Zap } from "lucide-react";
 import { OccupancyMeter } from "./OccupancyMeter";
 import { useApp } from "./Providers";
 import { Button, Panel, Tag, useAction } from "./ui";
-import { ruleTexts, type Settings } from "@/lib/hooks";
+import type { Settings } from "@/lib/hooks";
 import { rpc, supabase } from "@/lib/supabase";
 import type { RoomSummary } from "@/lib/types";
 import { cx, errMsg, fmtTime, level } from "@/lib/util";
@@ -62,12 +62,10 @@ export function useRoomActions(settings: Settings | null) {
 /** 열람실 한 곳의 요약: 남은 좌석, 혼잡도 눈금, 좌석 고르기·바로 예약·빈자리 알림 */
 export function RoomCard({
   room,
-  settings,
   actions,
   className,
 }: {
   room: RoomSummary;
-  settings: Settings | null;
   actions: ReturnType<typeof useRoomActions>;
   className?: string;
 }) {
@@ -96,7 +94,7 @@ export function RoomCard({
       </div>
 
       <div className="mt-3">
-        <OccupancyMeter pct={room.pct} rules={ruleTexts(settings, "away")} />
+        <OccupancyMeter pct={room.pct} />
       </div>
 
       <div className="mt-4 flex gap-2">

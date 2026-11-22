@@ -7,11 +7,11 @@ import { cx } from "@/lib/util";
  */
 export function OccupancyMeter({
   pct,
-  rules = ["60분", "40분", "20분"],
+  rules,
   ruleLabel = "외출",
 }: {
   pct: number;
-  /** 여유·보통·혼잡 구간의 규칙 값 */
+  /** 여유·보통·혼잡 구간의 규칙 값. 주면 구간 아래에 적고, 안 주면 단계 이름만 보여 준다 */
   rules?: string[];
   ruleLabel?: string;
 }) {
@@ -27,7 +27,7 @@ export function OccupancyMeter({
         aria-valuemin={0}
         aria-valuemax={100}
         aria-valuenow={pct}
-        aria-valuetext={`이용률 ${pct}퍼센트, ${names[zone]}. ${ruleLabel} ${rules[zone]}`}
+        aria-valuetext={`이용률 ${pct}퍼센트, ${names[zone]}${rules ? `. ${ruleLabel} ${rules[zone]}` : ""}`}
         className="relative h-3 overflow-hidden rounded-full bg-[#e3e9e7]"
       >
         <div className={cx("h-full rounded-full transition-[width] duration-500 ease-[var(--ease-out-expo)]", fill)} style={{ width: `${Math.max(pct, 2)}%` }} />
@@ -41,7 +41,7 @@ export function OccupancyMeter({
               {n}
               {i > 0 && <span className="tabular font-normal text-[#6b7774]"> {i === 1 ? "50%~" : "80%~"}</span>}
             </span>
-            <span className={cx("tabular mt-0.5 block whitespace-nowrap", i === zone ? "text-[13px] font-bold text-du-black" : "text-[#6b7774]")}>{i === zone ? `${ruleLabel} ${rules[i]}` : rules[i]}</span>
+            {rules && <span className={cx("tabular mt-0.5 block whitespace-nowrap", i === zone ? "text-[13px] font-bold text-du-black" : "text-[#6b7774]")}>{i === zone ? `${ruleLabel} ${rules[i]}` : rules[i]}</span>}
           </div>
         ))}
       </div>

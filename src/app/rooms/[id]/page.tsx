@@ -8,7 +8,7 @@ import { OccupancyMeter } from "@/components/OccupancyMeter";
 import { useApp } from "@/components/Providers";
 import { LEGEND, LegendSwatch, SeatMap, useWideHover, type SeatVisual } from "@/components/SeatMap";
 import { Button, Empty, Notice, Panel, Skeleton, Tag, TimeLeft, useAction, useNow } from "@/components/ui";
-import { ruleTexts, useHome, useSettings } from "@/lib/hooks";
+import { useHome, useSettings } from "@/lib/hooks";
 import { rpc, supabase } from "@/lib/supabase";
 import { SEAT_TYPE_LABEL, STATE_LABEL, type Room, type Seat, type SeatInfo } from "@/lib/types";
 import { cx, fmtLeft, fmtTime, level } from "@/lib/util";
@@ -291,7 +291,7 @@ export default function RoomPage() {
 
       {summary && (
         <Panel className="p-4">
-          <OccupancyMeter pct={summary.pct} rules={ruleTexts(settings, "away")} />
+          <OccupancyMeter pct={summary.pct} />
         </Panel>
       )}
 

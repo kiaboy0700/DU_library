@@ -150,7 +150,7 @@ export default function HomePage() {
         {home && (
           <Banner label="열람실" names={home.rooms.map((r) => r.name)}>
             {home.rooms.map((room) => (
-              <RoomCard key={room.id} room={room} settings={settings} actions={actions} className="h-full" />
+              <RoomCard key={room.id} room={room} actions={actions} className="h-full" />
             ))}
           </Banner>
         )}

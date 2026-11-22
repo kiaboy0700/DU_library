@@ -142,6 +142,12 @@ export function Shell({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (isAdmin && studentOnly) router.replace("/admin");
   }, [isAdmin, studentOnly, router]);
+  // 학생이 관리자 화면 주소로 들어오면 (직접 입력하든 링크로 오든) 홈으로 돌려보낸다
+  const adminOnly = path.startsWith("/admin");
+  const intruding = !!status && !isAdmin && adminOnly;
+  useEffect(() => {
+    if (intruding) router.replace("/");
+  }, [intruding, router]);
 
   // 모든 화면은 로그인 후에 볼 수 있다
   useEffect(() => {
@@ -153,7 +159,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
   const active = status?.reservation;
 
   if (bare) return <>{children}</>;
-  if (!status || (isAdmin && studentOnly))
+  if (!status || (isAdmin && studentOnly) || intruding)
     return (
       <div className="grid min-h-dvh place-items-center" role="status" aria-label="불러오는 중">
         <span className="skeleton size-12 !rounded-full" />

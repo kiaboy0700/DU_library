@@ -8,7 +8,7 @@ import { useApp } from "@/components/Providers";
 import { LEGEND, LegendSwatch, SeatMap, type SeatVisual } from "@/components/SeatMap";
 import { Button, Empty, Field, Panel, Skeleton, Tag, inputClass, useAction, useNow } from "@/components/ui";
 import { useAdminMap, useRooms, type AdminSeat } from "@/lib/admin";
-import { ruleTexts, useHome, useSettings } from "@/lib/hooks";
+import { useHome } from "@/lib/hooks";
 import { rpc } from "@/lib/supabase";
 import { SEAT_TYPE_LABEL, STATE_LABEL, type Seat } from "@/lib/types";
 import { cx, fmtRemain, fmtTime } from "@/lib/util";
@@ -24,7 +24,6 @@ export default function AdminHome() {
   const { toast, pulse } = useApp();
   const { rooms } = useRooms();
   const { home, reload: reloadHome } = useHome();
-  const { settings } = useSettings();
   const now = useNow();
   const [roomId, setRoomId] = useState<number | null>(null);
   const { seats, reload } = useAdminMap(roomId);
@@ -137,7 +136,7 @@ export default function AdminHome() {
                   {room?.is_closed && " (임시 폐쇄)"}
                 </p>
               </div>
-              <OccupancyMeter pct={summary.pct} rules={ruleTexts(settings, "away")} />
+              <OccupancyMeter pct={summary.pct} />
             </div>
           )}
           <ul className="mb-3 flex flex-wrap gap-x-3 gap-y-1 text-[13px]" aria-label="범례">

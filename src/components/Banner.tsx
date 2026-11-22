@@ -59,7 +59,9 @@ export function Banner({ label, names, interval = 5000, children }: { label: str
     go(current() + d);
   };
 
-  const arrow = "absolute top-1/2 z-10 hidden size-10 -translate-y-1/2 place-items-center rounded-full border border-line bg-surface text-du-black shadow-[var(--shadow-float)] transition-[opacity,transform] duration-200 ease-[var(--ease-out-expo)] opacity-0 group-hover:opacity-100 focus-visible:opacity-100 hover:scale-110 active:scale-95 [@media(hover:hover)]:grid";
+  // 넘기기 버튼은 카드 아래 줄에 둔다 (카드 위에 띄우면 내용을 가린다). 끝에서는 흐려진다
+  const arrow = "grid size-8 place-items-center rounded-full text-[#3d4744] transition-colors duration-150 hover:bg-[#e6ecea] disabled:text-[#c3cdca] disabled:hover:bg-transparent";
+  const edge = "pointer-events-none absolute inset-y-2 w-4 from-[rgb(0_60_50/0.16)] to-transparent transition-opacity duration-300 md:hidden";
 
   return (
     <section
@@ -78,36 +80,32 @@ export function Banner({ label, names, interval = 5000, children }: { label: str
         if (e.key === "ArrowLeft" && index > 0) step(-1);
       }}
     >
-      <div
-        ref={scroller}
-        onScroll={() => setIndex(Math.min(count - 1, current()))}
-        onPointerDown={stop}
-        onTouchStart={stop}
-        onFocusCapture={stop}
-        className="no-scrollbar -mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth px-4 md:mx-0 md:grid md:grid-cols-2 md:overflow-visible md:px-0"
-      >
-        {slides.map((s, i) => (
-          <div key={i} role="group" aria-roledescription="slide" aria-label={`${names[i] ?? ""} (${i + 1} / ${count})`} className="w-full shrink-0 snap-center md:w-auto md:shrink">
-            {s}
-          </div>
-        ))}
+      <div className="relative -mx-4 md:mx-0">
+        <div
+          ref={scroller}
+          onScroll={() => setIndex(Math.min(count - 1, current()))}
+          onPointerDown={stop}
+          onTouchStart={stop}
+          onFocusCapture={stop}
+          className="no-scrollbar flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth px-4 md:grid md:grid-cols-2 md:overflow-visible md:px-0"
+        >
+          {slides.map((s, i) => (
+            <div key={i} role="group" aria-roledescription="slide" aria-label={`${names[i] ?? ""} (${i + 1} / ${count})`} className="w-full shrink-0 snap-center md:w-auto md:shrink">
+              {s}
+            </div>
+          ))}
+        </div>
+        {/* 옆에 더 있다는 표시: 카드 바깥 여백에 드리우는 그림자. 내용을 가리지 않는다 */}
+        <span aria-hidden className={cx(edge, "left-0 bg-gradient-to-r", index > 0 ? "opacity-100" : "opacity-0")} />
+        <span aria-hidden className={cx(edge, "right-0 bg-gradient-to-l", index < count - 1 ? "opacity-100" : "opacity-0")} />
       </div>
 
       {count > 1 && (
         <>
-          {/* 양옆 화살표: 마우스를 올리면 나타난다 */}
-          {index > 0 && (
-            <button type="button" aria-label={`이전: ${names[index - 1] ?? ""}`} onClick={() => step(-1)} className={cx(arrow, "-left-3 sm:-left-5 md:!hidden")}>
-              <ChevronLeft size={20} aria-hidden />
+          <div className="mt-2 flex items-center justify-center gap-1 md:hidden">
+            <button type="button" aria-label={`이전: ${names[index - 1] ?? ""}`} disabled={index === 0} onClick={() => step(-1)} className={arrow}>
+              <ChevronLeft size={18} aria-hidden />
             </button>
-          )}
-          {index < count - 1 && (
-            <button type="button" aria-label={`다음: ${names[index + 1] ?? ""}`} onClick={() => step(1)} className={cx(arrow, "-right-3 sm:-right-5 md:!hidden")}>
-              <ChevronRight size={20} aria-hidden />
-            </button>
-          )}
-
-          <div className="mt-3 flex items-center justify-center gap-3 md:hidden">
             <div className="flex items-center gap-1">
               {slides.map((_, i) => (
                 <button
@@ -125,6 +123,9 @@ export function Banner({ label, names, interval = 5000, children }: { label: str
                 </button>
               ))}
             </div>
+            <button type="button" aria-label={`다음: ${names[index + 1] ?? ""}`} disabled={index === count - 1} onClick={() => step(1)} className={arrow}>
+              <ChevronRight size={18} aria-hidden />
+            </button>
             <button
               type="button"
               aria-label={paused ? "자동 넘김 다시 시작" : "자동 넘김 일시정지"}

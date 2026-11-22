@@ -39,7 +39,7 @@ export default function RoomsPage() {
       <div className="grid gap-4 sm:grid-cols-2">
         {!home && !error && [0, 1].map((i) => <Skeleton key={i} className="h-[236px] !rounded-[var(--radius-panel)]" />)}
         {home?.rooms.map((room) => (
-          <RoomCard key={room.id} room={room} settings={settings} actions={actions} />
+          <RoomCard key={room.id} room={room} actions={actions} />
         ))}
       </div>
     </div>
