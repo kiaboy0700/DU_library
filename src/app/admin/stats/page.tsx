@@ -27,6 +27,7 @@ const ACTION: Record<string, string> = {
   "help:resolve": "도움 요청 완료",
   revoke_penalty: "벌점 취소",
   unban: "정지 해제",
+  report_unban: "신고 정지 해제",
   "seats:on": "좌석 다시 열기",
   "seats:off": "좌석 사용 중지",
   "room:close": "열람실 임시 폐쇄",

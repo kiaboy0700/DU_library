@@ -14,7 +14,7 @@ import { rpc, supabase } from "@/lib/supabase";
 import { MODE_LABEL, SEAT_TYPE_LABEL, type Notice as NoticeRow, type Penalty } from "@/lib/types";
 import { cx, fmtDateTime, fmtRemain, fmtTime } from "@/lib/util";
 
-const PENALTY_LABEL: Record<string, string> = { no_show: "예약 후 미체크인", away_timeout: "외출 시간 초과", vacancy_report: "자리비움", manual: "관리자 부여" };
+const PENALTY_LABEL: Record<string, string> = { no_show: "예약 후 미체크인", away_timeout: "외출 시간 초과", vacancy_report: "자리비움", false_report: "허위 신고", manual: "관리자 부여" };
 const HELP_REASONS = ["QR이 인식되지 않아요", "위치 확인이 안 돼요", "좌석에 문제가 있어요", "기타"];
 
 interface Appeal {

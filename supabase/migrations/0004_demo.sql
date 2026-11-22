@@ -30,7 +30,7 @@ begin
             now(), now() - interval '20 minutes', true);
     n := n + 1;
   end loop;
-  update reservations set away_started_at = now(), away_deadline = now() + interval '30 minutes'
+  update reservations set away_started_at = now(), away_deadline = end_at
     where status = 'away' and away_deadline is null;
   perform log_admin('demo_fill', null, null, null, format('room %s → %s%%', p_room, p_pct));
   return n;

@@ -40,7 +40,7 @@ const GROUPS: { title: string; desc?: string; fields: [string, string, string][]
   },
   {
     title: "자리비움 신고",
-    desc: "응답 시간은 화장실을 다녀오기에 충분해야 합니다.",
+    desc: "응답 시간은 화장실을 다녀오기에 충분해야 합니다. 같은 이용자는 24시간 안에 다시 신고할 수 없습니다.",
     fields: [
       ["report_low", "응답 시간: 여유", "분"],
       ["report_mid", "응답 시간: 보통", "분"],
@@ -48,6 +48,11 @@ const GROUPS: { title: string; desc?: string; fields: [string, string, string][]
       ["report_min_after_checkin", "체크인 직후 신고 금지", "분"],
       ["report_cooldown", "기각 후 재신고 금지", "분"],
       ["report_hourly_limit", "1인당 신고 한도", "건/시간"],
+      ["report_daily_limit", "하루 신고 한도", "건"],
+      ["false_report_limit", "허위 신고 정지 기준", "회"],
+      ["false_report_window_days", "허위 신고 누적 기간", "일"],
+      ["false_report_ban_days", "신고 정지 기간", "일"],
+      ["pen_false_report", "허위 신고 벌점", "점"],
     ],
   },
   {

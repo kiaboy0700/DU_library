@@ -13,7 +13,7 @@ interface Row extends Profile {
   active: boolean;
 }
 interface Detail {
-  profile: Profile & { is_virtual?: boolean };
+  profile: Profile & { is_virtual?: boolean; report_banned_until?: string | null };
   points: number;
   penalties: Penalty[];
   reservations: { id: number; status: string; start_at: string; end_at: string; ended_at: string | null; end_reason: string | null; seat_label: string; room_name: string; by_admin: boolean }[];
@@ -179,6 +179,14 @@ export default function AdminUsers() {
                 </div>
               </dl>
               {banned && <p className="mt-2 text-sm text-[#7d1a14]">정지 사유: {d.profile.ban_reason}</p>}
+              {d.profile.report_banned_until && new Date(d.profile.report_banned_until).getTime() > now && (
+                <p className="mt-2 flex flex-wrap items-center gap-2 text-sm text-[#7d1a14]">
+                  허위 신고 누적으로 {fmtDateTime(d.profile.report_banned_until)}까지 신고 정지
+                  <Button size="sm" busy={busy === "runban"} onClick={() => act("runban", () => rpc("admin_report_unban", { p_user: d.profile.id }), "신고 정지를 해제했습니다.")}>
+                    신고 정지 해제
+                  </Button>
+                </p>
+              )}
 
               <div className="mt-4 grid gap-4 border-t border-line pt-4 sm:grid-cols-2">
                 <form

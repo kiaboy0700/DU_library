@@ -42,3 +42,4 @@ next-env.d.ts
 
 # 로컬 전용
 .claude/skills/
+계정목록.html
