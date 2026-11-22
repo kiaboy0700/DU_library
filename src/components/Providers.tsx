@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { CheckCircle2, CircleAlert, Info, X } from "lucide-react";
+import { clearCache, readCache, writeCache } from "@/lib/cache";
 import { rpc, supabase } from "@/lib/supabase";
 import type { MyStatus } from "@/lib/types";
 import { cx } from "@/lib/util";
@@ -45,19 +46,28 @@ export function Providers({ children }: { children: React.ReactNode }) {
   const refresh = useCallback(async () => {
     const { data } = await supabase.auth.getSession();
     if (!data.session) {
+      clearCache();
       setStatus(null);
       return;
     }
+    // 같은 사람의 지난 상태가 남아 있으면 먼저 그려 둔다 (서버 응답을 기다리며 빈 화면을 보지 않게)
+    const uid = data.session.user.id;
+    const cached = readCache<MyStatus>("status", 10 * 60_000);
+    if (cached?.profile.id === uid) setStatus((cur) => cur ?? cached);
     try {
       const [st, move] = await Promise.all([rpc<MyStatus>("my_status"), rpc<MyStatus["move"]>("my_move").catch(() => null)]);
-      setStatus({ ...st, move });
+      const next = { ...st, move };
+      setStatus(next);
+      writeCache("status", next);
     } catch {
-      setStatus(null);
+      // 잠깐 연결이 끊긴 것일 수 있으니, 보여 주던 화면이 있으면 그대로 둔다
+      setStatus((cur) => cur ?? null);
     }
   }, []);
 
   const signOut = useCallback(async () => {
     await supabase.auth.signOut();
+    clearCache();
     setStatus(null);
   }, []);
 
