@@ -430,7 +430,6 @@ export default function MePage() {
             <p className="tabular truncate text-sm text-muted">
               {status.profile.student_id}
               {status.profile.department && ` · ${status.profile.department}`}
-              {status.profile.grade && ` ${status.profile.grade}학년`}
               {res && ` · ${MODE_LABEL[res.mode]}`}
             </p>
           </div>

@@ -270,7 +270,6 @@ function SeatPanel(p: {
               <dt className="shrink-0 whitespace-nowrap text-muted">소속</dt>
               <dd className="min-w-0 text-right text-[13px] leading-snug">
                 {r.department ?? "-"}
-                {r.grade && ` ${r.grade}학년`}
               </dd>
             </div>
             <div className="flex justify-between gap-3">

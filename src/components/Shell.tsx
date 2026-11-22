@@ -374,7 +374,6 @@ function ProfileMenu({ pending }: { pending: number }) {
                 <p className="tabular text-[13px] text-muted">{p.student_id}</p>
                 <p className="text-[13px] text-muted">
                   {p.department ?? "학과 미등록"}
-                  {p.grade && ` · ${p.grade}학년`}
                 </p>
               </>
             )}

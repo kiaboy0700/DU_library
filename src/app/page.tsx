@@ -68,7 +68,6 @@ export default function HomePage() {
             {upper && <p className="text-[13px] text-[#3d4744]">{upper}</p>}
             <p className="tabular mt-0.5 text-[13px] text-[#3d4744]">
               {status.profile.student_id}
-              {status.profile.grade && ` · ${status.profile.grade}학년`}
             </p>
           </div>
           <Link

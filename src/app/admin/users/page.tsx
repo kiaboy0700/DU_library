@@ -106,7 +106,7 @@ export default function AdminUsers() {
               onSubmit={(e) => {
                 e.preventDefault();
                 run("create", async () => {
-                  const id = await rpc<string>("admin_create_account", { p_student_id: create.sid, p_name: create.name, p_department: create.dept || null, p_grade: create.grade, p_password: create.pw });
+                  const id = await rpc<string>("admin_create_account", { p_student_id: create.sid, p_name: create.name, p_department: create.dept || null, p_grade: null, p_password: create.pw });
                   toast(`${create.name} 학생 계정을 만들었습니다.`, "ok");
                   setCreate({ sid: "", name: "", dept: "", grade: 1, pw: "" });
                   await open(id);
@@ -122,15 +122,6 @@ export default function AdminUsers() {
                 </Field>
                 <Field label="학과">
                   <input className={inputClass} value={create.dept} onChange={(e) => setCreate({ ...create, dept: e.target.value })} />
-                </Field>
-                <Field label="학년">
-                  <select className={inputClass} value={create.grade} onChange={(e) => setCreate({ ...create, grade: Number(e.target.value) })}>
-                    {[1, 2, 3, 4].map((g) => (
-                      <option key={g} value={g}>
-                        {g}학년
-                      </option>
-                    ))}
-                  </select>
                 </Field>
               </div>
               <Field label="임시 비밀번호" hint="8자 이상">
@@ -156,7 +147,6 @@ export default function AdminUsers() {
                   <p className="tabular text-sm text-muted">
                     {d.profile.student_id}
                     {d.profile.department && ` · ${d.profile.department}`}
-                    {d.profile.grade && ` ${d.profile.grade}학년`}
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-1">
