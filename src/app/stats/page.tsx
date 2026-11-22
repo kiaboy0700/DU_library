@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Panel, Skeleton } from "@/components/ui";
 import { useHome } from "@/lib/hooks";
 import { rpc } from "@/lib/supabase";
@@ -28,6 +28,17 @@ export default function StatsPage() {
   const [roomId, setRoomId] = useState<number | null>(null);
   const [cells, setCells] = useState<Cell[] | null>(null);
   const cur = kstNow();
+  const scroller = useRef<HTMLDivElement>(null);
+  // 표가 화면보다 넓을 때: 지금 시간대 칸이 가운데 오도록 옆으로 옮겨 놓는다
+  // (운영 시간 밖이면 가장 가까운 끝으로)
+  useEffect(() => {
+    const el = scroller.current;
+    if (!el || !cells?.length) return;
+    const hour = Math.min(HOURS[HOURS.length - 1], Math.max(HOURS[0], cur.hour));
+    const col = el.querySelector<HTMLElement>(`[data-hour="${hour}"]`);
+    if (col) el.scrollLeft = col.offsetLeft - el.clientWidth / 2 + col.offsetWidth / 2;
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 표를 새로 받았을 때만
+  }, [cells]);
 
   useEffect(() => {
     if (home && roomId === null) setRoomId(home.rooms[0]?.id ?? null);
@@ -115,15 +126,15 @@ export default function StatsPage() {
         ) : cells.length === 0 ? (
           <p className="mt-2 text-sm text-muted">기록이 부족합니다</p>
         ) : (
-          <div className="mt-3 overflow-x-auto" tabIndex={0} aria-label="요일·시간대별 평균 이용률 표, 스크롤 가능">
+          <div ref={scroller} className="mt-3 overflow-x-auto" tabIndex={0} aria-label="요일·시간대별 평균 이용률 표, 스크롤 가능">
             <table className="tabular w-full min-w-[620px] border-separate border-spacing-[3px] text-center text-[11px]">
               <thead>
                 <tr>
-                  <th scope="col" className="w-8">
+                  <th scope="col" className="sticky left-0 z-10 w-8 bg-surface">
                     <span className="sr-only">요일</span>
                   </th>
                   {HOURS.map((h) => (
-                    <th key={h} scope="col" className={cx("pb-1 font-medium text-muted", h === cur.hour && "font-bold text-du-black")}>
+                    <th key={h} scope="col" data-hour={h} className={cx("pb-1 font-medium text-muted", h === cur.hour && "font-bold text-du-black")}>
                       {h}
                     </th>
                   ))}
@@ -132,7 +143,7 @@ export default function StatsPage() {
               <tbody>
                 {DOW.map((d, i) => (
                   <tr key={d}>
-                    <th scope="row" className={cx("pr-1 text-xs font-medium text-muted", i + 1 === cur.dow && "font-bold text-du-black")}>
+                    <th scope="row" className={cx("sticky left-0 z-10 bg-surface pr-1 text-xs font-medium text-muted", i + 1 === cur.dow && "font-bold text-du-black")}>
                       {d}
                     </th>
                     {HOURS.map((h) => {
