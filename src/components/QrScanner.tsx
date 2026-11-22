@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Camera, X } from "lucide-react";
+import { CameraOff, ChevronLeft, X } from "lucide-react";
 import { Button } from "./ui";
 
 interface Detector {
@@ -107,35 +107,52 @@ export function QrScanner({ onToken, onClose }: { onToken: (token: string) => vo
     };
   }, []);
 
+  // 전체 화면 스캐너: 뒤 화면이 스크롤되지 않게 잠그고, Esc 로 닫는다
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const esc = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    document.addEventListener("keydown", esc);
+    return () => {
+      document.body.style.overflow = prev;
+      document.removeEventListener("keydown", esc);
+    };
+  }, [onClose]);
+
   return (
-    <div className="rise overflow-hidden rounded-[var(--radius-panel)] border border-line bg-surface">
-      <div className="flex items-center justify-between px-4 py-3">
-        <p className="flex items-center gap-2 font-semibold">
-          <Camera size={18} aria-hidden />
-          좌석 QR 스캔
-        </p>
-        <button type="button" aria-label="스캔 닫기" onClick={onClose} className="-m-1 grid size-9 place-items-center rounded-lg text-muted hover:bg-canvas">
-          <X size={18} aria-hidden />
+    <div role="dialog" aria-modal="true" aria-label="QR코드 스캔" className="fixed inset-0 z-[60] flex flex-col bg-du-black">
+      <div className="relative flex h-14 shrink-0 items-center justify-center bg-surface pt-[env(safe-area-inset-top)] text-du-black">
+        <button type="button" aria-label="뒤로" onClick={onClose} className="absolute left-2 grid size-11 place-items-center rounded-lg hover:bg-canvas">
+          <ChevronLeft size={24} aria-hidden />
         </button>
+        <h2 className="text-[17px] font-semibold">QR코드 스캔</h2>
       </div>
+
       {problem ? (
-        <div className="px-4 pb-4">
-          <p role="alert" className="text-sm text-[#3d4744]">
+        <div className="flex flex-1 flex-col items-center justify-center px-8 text-center text-white">
+          <CameraOff size={40} strokeWidth={1.6} aria-hidden />
+          <p role="alert" className="mt-4 max-w-sm text-[15px] leading-relaxed">
             {problem}
           </p>
-          <Button className="mt-3" onClick={onClose}>
+          <Button className="mt-6" onClick={onClose}>
             닫기
           </Button>
         </div>
       ) : (
-        <div className="relative aspect-square bg-du-black sm:aspect-video">
-          <video ref={video} muted playsInline autoPlay className="size-full object-cover" />
-          <div aria-hidden className="pointer-events-none absolute inset-0 grid place-items-center">
-            <div className="size-[58%] max-w-64 rounded-2xl border-[3px] border-white/90 sm:size-48" />
+        <div className="relative flex-1 overflow-hidden">
+          <video ref={video} muted playsInline autoPlay className="absolute inset-0 size-full object-cover" />
+          {/* 가운데 네모만 밝게, 바깥은 어둡게 */}
+          <div aria-hidden className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+            <div className="aspect-square w-[62%] max-w-[300px] rounded-sm border border-white/70 shadow-[0_0_0_200vmax_rgb(0_0_0/0.55)]" />
           </div>
-          <p className="absolute inset-x-0 bottom-3 text-center text-sm font-medium text-white" role="status">
-            {ready ? "책상에 붙은 QR을 네모 안에 맞춰 주세요" : "카메라를 켜는 중…"}
-          </p>
+          <div className="absolute inset-x-0 top-[calc(50%+min(31vw,150px)+28px)] flex flex-col items-center gap-10 px-6">
+            <p className="text-center text-[15px] font-semibold text-white" role="status">
+              {ready ? "QR 코드를 스캔해 주세요." : "카메라를 켜는 중…"}
+            </p>
+            <button type="button" aria-label="스캔 닫기" onClick={onClose} className="grid size-14 place-items-center rounded-full bg-white/30 text-white backdrop-blur-sm transition-colors duration-150 hover:bg-white/40">
+              <X size={28} aria-hidden />
+            </button>
+          </div>
         </div>
       )}
     </div>
