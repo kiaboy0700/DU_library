@@ -280,7 +280,7 @@ export default function AdminUsers() {
             </Panel>
 
             <Panel>
-              <h3 className="px-4 pt-4 font-bold">벌점 기록</h3>
+              <h3 className="px-4 pt-4 text-[17px] font-bold">벌점 기록</h3>
               {d.penalties.length === 0 ? (
                 <p className="px-4 pb-4 pt-1 text-sm text-muted">벌점 기록이 없습니다.</p>
               ) : (
@@ -308,7 +308,7 @@ export default function AdminUsers() {
             </Panel>
 
             <Panel>
-              <h3 className="px-4 pt-4 font-bold">최근 예약</h3>
+              <h3 className="px-4 pt-4 text-[17px] font-bold">최근 예약</h3>
               {d.reservations.length === 0 ? (
                 <p className="px-4 pb-4 pt-1 text-sm text-muted">예약 기록이 없습니다.</p>
               ) : (

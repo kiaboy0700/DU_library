@@ -287,7 +287,7 @@ export default function MePage() {
 
       <section aria-labelledby="pen-h">
         <div className="flex items-baseline justify-between">
-          <h2 id="pen-h" className="text-base font-bold">
+          <h2 id="pen-h" className="text-[17px] font-bold">
             벌점
           </h2>
           <p className="text-sm text-muted">최근 {settings?.penalty_window_days ?? 30}일 누적</p>
@@ -371,7 +371,7 @@ export default function MePage() {
 
 
       <section aria-labelledby="help-h">
-        <h2 id="help-h" className="text-base font-bold">
+        <h2 id="help-h" className="text-[17px] font-bold">
           도움 요청
         </h2>
         <Panel className="mt-2 p-4">
@@ -422,7 +422,7 @@ export default function MePage() {
       </section>
 
       <section aria-labelledby="acct-h">
-        <h2 id="acct-h" className="text-base font-bold">
+        <h2 id="acct-h" className="text-[17px] font-bold">
           계정
         </h2>
         <Panel className="mt-2 flex items-center justify-between gap-3 p-4">

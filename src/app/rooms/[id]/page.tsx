@@ -110,8 +110,8 @@ export default function RoomPage() {
   if (room === null)
     return (
       <Empty icon={<DoorClosed size={32} aria-hidden />} title="열람실을 찾을 수 없습니다">
-        <Link href="/" className="font-semibold text-du-deep-dark underline underline-offset-4">
-          홈으로 돌아가기
+        <Link href="/rooms" className="font-semibold text-du-deep-dark underline underline-offset-4">
+          열람실 목록으로
         </Link>
       </Empty>
     );

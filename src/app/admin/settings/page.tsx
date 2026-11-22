@@ -253,7 +253,7 @@ export default function AdminSettings() {
   const row = ([k, label, unit, help]: Row) => (
     <div key={k} className="flex items-center justify-between gap-4 px-4 py-3 sm:px-5">
       <div className="min-w-0">
-        <p className="font-semibold">
+        <p className="text-[15px] font-medium">
           {label}
           {changed(k) && <span className="ml-2 text-xs font-semibold text-du-deep-dark">바뀜</span>}
         </p>
@@ -263,11 +263,11 @@ export default function AdminSettings() {
     </div>
   );
   const groupBlock = (g: Group, i: number) => (
-    <div key={g.sub ?? i} className={cx(i > 0 && "border-t border-line")}>
+    <div key={g.sub ?? i}>
       {g.sub && (
-        <div className="bg-[#f6f9f8] px-4 py-2.5 sm:px-5">
-          <h3 className="text-[13px] font-bold text-[#3d4744]">{g.sub}</h3>
-          {g.desc && <p className="mt-0.5 text-[13px] text-muted">{g.desc}</p>}
+        <div className="border-y border-[#d5e7e2] bg-du-tint px-4 py-2 first:border-t-0 sm:px-5">
+          <h3 className="text-[13px] font-bold text-du-deep-dark">{g.sub}</h3>
+          {g.desc && <p className="mt-0.5 text-[13px] font-normal text-[#3d4744]">{g.desc}</p>}
         </div>
       )}
       <div className="divide-y divide-line">{g.rows.map(row)}</div>
@@ -333,8 +333,8 @@ export default function AdminSettings() {
         <div className="space-y-4">
           {query ? (
             <Panel className="overflow-hidden">
-              <div className="px-4 py-3 sm:px-5">
-                <h2 className="font-bold">
+              <div className="px-4 pb-3 pt-4 sm:px-5">
+                <h2 className="text-lg font-bold tracking-[-0.01em]">
                   &lsquo;{q.trim()}&rsquo; 검색 결과 <span className="tabular font-normal text-muted">{hits.length}개</span>
                 </h2>
               </div>
@@ -355,8 +355,8 @@ export default function AdminSettings() {
             <>
               {section.id === "test" && (
                 <Panel className="divide-y divide-line overflow-hidden">
-                  <div className="px-4 py-3 sm:px-5">
-                    <h2 className="font-bold">{section.title}</h2>
+                  <div className="px-4 pb-3 pt-4 sm:px-5">
+                    <h2 className="text-lg font-bold tracking-[-0.01em]">{section.title}</h2>
                     <p className="text-[13px] text-muted">누르는 즉시 적용됩니다. 실제로 운영할 때는 둘 다 꺼 주세요.</p>
                   </div>
                   {TEST_TOGGLES.map((t) => {
@@ -364,7 +364,7 @@ export default function AdminSettings() {
                     return (
                       <div key={t.key} className="flex items-center justify-between gap-4 px-4 py-3.5 sm:px-5">
                         <div className="min-w-0">
-                          <p className="flex items-center gap-2 font-semibold">
+                          <p className="flex items-center gap-2 text-[15px] font-medium">
                             {t.label}
                             {on && <Tag tone="warn">켜짐</Tag>}
                           </p>
@@ -389,13 +389,13 @@ export default function AdminSettings() {
 
               {section.id === "crowd" && (
                 <Panel className="overflow-hidden">
-                  <div className="px-4 py-3 sm:px-5">
-                    <h2 className="font-bold">{section.title}</h2>
+                  <div className="px-4 pb-3 pt-4 sm:px-5">
+                    <h2 className="text-lg font-bold tracking-[-0.01em]">{section.title}</h2>
                     <p className="text-[13px] text-muted">이용률이 높을수록 외출 시간과 신고 응답 시간이 짧아집니다. 한 줄이 한 단계입니다.</p>
                   </div>
                   <div className="overflow-x-auto border-t border-line">
                     <table className="w-full min-w-[520px] text-sm">
-                      <thead className="bg-[#f6f9f8] text-left text-[13px] text-[#3d4744]">
+                      <thead className="border-y border-[#d5e7e2] bg-du-tint text-left text-[13px] text-du-deep-dark">
                         <tr>
                           <th scope="col" className="px-4 py-2.5 font-bold sm:px-5">
                             단계
@@ -430,8 +430,8 @@ export default function AdminSettings() {
 
               {section.groups && (
                 <Panel className="overflow-hidden">
-                  <div className="px-4 py-3 sm:px-5">
-                    <h2 className="font-bold">{section.title}</h2>
+                  <div className="px-4 pb-3 pt-4 sm:px-5">
+                    <h2 className="text-lg font-bold tracking-[-0.01em]">{section.title}</h2>
                   </div>
                   <div className="border-t border-line">{section.groups.map(groupBlock)}</div>
                   {section.id === "place" && (
@@ -458,7 +458,7 @@ export default function AdminSettings() {
           {!query && section.id === "hours" && (
             <>
           <Panel className="p-4 sm:p-5">
-            <h2 className="font-bold">운영 기간</h2>
+            <h2 className="text-lg font-bold tracking-[-0.01em]">운영 기간</h2>
             <p className="mt-0.5 text-sm text-muted">기간이 겹치면 시험기간이 우선합니다. 어느 기간에도 속하지 않는 날은 학기 중으로 봅니다.</p>
             {periods === null ? (
               <Skeleton className="mt-3 h-24" />
@@ -549,7 +549,7 @@ export default function AdminSettings() {
           {!query && section.id === "notice" && (
             <>
           <Panel className="p-4 sm:p-5">
-            <h2 className="font-bold">공지</h2>
+            <h2 className="text-lg font-bold tracking-[-0.01em]">공지</h2>
             <p className="mt-0.5 text-sm text-muted">홈 화면 위쪽에 표시됩니다. 푸시를 켠 학생에게는 알림으로도 보낼 수 있습니다.</p>
             <form
               className="mt-3 space-y-3"

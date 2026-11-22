@@ -73,7 +73,7 @@ export default function AdminStats() {
       ) : (
         <>
           <Panel className="p-4 sm:p-5">
-            <h2 className="font-bold">방치된 자리를 얼마나 되찾았나</h2>
+            <h2 className="text-[17px] font-bold">방치된 자리를 얼마나 되찾았나</h2>
             <p className="mt-1 max-w-2xl text-[15px] text-[#3d4744]">
               최근 {days}일 동안 미체크인·외출 초과·자리비움 신고로 <strong className="tabular text-du-deep-dark">{s.totals.recovered}석</strong>이 자동으로 회수되어 다른 학생에게 돌아갔습니다. 예약 {sum("reservations")}건 중 노쇼는{" "}
               <span className="tabular">{noShowRate}%</span>, 평균 이용 시간은 <span className="tabular">{s.totals.avg_minutes}분</span>입니다.
@@ -94,7 +94,7 @@ export default function AdminStats() {
           </Panel>
 
           <Panel>
-            <h2 className="px-4 pt-4 font-bold sm:px-5">일별 현황</h2>
+            <h2 className="px-4 pt-4 text-[17px] font-bold sm:px-5">일별 현황</h2>
             <div className="mt-2 overflow-x-auto border-t border-line">
               <table className="tabular w-full min-w-[560px] text-sm">
                 <thead className="text-left text-xs text-muted">
@@ -131,7 +131,7 @@ export default function AdminStats() {
           </Panel>
 
           <Panel>
-            <h2 className="px-4 pt-4 font-bold sm:px-5">관리자 처리 기록</h2>
+            <h2 className="px-4 pt-4 text-[17px] font-bold sm:px-5">관리자 처리 기록</h2>
             {s.actions.length === 0 ? (
               <p className="px-4 pb-4 pt-1 text-sm text-muted sm:px-5">아직 기록이 없습니다. 관리자가 처리한 모든 일이 여기에 남습니다.</p>
             ) : (

@@ -175,3 +175,12 @@ body[data-scanner] header,
 body[data-scanner] nav {
   display: none;
 }
+
+/* 배너: 스크롤 막대는 숨기고 넘기기만 */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+

@@ -107,7 +107,7 @@ export default function AdminReports() {
 
       {ov.reports.length > 0 && (
         <section aria-labelledby="rep-h">
-          <h2 id="rep-h" className="text-base font-bold">
+          <h2 id="rep-h" className="text-lg font-bold">
             자리비움 신고 <span className="tabular text-muted">{ov.reports.length}</span>
           </h2>
           <div className="mt-2 space-y-2">
@@ -118,7 +118,7 @@ export default function AdminReports() {
                   <div>
                     <div className="flex flex-wrap items-start justify-between gap-2">
                       <div>
-                        <p className="flex flex-wrap items-center gap-2 text-lg font-bold">
+                        <p className="flex flex-wrap items-center gap-2 text-base font-bold">
                           {r.room_name} {r.seat_label}
                           {fresh(r.created_at)}
                         </p>
@@ -163,14 +163,14 @@ export default function AdminReports() {
 
       {ov.helps.length > 0 && (
         <section aria-labelledby="help-h">
-          <h2 id="help-h" className="text-base font-bold">
+          <h2 id="help-h" className="text-lg font-bold">
             도움 요청 <span className="tabular text-muted">{ov.helps.length}</span>
           </h2>
           <div className="mt-2 space-y-2">
             {ov.helps.map((h) => (
               <Panel key={h.id} className="p-4">
                 <div>
-                  <p className="flex flex-wrap items-center gap-2 text-lg font-bold">
+                  <p className="flex flex-wrap items-center gap-2 text-base font-bold">
                     {h.reason}
                     {fresh(h.created_at)}
                   </p>
@@ -219,7 +219,7 @@ export default function AdminReports() {
 
       {ov.appeals.length > 0 && (
         <section aria-labelledby="ap-h">
-          <h2 id="ap-h" className="text-base font-bold">
+          <h2 id="ap-h" className="text-lg font-bold">
             벌점 이의신청 <span className="tabular text-muted">{ov.appeals.length}</span>
           </h2>
           <div className="mt-2 space-y-2">

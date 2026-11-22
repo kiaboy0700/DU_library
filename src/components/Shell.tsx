@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { Armchair, BellRing, ChartNoAxesColumn, ChevronDown, ClipboardList, House, Inbox, LogOut, MonitorDot, QrCode, ScanLine, Settings, TriangleAlert, UserRound, Users, X } from "lucide-react";
+import { Armchair, BellRing, ChartNoAxesColumn, ChevronDown, ClipboardList, House, Inbox, LayoutGrid, LogOut, MonitorDot, QrCode, ScanLine, Settings, TriangleAlert, UserRound, Users, X } from "lucide-react";
 import { NotificationBell } from "./NotificationBell";
 import { QrScanner } from "./QrScanner";
 import { useApp } from "./Providers";
@@ -13,7 +13,8 @@ import { cx, fmtRemain, fmtTime } from "@/lib/util";
 import { useNow } from "./ui";
 
 const NAV = [
-  { href: "/", label: "홈", icon: House, match: (p: string) => p === "/" || p.startsWith("/rooms") },
+  { href: "/", label: "홈", icon: House, match: (p: string) => p === "/" },
+  { href: "/rooms", label: "열람실", icon: LayoutGrid, match: (p: string) => p.startsWith("/rooms") },
   { href: "/me", label: "내 좌석", icon: Armchair, match: (p: string) => p.startsWith("/me") || p.startsWith("/s/") },
   { href: "/stats", label: "혼잡도", icon: ChartNoAxesColumn, match: (p: string) => p.startsWith("/stats") },
 ];
