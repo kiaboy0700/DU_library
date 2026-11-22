@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Bell, BellOff, BellRing } from "lucide-react";
+import { Bell, BellOff, BellRing, CheckCheck, Trash2, X } from "lucide-react";
 import { useApp } from "./Providers";
 import { disablePush, enablePush, pushEnabled } from "@/lib/push";
-import { supabase } from "@/lib/supabase";
+import { rpc, supabase } from "@/lib/supabase";
 import type { Notice } from "@/lib/types";
 import { cx, errMsg, fmtDateTime } from "@/lib/util";
 
@@ -24,12 +24,28 @@ export function NotificationBell() {
     if (!uid) return;
     const { data } = await supabase.from("notifications").select("id,title,body,url,created_at,read_at").eq("user_id", uid).order("created_at", { ascending: false }).limit(20);
     setItems((data as Notice[]) ?? []);
-    // 목록을 열어 본 알림은 읽음 처리 (배지가 사라진다)
-    if (data?.some((n) => !n.read_at)) {
-      await supabase.from("notifications").update({ read_at: new Date().toISOString() }).eq("user_id", uid).is("read_at", null);
-      refresh();
+  }, [uid]);
+
+  // 읽음: 하나(id) 또는 전부
+  async function markRead(id?: number) {
+    if (!uid) return;
+    const at = new Date().toISOString();
+    setItems((cur) => cur?.map((n) => (id === undefined || n.id === id ? { ...n, read_at: n.read_at ?? at } : n)) ?? cur);
+    const q = supabase.from("notifications").update({ read_at: at }).eq("user_id", uid).is("read_at", null);
+    await (id === undefined ? q : q.eq("id", id));
+    refresh();
+  }
+  // 삭제: 하나(id) 또는 전부
+  async function remove(id?: number) {
+    setItems((cur) => (id === undefined ? [] : (cur?.filter((n) => n.id !== id) ?? cur)));
+    try {
+      await rpc("clear_notifications", { p_id: id ?? null });
+    } catch (e) {
+      toast(errMsg(e), "error");
+      load();
     }
-  }, [uid, refresh]);
+    refresh();
+  }
 
   // 열려 있는 동안 새 알림이 오면 바로 반영
   useEffect(() => {
@@ -117,6 +133,19 @@ export function NotificationBell() {
             )}
           </div>
 
+          {items && items.length > 0 && (
+            <div className="flex items-center justify-end gap-1 border-b border-line px-2 py-1">
+              <button type="button" disabled={!items.some((n) => !n.read_at)} onClick={() => markRead()} className="flex min-h-9 items-center gap-1 rounded-md px-2 text-[13px] font-semibold text-du-deep-dark hover:bg-canvas disabled:text-[#9aa5a2]">
+                <CheckCheck size={15} aria-hidden />
+                모두 읽음
+              </button>
+              <button type="button" onClick={() => remove()} className="flex min-h-9 items-center gap-1 rounded-md px-2 text-[13px] font-semibold text-danger hover:bg-danger-tint">
+                <Trash2 size={15} aria-hidden />
+                모두 삭제
+              </button>
+            </div>
+          )}
+
           <div className="min-h-0 flex-1 overflow-y-auto">
             {items === null ? (
               <div className="space-y-2 p-4">
@@ -128,8 +157,15 @@ export function NotificationBell() {
             ) : (
               <ul className="divide-y divide-line">
                 {items.map((n) => (
-                  <li key={n.id}>
-                    <Link href={n.url || "/me"} onClick={() => setOpen(false)} className={cx("flex gap-3 px-4 py-3 hover:bg-canvas", !n.read_at && "bg-du-tint/60")}>
+                  <li key={n.id} className={cx("flex items-start", !n.read_at && "bg-du-tint/60")}>
+                    <Link
+                      href={n.url || "/me"}
+                      onClick={() => {
+                        if (!n.read_at) markRead(n.id);
+                        setOpen(false);
+                      }}
+                      className="flex min-w-0 flex-1 gap-3 py-3 pl-4 pr-1 hover:bg-canvas"
+                    >
                       <span aria-hidden className={cx("mt-2 size-2 shrink-0 rounded-full", n.read_at ? "bg-transparent" : "bg-danger")} />
                       <span className="min-w-0 flex-1">
                         <span className="block font-semibold">
@@ -140,6 +176,9 @@ export function NotificationBell() {
                         <span className="tabular mt-0.5 block text-xs text-muted">{fmtDateTime(n.created_at)}</span>
                       </span>
                     </Link>
+                    <button type="button" aria-label={`알림 삭제: ${n.title}`} onClick={() => remove(n.id)} className="m-1 grid size-9 shrink-0 place-items-center rounded-md text-muted hover:bg-danger-tint hover:text-danger">
+                      <X size={16} aria-hidden />
+                    </button>
                   </li>
                 ))}
               </ul>

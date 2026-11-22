@@ -3,14 +3,15 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
-import { Armchair, LifeBuoy, LogOut, QrCode, ScanLine, TriangleAlert } from "lucide-react";
+import { Armchair, Check, LifeBuoy, LogOut, MapPin, QrCode, ScanLine, TriangleAlert } from "lucide-react";
 import { OccupancyMeter } from "@/components/OccupancyMeter";
 import { useApp } from "@/components/Providers";
+import { HelpChat } from "@/components/HelpChat";
 import { QrScanner } from "@/components/QrScanner";
 import { Button, Empty, Field, Notice, Panel, Skeleton, Tag, inputClass, useAction, useFold, useNow } from "@/components/ui";
 import { ruleTexts, useSettings } from "@/lib/hooks";
 import { rpc, supabase } from "@/lib/supabase";
-import { MODE_LABEL, SEAT_TYPE_LABEL, type Penalty } from "@/lib/types";
+import { MODE_LABEL, SEAT_TYPE_LABEL, type Penalty, type SeatContext } from "@/lib/types";
 import { cx, fmtDateTime, fmtRemain, fmtTime } from "@/lib/util";
 
 const PENALTY_LABEL: Record<string, string> = { no_show: "예약 후 미체크인", away_timeout: "외출 시간 초과", vacancy_report: "자리비움", false_report: "허위 신고", manual: "관리자 부여" };
@@ -36,6 +37,28 @@ export default function MePage() {
   const [appealText, setAppealText] = useState("");
   const [helpReason, setHelpReason] = useState(HELP_REASONS[0]);
   const [helpText, setHelpText] = useState("");
+  // 도움 요청이 어느 좌석 이야기인지: 내 좌석 / QR로 찍은 좌석 / 번호로 적은 좌석 / 좌석과 무관
+  const [helpAt, setHelpAt] = useState<"mine" | "qr" | "label" | "none" | null>(null);
+  const [helpSeat, setHelpSeat] = useState<{ token: string; text: string } | null>(null);
+  const [helpRoom, setHelpRoom] = useState<number | null>(null);
+  const [helpLabel, setHelpLabel] = useState("");
+  const [helpScan, setHelpScan] = useState(false);
+  const [rooms, setRooms] = useState<{ id: number; name: string }[]>([]);
+  const [myHelp, setMyHelp] = useState<{ id: number; reason: string; message: string | null; created_at: string; seat_label: string | null; room_name: string | null } | null>(null);
+  const helpOpen = !!status?.help_open;
+  useEffect(() => {
+    supabase
+      .from("rooms")
+      .select("id,name")
+      .order("floor")
+      .then(({ data }) => setRooms(data ?? []));
+  }, []);
+  useEffect(() => {
+    if (!helpOpen) return setMyHelp(null);
+    rpc<typeof myHelp>("my_help")
+      .then(setMyHelp)
+      .catch(() => {});
+  }, [helpOpen]);
   const uid = status?.profile.id;
 
   const load = useCallback(async () => {
@@ -390,47 +413,166 @@ export default function MePage() {
         </h2>
         <Panel className="mt-2 p-4">
           {status.help_open ? (
-            <p className="flex items-start gap-2 text-sm">
-              <LifeBuoy size={18} className="mt-0.5 shrink-0 text-du-deep" aria-hidden />
-              관리자가 확인하고 있습니다
-            </p>
+            <>
+            <div className="flex items-start gap-3">
+              <span className="grid size-9 shrink-0 place-items-center rounded-full bg-du-tint text-du-deep-dark">
+                <LifeBuoy size={18} aria-hidden />
+              </span>
+              <div className="min-w-0 text-sm">
+                <p className="text-base font-bold">관리자가 확인하고 있습니다</p>
+                {myHelp && (
+                  <>
+                    <p className="mt-0.5 font-semibold">{myHelp.reason}</p>
+                    {myHelp.seat_label && (
+                      <p className="flex items-center gap-1 text-[#3d4744]">
+                        <MapPin size={14} aria-hidden />
+                        {myHelp.room_name} {myHelp.seat_label}
+                      </p>
+                    )}
+                    {myHelp.message && <p className="mt-1 rounded-md bg-canvas px-2.5 py-2">{myHelp.message}</p>}
+                    <p className="tabular mt-1 text-[13px] text-muted">{fmtDateTime(myHelp.created_at)} 접수</p>
+                  </>
+                )}
+              </div>
+            </div>
+            {myHelp && <HelpChat helpId={myHelp.id} className="mt-3" />}
+            </>
           ) : open === "help" ? (
             <form
-              className="rise space-y-3"
+              className="rise space-y-4"
               onSubmit={(e) => {
                 e.preventDefault();
+                const at = helpAt ?? (res ? "mine" : "none");
+                if (at === "qr" && !helpSeat) return toast("좌석 QR을 찍어 주세요.", "error");
+                if (at === "label" && !helpLabel.trim()) return toast("좌석 번호를 입력해 주세요.", "error");
                 act("help", async () => {
-                  await rpc("request_help", { p_reason: helpReason, p_message: helpText || null });
+                  await rpc("request_help", {
+                    p_reason: helpReason,
+                    p_message: helpText || null,
+                    p_token: at === "qr" ? helpSeat?.token : null,
+                    p_room: at === "label" ? (helpRoom ?? rooms[0]?.id ?? null) : null,
+                    p_label: at === "label" ? helpLabel : null,
+                  });
                   toast("관리자에게 도움을 요청했습니다.", "ok");
                   setHelpText("");
+                  setHelpSeat(null);
+                  setHelpLabel("");
+                  setHelpAt(null);
                 });
               }}
             >
-              <Field label="어떤 문제가 있나요?">
-                <select className={inputClass} value={helpReason} onChange={(e) => setHelpReason(e.target.value)}>
+              <fieldset>
+                <legend className="mb-1.5 text-[13px] font-semibold">문제</legend>
+                <div className="grid grid-cols-2 gap-2">
                   {HELP_REASONS.map((r) => (
-                    <option key={r}>{r}</option>
+                    <button
+                      key={r}
+                      type="button"
+                      aria-pressed={helpReason === r}
+                      onClick={() => setHelpReason(r)}
+                      className={cx(
+                        "flex min-h-11 items-center justify-center rounded-[var(--radius-ctl)] border px-2 text-center text-sm font-semibold transition-colors duration-150",
+                        helpReason === r ? "border-du-deep bg-du-tint text-du-deep-dark" : "border-line bg-surface hover:bg-canvas",
+                      )}
+                    >
+                      {r}
+                    </button>
                   ))}
-                </select>
-              </Field>
+                </div>
+              </fieldset>
+
+              <fieldset>
+                <legend className="mb-1.5 text-[13px] font-semibold">좌석</legend>
+                {(() => {
+                  const at = helpAt ?? (res ? "mine" : "none");
+                  const opts: { key: typeof at; label: React.ReactNode }[] = [
+                    res ? { key: "mine", label: `내 좌석 ${res.seat_label}` } : { key: "none", label: "좌석 없음" },
+                    {
+                      key: "qr",
+                      label: (
+                        <>
+                          <QrCode size={15} aria-hidden />
+                          QR 찍기
+                        </>
+                      ),
+                    },
+                    { key: "label", label: "번호 입력" },
+                  ];
+                  return (
+                    <>
+                      <div className="grid grid-cols-3 gap-2">
+                        {opts.map((o) => (
+                          <button
+                            key={o.key}
+                            type="button"
+                            aria-pressed={at === o.key}
+                            onClick={() => {
+                              setHelpAt(o.key);
+                              if (o.key === "qr") setHelpScan(true);
+                            }}
+                            className={cx(
+                              "flex min-h-11 items-center justify-center gap-1 whitespace-nowrap rounded-[var(--radius-ctl)] border px-1.5 text-sm font-semibold transition-colors duration-150",
+                              at === o.key ? "border-du-deep bg-du-tint text-du-deep-dark" : "border-line bg-surface hover:bg-canvas",
+                            )}
+                          >
+                            {o.label}
+                          </button>
+                        ))}
+                      </div>
+                      {at === "qr" && helpSeat && (
+                        <p className="mt-2 flex items-center gap-1.5 text-sm font-semibold text-du-deep-dark">
+                          <Check size={16} aria-hidden />
+                          {helpSeat.text}
+                        </p>
+                      )}
+                      {at === "label" && (
+                        <div className="mt-2 grid grid-cols-2 gap-2">
+                          <select aria-label="열람실" className={inputClass} value={helpRoom ?? rooms[0]?.id ?? ""} onChange={(e) => setHelpRoom(Number(e.target.value))}>
+                            {rooms.map((r) => (
+                              <option key={r.id} value={r.id}>
+                                {r.name}
+                              </option>
+                            ))}
+                          </select>
+                          <input aria-label="좌석 번호" className={inputClass} placeholder="예: N-024" autoCapitalize="characters" value={helpLabel} onChange={(e) => setHelpLabel(e.target.value)} />
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
+              </fieldset>
+
               <Field label="자세한 내용 (선택)">
                 <textarea className={cx(inputClass, "py-2.5")} rows={2} maxLength={300} value={helpText} onChange={(e) => setHelpText(e.target.value)} />
               </Field>
-              <div className="flex gap-2">
-                <Button type="submit" variant="primary" busy={busy === "help"}>
-                  도움 요청 보내기
-                </Button>
+              <div className="grid grid-cols-2 gap-2">
                 <Button onClick={() => setOpen(null)}>취소</Button>
+                <Button type="submit" variant="primary" busy={busy === "help"}>
+                  보내기
+                </Button>
               </div>
             </form>
           ) : (
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              
-              <Button className="w-full sm:w-auto" onClick={() => setOpen("help")}>
-                <LifeBuoy size={16} aria-hidden />
-                도움 요청
-              </Button>
-            </div>
+            <Button className="w-full sm:w-auto" onClick={() => setOpen("help")}>
+              <LifeBuoy size={16} aria-hidden />
+              도움 요청
+            </Button>
+          )}
+          {helpScan && (
+            <QrScanner
+              onToken={async (t) => {
+                setHelpScan(false);
+                try {
+                  const c = await rpc<SeatContext | null>("seat_context_v2", { p_token: t });
+                  if (!c) throw new Error("유효하지 않은 QR입니다.");
+                  setHelpSeat({ token: t, text: `${c.seat.room_name} ${c.seat.label}` });
+                } catch (e) {
+                  setHelpSeat(null);
+                  toast(e instanceof Error ? e.message : "좌석을 확인하지 못했습니다.", "error");
+                }
+              }}
+              onClose={() => setHelpScan(false)}
+            />
           )}
         </Panel>
       </section>

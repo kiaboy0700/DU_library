@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ChevronRight, MousePointerClick, PenLine } from "lucide-react";
 import { OccupancyMeter } from "@/components/OccupancyMeter";
 import { useApp } from "@/components/Providers";
@@ -44,7 +44,29 @@ export default function AdminHome() {
   useEffect(() => {
     if (rooms?.length && roomId === null) setRoomId(rooms[0].id);
   }, [rooms, roomId]);
-  useEffect(() => setPickedId(null), [roomId]);
+  // 처리 대기에서 '좌석 위치'를 누르고 왔으면 그 열람실의 그 좌석을 연다
+  const [want, setWant] = useState<{ room: number; seat: number } | null>(null);
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search);
+    const room = Number(q.get("room"));
+    const seat = Number(q.get("seat"));
+    if (room && seat) {
+      setWant({ room, seat });
+      setRoomId(room);
+    }
+  }, []);
+  const prevRoom = useRef(roomId);
+  useEffect(() => {
+    if (want && roomId === want.room && seats?.some((x) => x.seat_id === want.seat)) {
+      prevRoom.current = roomId;
+      setPickedId(want.seat);
+      setWant(null);
+    } else if (prevRoom.current !== roomId) {
+      // 열람실을 바꾸면 고른 좌석을 푼다
+      prevRoom.current = roomId;
+      if (!want) setPickedId(null);
+    }
+  }, [roomId, seats, want]);
 
   const room = rooms?.find((r) => r.id === roomId);
   const summary = home?.rooms.find((r) => r.id === roomId);
@@ -169,6 +191,7 @@ export default function AdminHome() {
                 return a?.res?.report ? "report" : a?.res?.on_hold ? "hold" : null;
               }}
               selectedId={pickedId}
+              focusId={pickedId}
               onSelect={(s) => setPickedId(s.id)}
               selectable={() => true}
             />

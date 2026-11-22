@@ -1,7 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Inbox } from "lucide-react";
+import Link from "next/link";
+import { Inbox, MapPin } from "lucide-react";
+import { HelpChat } from "@/components/HelpChat";
 import { useApp } from "@/components/Providers";
 import { Button, Empty, Panel, Skeleton, Tag, inputClass, useAction, useNow } from "@/components/ui";
 import { rpc } from "@/lib/supabase";
@@ -29,6 +31,8 @@ interface Help {
   student_id: string;
   seat_label: string | null;
   room_name: string | null;
+  room_id: number | null;
+  seat_id: number | null;
   res_status: string | null;
 }
 interface Appeal {
@@ -174,10 +178,25 @@ export default function AdminReports() {
                   </p>
                   <p className="text-sm text-[#3d4744]">
                     {h.name} <span className="tabular text-muted">{h.student_id}</span>
-                    {h.seat_label && ` · ${h.room_name} ${h.seat_label} (${h.res_status === "reserved" ? "체크인 대기" : h.res_status === "away" ? "외출" : h.res_status === "in_use" ? "이용 중" : "종료"})`}
+                    {h.res_status && ` · ${h.res_status === "reserved" ? "체크인 대기" : h.res_status === "away" ? "외출" : h.res_status === "in_use" ? "이용 중" : "좌석 없음"}`}
+                  </p>
+                  {/* 어느 좌석인지: 누르면 관제 지도에서 그 좌석을 바로 보여 준다 */}
+                  <p className="mt-1.5">
+                    {h.seat_id ? (
+                      <Link href={`/admin?room=${h.room_id}&seat=${h.seat_id}`} className="inline-flex min-h-9 items-center gap-1.5 rounded-md bg-du-tint px-2.5 text-sm font-bold text-du-deep-dark hover:underline">
+                        <MapPin size={15} aria-hidden />
+                        {h.room_name} {h.seat_label}
+                      </Link>
+                    ) : (
+                      <span className="inline-flex min-h-9 items-center gap-1.5 rounded-md bg-canvas px-2.5 text-sm text-muted">
+                        <MapPin size={15} aria-hidden />
+                        좌석 없음
+                      </span>
+                    )}
                   </p>
                   {h.message && <p className="mt-1 rounded-md bg-canvas px-2.5 py-2 text-sm">{h.message}</p>}
                   <p className="tabular mt-1 text-[13px] text-muted">{fmtDateTime(h.created_at)} 접수</p>
+                  <HelpChat helpId={h.id} admin className="mt-3 max-w-xl" />
                   <div className="mt-3 flex flex-wrap items-center gap-2">
                     {h.reservation_id && ["reserved", "in_use", "away"].includes(h.res_status ?? "") && (
                       <Button
@@ -207,8 +226,8 @@ export default function AdminReports() {
                     )}
                     <input
                       className={`${inputClass} !min-h-11 max-w-xs flex-1`}
-                      aria-label="학생에게 보낼 답변"
-                      placeholder="학생에게 보낼 답변 (선택)"
+                      aria-label="처리 결과"
+                      placeholder="처리 결과 (선택)"
                       value={text[`h${h.id}`] ?? ""}
                       onChange={(e) => setText({ ...text, [`h${h.id}`]: e.target.value })}
                     />

@@ -184,3 +184,18 @@ body[data-scanner] nav {
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
+/* 모바일: 두 번 누르기 확대를 막고, 입력칸을 눌렀을 때 화면이 확대되지 않게 글자를 16px 이상으로 */
+html {
+  touch-action: manipulation;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+@media (pointer: coarse) {
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+

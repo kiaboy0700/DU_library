@@ -34,6 +34,16 @@ export function useApp() {
 export function Providers({ children }: { children: React.ReactNode }) {
   const [status, setStatus] = useState<MyStatus | null | undefined>(undefined);
   const [toasts, setToasts] = useState<ToastItem[]>([]);
+  // 아이폰은 확대 금지 설정을 무시하므로 두 손가락 확대 동작을 직접 막는다
+  useEffect(() => {
+    const stop = (e: Event) => e.preventDefault();
+    document.addEventListener("gesturestart", stop);
+    document.addEventListener("gesturechange", stop);
+    return () => {
+      document.removeEventListener("gesturestart", stop);
+      document.removeEventListener("gesturechange", stop);
+    };
+  }, []);
   // 로그인 여부가 정해지면 로딩 화면을 걷는다
   useEffect(() => {
     if (status !== undefined) document.body.dataset.ready = "1";

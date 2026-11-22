@@ -1,9 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Search, UserRound } from "lucide-react";
+import { RotateCcw, Search, UserRound } from "lucide-react";
 import { useApp } from "@/components/Providers";
-import { Button, Empty, Field, Panel, Skeleton, Tag, inputClass, useAction, useFold, useNow } from "@/components/ui";
+import { Button, Confirm, Empty, Field, Panel, Skeleton, Tag, inputClass, useAction, useFold, useNow } from "@/components/ui";
 import { rpc } from "@/lib/supabase";
 import type { Penalty, Profile } from "@/lib/types";
 import { cx, fmtDateTime } from "@/lib/util";
@@ -54,6 +54,7 @@ export default function AdminUsers() {
     });
 
   const d = detail;
+  const [wipe, setWipe] = useState(false);
   const penFold = useFold(d?.penalties ?? [], 3);
   const resFold = useFold(d?.reservations ?? [], 5);
   const banned = d?.profile.banned_until && new Date(d.profile.banned_until).getTime() > now;
@@ -269,6 +270,29 @@ export default function AdminUsers() {
               </div>
             </Panel>
 
+            {d.profile.role === "student" && (
+              <Button variant="danger" className="w-full sm:w-auto" disabled={!!busy} onClick={() => setWipe(true)}>
+                <RotateCcw size={16} aria-hidden />
+                이 학생 초기화
+              </Button>
+            )}
+            {wipe && (
+              <Confirm
+                title={`${d.profile.name} 초기화`}
+                confirmLabel="초기화"
+                danger
+                busy={busy === "wipe"}
+                onClose={() => setWipe(false)}
+                onConfirm={() => act("wipe", () => rpc("admin_demo", { p_action: "reset", p_student: d.profile.student_id }), "학생 정보를 초기화했습니다.").then(() => setWipe(false))}
+              >
+                <ul className="list-disc space-y-0.5 pl-5">
+                  <li>지금 좌석 예약·이용</li>
+                  <li>벌점·예약 정지·신고 정지</li>
+                  <li>도움 요청·알림</li>
+                </ul>
+                <p className="mt-2 font-semibold text-danger">되돌릴 수 없습니다.</p>
+              </Confirm>
+            )}
             <Panel>
               <h3 className="px-4 pt-4 text-[17px] font-bold">벌점 기록</h3>
               {d.penalties.length === 0 ? (
