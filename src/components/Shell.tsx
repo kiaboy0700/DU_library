@@ -3,8 +3,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect } from "react";
-import { Armchair, ChartNoAxesColumn, House, ShieldCheck, TriangleAlert } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Armchair, ChartNoAxesColumn, ChevronDown, House, LogOut, ShieldCheck, TriangleAlert, UserRound } from "lucide-react";
 import { useApp } from "./Providers";
 import { cx } from "@/lib/util";
 
@@ -70,22 +70,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
               );
             })}
           </nav>
-          <Link
-            href="/me#acct-h"
-            aria-label={`내 프로필: ${status.profile.name}, ${status.profile.department ?? ""} ${status.profile.student_id}`}
-            className="ml-auto flex min-w-0 max-w-[46%] shrink-0 items-center gap-2 rounded-lg py-1 pl-1 pr-1.5 transition-colors duration-150 hover:bg-white/15 sm:ml-2 sm:max-w-64"
-          >
-            <span aria-hidden className="grid size-8 shrink-0 place-items-center rounded-full bg-white/20 text-sm font-bold">
-              {status.profile.name.slice(0, 1)}
-            </span>
-            <span className="min-w-0 text-left leading-tight">
-              <span className="block truncate text-[13px] font-bold">{status.profile.name}</span>
-              <span className="tabular block truncate text-[11px] text-white/85">
-                {status.profile.department ? `${status.profile.department} · ` : ""}
-                {status.profile.student_id}
-              </span>
-            </span>
-          </Link>
+          <ProfileMenu />
         </div>
       </header>
 
@@ -125,6 +110,82 @@ export function Shell({ children }: { children: React.ReactNode }) {
           })}
         </ul>
       </nav>
+    </div>
+  );
+}
+
+/** 상단 바 오른쪽의 내 프로필. 누르면 내 정보와 로그아웃이 열린다 */
+function ProfileMenu() {
+  const { status, signOut } = useApp();
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const box = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const away = (e: PointerEvent) => !box.current?.contains(e.target as Node) && setOpen(false);
+    const esc = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    document.addEventListener("pointerdown", away);
+    document.addEventListener("keydown", esc);
+    return () => {
+      document.removeEventListener("pointerdown", away);
+      document.removeEventListener("keydown", esc);
+    };
+  }, [open]);
+
+  if (!status) return null;
+  const p = status.profile;
+  const sub = `${p.department ? `${p.department} · ` : ""}${p.student_id}`;
+
+  return (
+    <div ref={box} className="relative ml-auto min-w-0 max-w-[48%] shrink-0 sm:ml-2 sm:max-w-64">
+      <button
+        type="button"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-label={`내 프로필: ${p.name}, ${sub}`}
+        onClick={() => setOpen((o) => !o)}
+        className={cx("flex w-full min-w-0 items-center gap-2 rounded-lg py-1 pl-1 pr-1.5 transition-colors duration-150 hover:bg-white/15", open && "bg-white/15")}
+      >
+        <span aria-hidden className="grid size-8 shrink-0 place-items-center rounded-full bg-white/20 text-sm font-bold">
+          {p.name.slice(0, 1)}
+        </span>
+        <span className="min-w-0 text-left leading-tight">
+          <span className="block truncate text-[13px] font-bold">{p.name}</span>
+          <span className="tabular block truncate text-[11px] text-white/85">{sub}</span>
+        </span>
+        <ChevronDown size={14} aria-hidden className={cx("shrink-0 transition-transform duration-150", open && "rotate-180")} />
+      </button>
+      {open && (
+        <div role="menu" className="rise absolute right-0 top-[calc(100%+8px)] w-60 overflow-hidden rounded-[var(--radius-panel)] border border-line bg-surface text-du-black shadow-[var(--shadow-float)]">
+          <div className="border-b border-line px-4 py-3">
+            <p className="font-bold">{p.name}</p>
+            <p className="tabular text-[13px] text-muted">{p.student_id}</p>
+            <p className="text-[13px] text-muted">
+              {p.department ?? "학과 미등록"}
+              {p.grade && ` · ${p.grade}학년`}
+              {p.role === "admin" && " · 관리자"}
+            </p>
+          </div>
+          <Link role="menuitem" href="/me" onClick={() => setOpen(false)} className="flex min-h-11 items-center gap-2.5 px-4 text-sm font-semibold hover:bg-canvas">
+            <UserRound size={16} aria-hidden />
+            내 좌석·벌점
+          </Link>
+          <button
+            role="menuitem"
+            type="button"
+            onClick={async () => {
+              setOpen(false);
+              await signOut();
+              router.replace("/login");
+            }}
+            className="flex min-h-11 w-full items-center gap-2.5 border-t border-line px-4 text-sm font-semibold text-danger hover:bg-danger-tint"
+          >
+            <LogOut size={16} aria-hidden />
+            로그아웃
+          </button>
+        </div>
+      )}
     </div>
   );
 }
