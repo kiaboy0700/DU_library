@@ -2,7 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect } from "react";
 import { Armchair, ChartNoAxesColumn, House, ShieldCheck, TriangleAlert } from "lucide-react";
 import { useApp } from "./Providers";
 import { cx } from "@/lib/util";
@@ -16,13 +17,25 @@ const ADMIN = { href: "/admin", label: "관리", icon: ShieldCheck, match: (p: s
 
 export function Shell({ children }: { children: React.ReactNode }) {
   const path = usePathname();
+  const router = useRouter();
   const { status } = useApp();
   const bare = path === "/login";
+
+  // 모든 화면은 로그인 후에 볼 수 있다
+  useEffect(() => {
+    if (status === null && !bare) router.replace(path === "/" ? "/login" : `/login?next=${encodeURIComponent(path)}`);
+  }, [status, bare, path, router]);
   const items = status?.profile.role === "admin" ? [...NAV, ADMIN] : NAV;
   const wide = path.startsWith("/admin");
   const active = status?.reservation;
 
   if (bare) return <>{children}</>;
+  if (!status)
+    return (
+      <div className="grid min-h-dvh place-items-center" role="status" aria-label="불러오는 중">
+        <span className="skeleton size-12 !rounded-full" />
+      </div>
+    );
 
   return (
     <div className="flex min-h-dvh flex-col">
@@ -57,11 +70,22 @@ export function Shell({ children }: { children: React.ReactNode }) {
               );
             })}
           </nav>
-          {status === null && (
-            <Link href="/login" className="ml-auto flex h-9 items-center rounded-lg bg-white px-3.5 text-sm font-bold text-du-deep-dark sm:ml-2">
-              로그인
-            </Link>
-          )}
+          <Link
+            href="/me#acct-h"
+            aria-label={`내 프로필: ${status.profile.name}, ${status.profile.department ?? ""} ${status.profile.student_id}`}
+            className="ml-auto flex min-w-0 max-w-[46%] shrink-0 items-center gap-2 rounded-lg py-1 pl-1 pr-1.5 transition-colors duration-150 hover:bg-white/15 sm:ml-2 sm:max-w-64"
+          >
+            <span aria-hidden className="grid size-8 shrink-0 place-items-center rounded-full bg-white/20 text-sm font-bold">
+              {status.profile.name.slice(0, 1)}
+            </span>
+            <span className="min-w-0 text-left leading-tight">
+              <span className="block truncate text-[13px] font-bold">{status.profile.name}</span>
+              <span className="tabular block truncate text-[11px] text-white/85">
+                {status.profile.department ? `${status.profile.department} · ` : ""}
+                {status.profile.student_id}
+              </span>
+            </span>
+          </Link>
         </div>
       </header>
 

@@ -129,7 +129,7 @@ export default function RoomPage() {
 
       {summary && !summary.is_open && (
         <Notice tone="warn" icon={<DoorClosed size={18} aria-hidden />}>
-          지금은 예약할 수 없습니다. {summary.reason}
+          {summary.reason}
         </Notice>
       )}
       {banned && (
@@ -195,7 +195,6 @@ export default function RoomPage() {
         ) : (
           <Skeleton className="h-[420px]" />
         )}
-        <p className="mt-2 text-xs text-muted">초록색 빈자리를 누르면 예약할 수 있습니다. 배치도는 좌우로 밀어서 볼 수 있어요.</p>
       </Panel>
 
       {selected && (
@@ -214,11 +213,10 @@ export default function RoomPage() {
             </div>
             {mine ? (
               <p className="mt-3 text-sm text-[#3d4744]">
-                이미 {mine.seat_label} 좌석을 이용 중입니다. 좌석을 바꾸려면{" "}
+                {mine.seat_label} 이용 중 ·{" "}
                 <Link href="/me" className="font-semibold text-du-deep-dark underline underline-offset-2">
-                  내 좌석
+                  반납하고 옮기기
                 </Link>
-                에서 먼저 반납해 주세요.
               </p>
             ) : (
               <>
@@ -238,7 +236,7 @@ export default function RoomPage() {
                       </label>
                     ))}
                   </div>
-                  {summary?.closes_at && <p className="mt-1.5 text-xs text-muted">폐관 시각 {fmtTime(summary.closes_at)}을 넘지 않게 자동으로 맞춰집니다.</p>}
+                  {summary?.closes_at && <p className="tabular mt-1.5 text-xs text-muted">{fmtTime(summary.closes_at)} 폐관</p>}
                 </fieldset>
                 <Button variant="primary" size="lg" className="mt-3 w-full" busy={busy === "reserve"} disabled={!!banned || (summary && !summary.is_open)} onClick={reserve}>
                   {status ? `${selected.label} 예약하기` : "로그인하고 예약하기"}

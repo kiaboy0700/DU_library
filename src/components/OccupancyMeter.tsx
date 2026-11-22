@@ -8,14 +8,12 @@ import { cx } from "@/lib/util";
 export function OccupancyMeter({
   pct,
   rules = ["60분", "40분", "20분"],
-  ruleLabel = "외출 허용",
-  compact,
+  ruleLabel = "외출",
 }: {
   pct: number;
   /** 여유·보통·혼잡 구간의 규칙 값 */
   rules?: string[];
   ruleLabel?: string;
-  compact?: boolean;
 }) {
   const zone = pct >= 80 ? 2 : pct >= 50 ? 1 : 0;
   const fill = ["bg-du-deep", "bg-[#b9790a]", "bg-danger"][zone];
@@ -38,20 +36,15 @@ export function OccupancyMeter({
       </div>
       <div aria-hidden className="mt-1.5 flex text-xs leading-tight">
         {names.map((n, i) => (
-          <div key={n} className={cx(widths[i], "min-w-0", i > 0 && "pl-1.5")}>
+          <div key={n} className={cx(widths[i], i === 1 && "pl-1.5", i === 2 && "flex flex-col items-end")}>
             <span className={cx("block whitespace-nowrap", i === zone ? "font-bold text-du-black" : "text-[#6b7774]")}>
               {n}
               {i > 0 && <span className="tabular font-normal text-[#6b7774]"> {i === 1 ? "50%~" : "80%~"}</span>}
             </span>
-            <span className={cx("tabular mt-0.5 block whitespace-nowrap", i === zone ? "text-[13px] font-bold text-du-black" : "text-[#6b7774]")}>{rules[i]}</span>
+            <span className={cx("tabular mt-0.5 block whitespace-nowrap", i === zone ? "text-[13px] font-bold text-du-black" : "text-[#6b7774]")}>{i === zone ? `${ruleLabel} ${rules[i]}` : rules[i]}</span>
           </div>
         ))}
       </div>
-      {!compact && (
-        <p className="mt-2 text-[13px] text-[#3d4744]">
-          지금은 <strong className="font-semibold text-du-black">{names[zone]}</strong> 단계라 {ruleLabel} 시간이 <strong className="tabular font-semibold text-du-black">{rules[zone]}</strong>입니다.
-        </p>
-      )}
     </div>
   );
 }

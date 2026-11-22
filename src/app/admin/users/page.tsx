@@ -141,7 +141,7 @@ export default function AdminUsers() {
         {!d ? (
           <Panel>
             <Empty icon={<UserRound size={36} strokeWidth={1.6} aria-hidden />} title="학생을 선택하세요">
-              왼쪽에서 학생을 고르면 벌점·예약 기록을 보고 벌점 부여·취소, 예약 정지·해제, 비밀번호 초기화를 할 수 있습니다.
+              벌점·예약 기록, 정지·해제, 비밀번호 초기화
             </Empty>
           </Panel>
         ) : (

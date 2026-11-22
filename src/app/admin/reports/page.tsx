@@ -74,15 +74,12 @@ export default function AdminReports() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-[22px] font-bold">처리 대기</h1>
-        <p className="mt-0.5 text-sm text-muted">신고는 응답 시간이 지나면 자동으로 처리됩니다. 현장에서 확인했다면 먼저 확정하거나 기각할 수 있습니다.</p>
-      </div>
+      <h1 className="text-[22px] font-bold">처리 대기</h1>
 
       {empty && (
         <Panel>
           <Empty icon={<Inbox size={36} strokeWidth={1.6} aria-hidden />} title="처리할 일이 없습니다">
-            자리비움 신고, 학생의 도움 요청, 벌점 이의신청이 들어오면 여기에 표시되고 알림으로도 알려 드립니다.
+            신고·도움 요청·이의신청이 들어오면 여기에 표시됩니다.
           </Empty>
         </Panel>
       )}

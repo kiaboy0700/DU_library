@@ -99,8 +99,7 @@ export default function MePage() {
         <Notice tone="danger" icon={<TriangleAlert size={18} aria-hidden />}>
           <p className="font-bold">자리 확인 요청이 왔습니다</p>
           <p className="mt-0.5">
-            자리가 비어 있다는 신고가 접수되었습니다. <strong className="tabular">{fmtRemain(new Date(res.report_deadline).getTime() - now)}</strong> 안에 좌석 QR을 스캔하지 않으면 자동
-            반납되고 벌점이 부여됩니다.
+            <strong className="tabular">{fmtRemain(new Date(res.report_deadline).getTime() - now)}</strong> 안에 좌석 QR을 스캔하지 않으면 자동 반납되고 벌점이 부여됩니다.
           </p>
           <Button variant="danger" size="sm" className="mt-2.5" onClick={() => setOpen("scan")}>
             <ScanLine size={16} aria-hidden />
@@ -148,11 +147,8 @@ export default function MePage() {
           <div className="border-t border-line bg-[#f8faf9] p-4 sm:p-5">
             {res.status === "reserved" && (
               <>
-                <p className="text-sm text-[#3d4744]">
-                  자리에 도착하면 책상의 QR을 스캔해 체크인하세요.
-                  {res.on_hold && <strong className="font-semibold"> 도움 요청이 접수되어 자동 취소가 멈춰 있습니다.</strong>}
-                </p>
-                <div className="mt-3 grid grid-cols-2 gap-2">
+                {res.on_hold && <p className="mb-3 text-sm font-semibold text-warn">도움 요청 접수됨 · 자동 취소가 멈춰 있습니다</p>}
+                <div className="grid grid-cols-2 gap-2">
                   <Button variant="primary" onClick={() => setOpen("scan")}>
                     <QrCode size={16} aria-hidden />
                     QR 체크인
@@ -190,19 +186,19 @@ export default function MePage() {
                 </div>
                 <p className="mt-2 text-xs text-muted">
                   {extendsLeft === 0
-                    ? "연장 횟수를 모두 사용했습니다. 종료 후 다시 예약해 주세요."
+                    ? "연장 횟수를 모두 사용했습니다"
                     : canExtend
                       ? res.mode === "exam"
-                        ? "시험기간에는 좌석 QR을 스캔해야 연장됩니다."
-                        : "지금 연장할 수 있습니다."
-                      : `연장은 종료 ${res.extend_window_min}분 전(${fmtTime(new Date(new Date(res.end_at).getTime() - res.extend_window_min * 60_000).toISOString())})부터 할 수 있습니다.`}
+                        ? "연장은 좌석 QR 스캔으로"
+                        : ""
+                      : `연장은 ${fmtTime(new Date(new Date(res.end_at).getTime() - res.extend_window_min * 60_000).toISOString())}부터`}
                 </p>
               </>
             )}
 
             {res.status === "away" && (
               <>
-                <p className="text-sm text-[#3d4744]">돌아오면 책상의 QR을 스캔해 주세요. 시간 안에 복귀하지 않으면 자동 반납되고 벌점 {settings?.pen_away ?? 1}점이 부여됩니다.</p>
+                <p className="text-sm text-[#3d4744]">시간이 지나면 자동 반납 · 벌점 {settings?.pen_away ?? 1}점</p>
                 <div className="mt-3 grid grid-cols-2 gap-2">
                   <Button variant="primary" onClick={() => setOpen("scan")}>
                     <QrCode size={16} aria-hidden />
@@ -220,11 +216,9 @@ export default function MePage() {
                 <p className="font-semibold">
                   지금 외출하면 <span className="tabular text-du-deep-dark">{res.away_minutes}분</span> 안에 돌아와야 합니다
                 </p>
-                <p className="mt-0.5 text-sm text-muted">
-                  {res.room_name} 이용률이 {res.occupancy}%라서 적용되는 시간입니다. 화장실처럼 잠깐 다녀올 때는 외출 처리를 하지 않아도 됩니다.
-                </p>
+                <p className="mt-0.5 text-sm text-muted">화장실처럼 잠깐 다녀올 때는 외출하지 않아도 됩니다.</p>
                 <div className="mt-3">
-                  <OccupancyMeter pct={res.occupancy} rules={ruleTexts(settings, "away")} compact />
+                  <OccupancyMeter pct={res.occupancy} rules={ruleTexts(settings, "away")} />
                 </div>
                 <div className="mt-3 flex gap-2">
                   <Button variant="primary" busy={busy === "away"} onClick={() => act("away", async () => { const m = await rpc<number>("go_away"); toast(`외출 처리했습니다. ${m}분 안에 돌아와 QR을 스캔하세요.`, "ok"); })}>
@@ -238,7 +232,6 @@ export default function MePage() {
             {open === "return" && (
               <div className="rise mt-3 rounded-[var(--radius-ctl)] border border-line bg-surface p-3.5">
                 <p className="font-semibold">{res.seat_label} 좌석을 반납할까요?</p>
-                <p className="mt-0.5 text-sm text-muted">반납하면 바로 다른 학생이 예약할 수 있습니다. 짐을 모두 챙겨 주세요.</p>
                 <div className="mt-3 flex gap-2">
                   <Button variant="danger" busy={busy === "return"} onClick={() => act("return", async () => { await rpc("return_seat"); toast("좌석을 반납했습니다. 이용해 주셔서 감사합니다.", "ok"); })}>
                     반납하기
@@ -253,12 +246,11 @@ export default function MePage() {
         <Panel>
           <Empty icon={<Armchair size={36} strokeWidth={1.6} aria-hidden />} title="이용 중인 좌석이 없습니다">
             {banned ? (
-              <>예약이 정지된 상태입니다. {fmtDateTime(status.profile.banned_until!)}부터 다시 예약할 수 있습니다.</>
+              <>{fmtDateTime(status.profile.banned_until!)}까지 예약 정지</>
             ) : (
               <>
-                열람실을 고르고 빈자리를 예약해 보세요.
-                <Link href="/" className="mt-3 flex min-h-11 items-center justify-center rounded-[var(--radius-ctl)] bg-du-deep px-5 text-sm font-semibold text-white hover:bg-du-deep-dark">
-                  좌석 고르러 가기
+                <Link href="/" className="mt-2 flex min-h-11 items-center justify-center rounded-[var(--radius-ctl)] bg-du-deep px-5 text-sm font-semibold text-white hover:bg-du-deep-dark">
+                  좌석 고르기
                 </Link>
               </>
             )}
@@ -281,11 +273,11 @@ export default function MePage() {
             </p>
             <p className="min-w-0 text-sm text-[#3d4744]">
               {banned ? (
-                <strong className="font-semibold text-danger">{fmtDateTime(status.profile.banned_until!)}까지 예약이 정지되어 있습니다.</strong>
+                <strong className="font-semibold text-danger">{fmtDateTime(status.profile.banned_until!)}까지 예약 정지</strong>
               ) : (
-                <>
-                  {settings?.ban1_points ?? 3}점이 되면 {settings?.ban1_days ?? 3}일, {settings?.ban2_points ?? 6}점이 되면 {settings?.ban2_days ?? 14}일간 예약할 수 없습니다.
-                </>
+                <span className="tabular text-muted">
+                  {settings?.ban1_points ?? 3}점부터 {settings?.ban1_days ?? 3}일, {settings?.ban2_points ?? 6}점부터 {settings?.ban2_days ?? 14}일 예약 정지
+                </span>
               )}
             </p>
           </div>
@@ -329,7 +321,7 @@ export default function MePage() {
                           });
                         }}
                       >
-                        <Field label="사유" hint="당시 상황을 구체적으로 적어 주세요. 관리자가 확인한 뒤 알려 드립니다.">
+                        <Field label="사유">
                           <textarea className={cx(inputClass, "py-2.5")} rows={3} maxLength={500} value={appealText} onChange={(e) => setAppealText(e.target.value)} required />
                         </Field>
                         <div className="mt-2 flex gap-2">
@@ -381,7 +373,7 @@ export default function MePage() {
         </div>
         <Panel className="mt-2">
           {notices.length === 0 ? (
-            <Empty title="아직 알림이 없습니다">이용 시간 종료, 외출 복귀, 자리 확인 요청을 여기에서 알려 드립니다.</Empty>
+            <Empty title="알림이 없습니다" />
           ) : (
             <ul className="divide-y divide-line">
               {notices.map((n) => (
@@ -404,13 +396,13 @@ export default function MePage() {
 
       <section aria-labelledby="help-h">
         <h2 id="help-h" className="text-base font-bold">
-          도움이 필요하세요?
+          도움 요청
         </h2>
         <Panel className="mt-2 p-4">
           {status.help_open ? (
             <p className="flex items-start gap-2 text-sm">
               <LifeBuoy size={18} className="mt-0.5 shrink-0 text-du-deep" aria-hidden />
-              도움 요청이 접수되었습니다. 관리자가 확인하고 있으니 안내 데스크로 오셔도 됩니다. 처리될 때까지 예약은 자동 취소되지 않습니다.
+              관리자가 확인하고 있습니다. 처리될 때까지 예약은 자동 취소되지 않습니다.
             </p>
           ) : open === "help" ? (
             <form
@@ -443,10 +435,10 @@ export default function MePage() {
             </form>
           ) : (
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <p className="min-w-0 flex-1 basis-56 text-sm text-[#3d4744]">QR이 안 찍히거나 휴대폰에 문제가 있으면 관리자가 대신 처리해 드립니다. 요청하는 동안에는 예약이 자동 취소되지 않습니다.</p>
+              <p className="min-w-0 flex-1 basis-40 text-sm text-[#3d4744]">QR·휴대폰 문제는 관리자가 대신 처리합니다.</p>
               <Button onClick={() => setOpen("help")}>
                 <LifeBuoy size={16} aria-hidden />
-                관리자에게 도움 요청
+                도움 요청
               </Button>
             </div>
           )}

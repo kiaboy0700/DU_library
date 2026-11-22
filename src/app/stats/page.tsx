@@ -51,10 +51,7 @@ export default function StatsPage() {
 
   return (
     <div className="space-y-5">
-      <div>
-        <h1 className="text-[22px] font-bold">혼잡도</h1>
-        <p className="mt-0.5 text-sm text-muted">최근 5주 이용 기록의 요일·시간대 평균입니다. 붐비는 시간을 피해서 오면 외출 시간도 넉넉합니다.</p>
-      </div>
+      <h1 className="text-[22px] font-bold">혼잡도</h1>
 
       <div role="tablist" aria-label="열람실" className="flex gap-1.5">
         {home?.rooms.map((r) => (
@@ -75,19 +72,19 @@ export default function StatsPage() {
       </div>
 
       <Panel className="p-4">
-        <h2 className="font-bold">오늘 남은 시간 예상</h2>
+        <h2 className="font-bold">오늘 예상</h2>
         {cells === null ? (
           <Skeleton className="mt-3 h-28" />
         ) : upcoming.length === 0 ? (
-          <p className="mt-2 text-sm text-muted">오늘 운영 시간이 끝났습니다. 아래 표에서 내일 시간대를 확인해 보세요.</p>
+          <p className="mt-2 text-sm text-muted">오늘 운영이 끝났습니다.</p>
         ) : (
           <>
             <p className="mt-1 text-sm text-[#3d4744]">
-              지금 이용률은 <strong className="tabular">{room?.pct ?? "-"}%</strong>입니다.
+              지금 <strong className="tabular">{room?.pct ?? "-"}%</strong>
               {quiet && (
                 <>
-                  {" "}
-                  오늘은 <strong className="tabular">{quiet.h}시</strong> 무렵이 가장 한산할 것으로 보입니다(평균 {quiet.pct}%).
+                  {" · "}
+                  가장 한산한 시간 <strong className="tabular">{quiet.h}시</strong> <span className="tabular text-muted">({quiet.pct}%)</span>
                 </>
               )}
             </p>
@@ -110,7 +107,7 @@ export default function StatsPage() {
       </Panel>
 
       <Panel className="p-4">
-        <h2 className="font-bold">요일·시간대별 평균 이용률</h2>
+        <h2 className="font-bold">요일·시간대별 평균 (최근 5주)</h2>
         {cells === null ? (
           <Skeleton className="mt-3 h-64" />
         ) : cells.length === 0 ? (

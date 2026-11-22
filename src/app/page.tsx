@@ -70,7 +70,7 @@ export default function HomePage() {
     <div className="space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-1">
         <h1 className="text-[22px] font-bold leading-snug">
-          {status ? `${status.profile.name}님, 어느 자리에 앉을까요?` : "지금 빈자리를 확인하세요"}
+          열람실
         </h1>
         {mode && (
           <p className="text-sm text-muted">
@@ -82,7 +82,7 @@ export default function HomePage() {
 
       {home?.incident && (
         <Notice tone="warn" icon={<TriangleAlert size={18} aria-hidden />}>
-          <strong className="font-semibold">시스템 점검 중입니다.</strong> 지금은 자동 취소·자동 반납·벌점이 적용되지 않습니다.
+          <strong className="font-semibold">시스템 점검 중</strong> · 자동 취소와 벌점이 멈춰 있습니다.
         </Notice>
       )}
 
@@ -133,7 +133,8 @@ export default function HomePage() {
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <h2 className="text-lg font-bold">{room.name}</h2>
-                  <p className="text-[13px] text-muted">{room.description}</p>
+                  {room.is_open && room.closes_at && <p className="tabular text-[13px] text-muted">{fmtTime(room.closes_at)} 폐관</p>}
+                  {!room.is_open && <p className="text-[13px] text-muted">{room.reason}</p>}
                 </div>
                 {room.is_open ? <Tag tone={room.pct >= 80 ? "danger" : room.pct >= 50 ? "warn" : "deep"}>{lv.name}</Tag> : <Tag>운영 종료</Tag>}
               </div>
@@ -152,8 +153,6 @@ export default function HomePage() {
                 <OccupancyMeter pct={room.pct} rules={ruleTexts(settings, "away")} />
               </div>
 
-              {!room.is_open && <p className="mt-3 text-sm text-muted">{room.reason}</p>}
-              {room.is_open && room.closes_at && <p className="mt-3 text-[13px] text-muted">오늘 {fmtTime(room.closes_at)}까지 이용할 수 있습니다.</p>}
 
               <div className="mt-4 flex gap-2">
                 <Link
@@ -173,24 +172,23 @@ export default function HomePage() {
         })}
       </div>
 
-      <section aria-labelledby="rules-h" className="pt-2">
-        <h2 id="rules-h" className="text-base font-bold">
-          붐빌수록 규칙이 엄격해집니다
-        </h2>
-        <dl className="mt-3 divide-y divide-line rounded-[var(--radius-panel)] border border-line bg-surface text-sm">
+      <details className="rounded-[var(--radius-panel)] border border-line bg-surface">
+        <summary className="flex min-h-12 cursor-pointer items-center px-4 text-sm font-semibold">이용 규칙</summary>
+        <dl className="divide-y divide-line border-t border-line text-sm">
           {[
-            ["예약 후 체크인", `${settings?.checkin_minutes ?? 15}분 안에 좌석 QR을 스캔합니다. 늦으면 자동 취소되고 벌점 ${settings?.pen_no_show ?? 1}점.`],
-            ["외출", `이용률에 따라 ${settings?.away_high ?? 20}~${settings?.away_low ?? 60}분. 돌아와서 좌석 QR을 스캔합니다.`],
-            ["자리비움 신고", `빈 좌석이 신고되면 ${settings?.report_high ?? 10}~${settings?.report_low ?? 20}분 안에 QR을 스캔해야 합니다. 화장실은 외출 처리 없이 다녀오셔도 됩니다.`],
-            ["이용 시간", `한 번에 최대 ${Number(settings?.max_minutes ?? 240) / 60}시간. 종료 ${settings?.extend_window_min ?? 30}분 전부터 연장할 수 있고, 시험기간에는 횟수 제한이 없습니다.`],
+            ["체크인", `예약 후 ${settings?.checkin_minutes ?? 15}분 안에 좌석 QR 스캔 · 늦으면 자동 취소, 벌점 ${settings?.pen_no_show ?? 1}점`],
+            ["외출", `혼잡도에 따라 ${settings?.away_high ?? 20}~${settings?.away_low ?? 60}분 · 늦으면 자동 반납, 벌점 ${settings?.pen_away ?? 1}점`],
+            ["자리비움 신고", `${settings?.report_high ?? 10}~${settings?.report_low ?? 20}분 안에 QR 스캔으로 응답 · 무응답 시 반납, 벌점 ${settings?.pen_report ?? 2}~${settings?.pen_report_busy ?? 3}점`],
+            ["이용 시간", `최대 ${Number(settings?.max_minutes ?? 240) / 60}시간 · 종료 ${settings?.extend_window_min ?? 30}분 전부터 연장`],
+            ["예약 정지", `벌점 ${settings?.ban1_points ?? 3}점 ${settings?.ban1_days ?? 3}일 · ${settings?.ban2_points ?? 6}점 ${settings?.ban2_days ?? 14}일`],
           ].map(([k, v]) => (
-            <div key={k} className="flex gap-3 px-4 py-3">
+            <div key={k} className="flex gap-3 px-4 py-2.5">
               <dt className="w-24 shrink-0 font-semibold">{k}</dt>
               <dd className="min-w-0 text-[#3d4744]">{v}</dd>
             </div>
           ))}
         </dl>
-      </section>
+      </details>
     </div>
   );
 }

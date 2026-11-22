@@ -96,14 +96,13 @@ export default function SeatQrPage() {
         {ctx.gps_required && (
           <p className="mt-3 flex items-center gap-1.5 text-[13px] text-muted">
             <MapPin size={14} aria-hidden />
-            도서관 안에 있는지 확인하기 위해 위치 권한을 요청합니다.
+            도서관 안에서만 처리됩니다 (위치 확인)
           </p>
         )}
 
         <div className="mt-4 space-y-2.5">
           {!loggedIn && (
             <>
-              <p className="text-sm text-[#3d4744]">이 좌석을 이용하려면 먼저 로그인해 주세요.</p>
               <Button variant="primary" size="lg" className="w-full" onClick={() => router.push(`/login?next=/s/${token}`)}>
                 로그인
               </Button>
@@ -117,7 +116,6 @@ export default function SeatQrPage() {
             <>
               {ctx.is_open ? (
                 <>
-                  <p className="text-sm text-[#3d4744]">비어 있는 좌석입니다. 지금 앉아서 바로 이용을 시작할 수 있습니다.</p>
                   <Button
                     variant="primary"
                     size="lg"
@@ -133,21 +131,20 @@ export default function SeatQrPage() {
                       })
                     }
                   >
-                    이 좌석 이용 시작하기
+                    이 좌석 이용 시작
                   </Button>
                 </>
               ) : (
-                <Notice tone="warn">지금은 예약할 수 없습니다. {ctx.reason}</Notice>
+                <Notice tone="warn">{ctx.reason}</Notice>
               )}
             </>
           )}
           {loggedIn && ctx.state === "free" && ctx.have_other && (
             <Notice tone="warn">
-              이미 다른 좌석({status?.reservation?.seat_label})을 이용 중입니다.{" "}
+              {status?.reservation?.seat_label} 이용 중 ·{" "}
               <Link href="/me" className="font-semibold underline underline-offset-2">
-                내 좌석
+                반납하고 옮기기
               </Link>
-              에서 먼저 반납해 주세요.
             </Notice>
           )}
 
@@ -155,7 +152,7 @@ export default function SeatQrPage() {
           {ctx.is_mine && r?.status === "reserved" && (
             <>
               <p className="text-sm text-[#3d4744]">
-                체크인 마감까지 <strong className="tabular">{fmtRemain(new Date(r.checkin_deadline).getTime() - now)}</strong> 남았습니다.
+                체크인 마감까지 <strong className="tabular">{fmtRemain(new Date(r.checkin_deadline).getTime() - now)}</strong>
               </p>
               <Button variant="primary" size="lg" className="w-full" busy={busy === "in"} onClick={() => scan("in", "check_in", () => "체크인했습니다. 열공하세요!")}>
                 체크인
@@ -166,7 +163,7 @@ export default function SeatQrPage() {
           {ctx.is_mine && r?.status === "away" && (
             <>
               <p className="text-sm text-[#3d4744]">
-                외출 중입니다. 복귀 마감까지 <strong className="tabular">{r.away_deadline ? fmtRemain(new Date(r.away_deadline).getTime() - now) : "-"}</strong> 남았습니다.
+                복귀 마감까지 <strong className="tabular">{r.away_deadline ? fmtRemain(new Date(r.away_deadline).getTime() - now) : "-"}</strong>
               </p>
               <Button variant="primary" size="lg" className="w-full" busy={busy === "back"} onClick={() => scan("back", "come_back", () => "복귀 처리했습니다.")}>
                 자리로 복귀
@@ -179,10 +176,11 @@ export default function SeatQrPage() {
               {ctx.pending_report ? (
                 <>
                   <Notice tone="danger">
-                    자리가 비어 있다는 신고가 접수되었습니다.{" "}
+                    자리 확인 요청
                     {ctx.report_deadline && (
                       <>
-                        <strong className="tabular">{fmtRemain(new Date(ctx.report_deadline).getTime() - now)}</strong> 안에 확인해 주세요.
+                        {" · "}
+                        <strong className="tabular">{fmtRemain(new Date(ctx.report_deadline).getTime() - now)}</strong> 남음
                       </>
                     )}
                   </Notice>
@@ -192,7 +190,7 @@ export default function SeatQrPage() {
                 </>
               ) : (
                 <p className="text-sm text-[#3d4744]">
-                  <strong className="tabular">{fmtTime(r.end_at)}</strong>까지 이용할 수 있습니다. 남은 시간 <span className="tabular">{fmtRemain(endLeft)}</span>
+                  <strong className="tabular">{fmtTime(r.end_at)}</strong>까지 · 남은 시간 <span className="tabular">{fmtRemain(endLeft)}</span>
                 </p>
               )}
               <div className="grid grid-cols-3 gap-2">
@@ -210,7 +208,7 @@ export default function SeatQrPage() {
                   반납
                 </Button>
               </div>
-              {!canExtend && <p className="text-xs text-muted">연장은 종료 {ctx.extend_window_min}분 전부터 할 수 있습니다.</p>}
+              {!canExtend && <p className="text-xs text-muted">연장은 종료 {ctx.extend_window_min}분 전부터</p>}
             </>
           )}
           {ctx.is_mine && r?.status === "away" && (
@@ -224,9 +222,9 @@ export default function SeatQrPage() {
               <p className="font-semibold">
                 지금 외출하면 <span className="tabular text-du-deep-dark">{ctx.away_minutes}분</span> 안에 돌아와야 합니다
               </p>
-              <p className="mt-0.5 text-sm text-muted">이용률 {ctx.occupancy}% 기준입니다. 돌아와서 이 QR을 다시 스캔하세요.</p>
+              <p className="mt-0.5 text-sm text-muted">돌아와서 이 QR을 다시 스캔하세요.</p>
               <div className="mt-3">
-                <OccupancyMeter pct={ctx.occupancy} rules={ruleTexts(settings, "away")} compact />
+                <OccupancyMeter pct={ctx.occupancy} rules={ruleTexts(settings, "away")} />
               </div>
               <Button variant="primary" className="mt-3" busy={busy === "away"} onClick={() => plain("away", async () => `외출 처리했습니다. ${await rpc<number>("go_away")}분 안에 돌아오세요.`)}>
                 외출 시작
@@ -236,7 +234,6 @@ export default function SeatQrPage() {
           {confirm === "return" && (
             <div className="rise rounded-[var(--radius-ctl)] border border-line p-3.5">
               <p className="font-semibold">{seat.label} 좌석을 반납할까요?</p>
-              <p className="mt-0.5 text-sm text-muted">반납하면 바로 다른 학생이 예약할 수 있습니다.</p>
               <Button variant="danger" className="mt-3" busy={busy === "ret"} onClick={() => plain("ret", async () => { await rpc("return_seat"); return "좌석을 반납했습니다."; })}>
                 반납하기
               </Button>
@@ -246,7 +243,6 @@ export default function SeatQrPage() {
           {/* 다른 사람의 좌석 */}
           {loggedIn && !ctx.is_mine && ctx.state === "in_use" && (
             <>
-              <p className="text-sm text-[#3d4744]">다른 학생이 이용 중인 좌석입니다. 짐만 있고 오랫동안 비어 있다면 신고할 수 있습니다.</p>
               <Button aria-expanded={confirm === "report"} className="w-full" onClick={() => setConfirm(confirm === "report" ? null : "report")}>
                 자리가 비어 있어요
               </Button>
@@ -255,13 +251,12 @@ export default function SeatQrPage() {
                   <p className="font-semibold">자리비움을 신고할까요?</p>
                   <ul className="mt-1.5 list-disc space-y-1 pl-5 text-sm text-[#3d4744]">
                     <li>
-                      이용자에게 확인 요청이 가고, <strong className="tabular">{ctx.report_minutes}분</strong> 안에 QR을 스캔하지 않으면 좌석이 자동 반납됩니다.
+                      이용자가 <strong className="tabular">{ctx.report_minutes}분</strong> 안에 응답하지 않으면 자동 반납됩니다.
                     </li>
-                    <li>화장실처럼 잠깐 비운 자리일 수 있으니, 한동안 비어 있었는지 확인해 주세요.</li>
-                    <li>신고자가 누구인지는 이용자에게 알려지지 않습니다.</li>
+                    <li>잠깐 비운 자리일 수 있으니 한동안 비어 있었는지 확인해 주세요.</li>
                   </ul>
                   <div className="mt-3">
-                    <OccupancyMeter pct={ctx.occupancy} rules={ruleTexts(settings, "report")} ruleLabel="응답 시간" compact />
+                    <OccupancyMeter pct={ctx.occupancy} rules={ruleTexts(settings, "report")} ruleLabel="응답" />
                   </div>
                   <Button variant="primary" className="mt-3" busy={busy === "rep"} onClick={() => scan("rep", "report_seat", (m) => `신고를 접수했습니다. ${m}분 뒤 결과를 알림으로 알려 드립니다.`)}>
                     신고 접수
@@ -270,9 +265,9 @@ export default function SeatQrPage() {
               )}
             </>
           )}
-          {loggedIn && !ctx.is_mine && ctx.state === "away" && <Notice>이용자가 외출 처리한 좌석입니다. 외출 시간이 지나면 자동으로 반납됩니다.</Notice>}
+          {loggedIn && !ctx.is_mine && ctx.state === "away" && <Notice>외출 중인 좌석 · 시간이 지나면 자동 반납됩니다</Notice>}
           {loggedIn && !ctx.is_mine && ctx.state === "reserved" && (
-            <Notice>예약된 좌석이며 체크인을 기다리고 있습니다. {settings?.checkin_minutes ?? 15}분 안에 오지 않으면 자동으로 취소됩니다.</Notice>
+            <Notice>체크인 대기 중인 좌석 · {settings?.checkin_minutes ?? 15}분 안에 오지 않으면 자동 취소됩니다</Notice>
           )}
         </div>
       </Panel>

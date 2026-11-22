@@ -62,7 +62,6 @@ export default function LoginPage() {
       <main className="-mt-8 flex-1 px-4 pb-10 sm:-mt-14">
         <form onSubmit={submit} noValidate className="mx-auto max-w-sm rounded-[var(--radius-panel)] border border-line bg-surface p-5 shadow-[var(--shadow-float)] sm:p-6">
           <h2 className="text-lg font-bold">로그인</h2>
-          <p className="mt-1 text-sm text-muted">대구대학교 학번과 비밀번호로 로그인합니다.</p>
           <div className="mt-5 space-y-4">
             <Field label="학번">
               <input
@@ -90,7 +89,7 @@ export default function LoginPage() {
           <Button type="submit" variant="primary" size="lg" busy={busy} className="mt-5 w-full">
             로그인
           </Button>
-          <p className="mt-4 text-[13px] text-muted">계정이 없거나 비밀번호를 잊었다면 도서관 안내 데스크에 문의해 주세요.</p>
+          <p className="mt-4 text-[13px] text-muted">비밀번호 문의: 도서관 안내 데스크</p>
         </form>
       </main>
     </div>

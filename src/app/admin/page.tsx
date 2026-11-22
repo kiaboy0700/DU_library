@@ -178,7 +178,7 @@ export default function AdminHome() {
         <Panel className="lg:sticky lg:top-[72px]">
           {!picked ? (
             <Empty icon={<MousePointerClick size={32} strokeWidth={1.6} aria-hidden />} title="좌석을 선택하세요">
-              배치도에서 좌석을 누르면 이용자 정보를 보고 대리 배정·체크인·반납 등을 처리할 수 있습니다.
+              이용자 확인, 대리 배정·체크인·반납
             </Empty>
           ) : (
             <SeatPanel
@@ -225,9 +225,7 @@ export default function AdminHome() {
       <details className="rounded-[var(--radius-panel)] border border-line bg-surface">
         <summary className="cursor-pointer px-4 py-3 text-sm font-semibold">발표·시연용 도구</summary>
         <div className="border-t border-line p-4">
-          <p className="max-w-2xl text-sm text-muted">
-            가상 학생으로 {room?.name}을 원하는 이용률까지 채웁니다. 혼잡도에 따라 외출 시간과 신고 응답 시간이 바뀌는 것을 바로 보여 줄 수 있습니다. 기존 가상 학생의 좌석은 먼저 비워집니다.
-          </p>
+          <p className="text-sm text-muted">가상 학생으로 {room?.name}을 채웁니다.</p>
           <div className="mt-3 flex flex-wrap items-center gap-3">
             <label className="flex items-center gap-3 text-sm font-semibold">
               목표 이용률
@@ -388,7 +386,7 @@ function SeatPanel(p: {
             p.onAssign(true);
           }}
         >
-          <Field label="학번" hint="휴대폰을 쓸 수 없는 학생에게 이 좌석을 바로 배정합니다.">
+          <Field label="학번">
             <input className={inputClass} value={p.sid} onChange={(e) => p.setSid(e.target.value)} placeholder="예: 22123456" inputMode="numeric" required />
           </Field>
           <Field label="사유">

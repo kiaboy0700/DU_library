@@ -56,9 +56,7 @@ export default function AdminQrPage() {
       <div className="no-print flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-[22px] font-bold">좌석 QR</h1>
-          <p className="mt-0.5 max-w-2xl text-sm text-muted">
-            좌석마다 책상에 붙이는 QR입니다. 좌석을 누르면 크게 볼 수 있고, 휴대폰으로 스캔하거나 &lsquo;좌석 화면 열기&rsquo;로 스캔한 것과 같은 화면을 바로 열어 테스트할 수 있습니다.
-          </p>
+
         </div>
         <Button onClick={() => window.print()}>
           <Printer size={16} aria-hidden />
@@ -147,7 +145,6 @@ export default function AdminQrPage() {
                 QR 재발급
               </Button>
             </div>
-            <p className="mt-2 text-xs text-muted">학생 계정으로 테스트하려면 다른 브라우저나 시크릿 창에서 그 학생으로 로그인한 뒤 주소를 열어 주세요.</p>
           </div>
         </Panel>
       )}

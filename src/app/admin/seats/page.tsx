@@ -110,7 +110,6 @@ export default function AdminSeats() {
 
           <Panel>
             <h2 className="px-4 pt-4 text-lg font-bold sm:px-5">구역</h2>
-            <p className="px-4 text-sm text-muted sm:px-5">구역 전체를 한 번에 막거나 열 수 있습니다. 좌석 하나만 중지하려면 관제 화면에서 좌석을 선택하세요.</p>
             <div className="mt-3 overflow-x-auto border-t border-line">
               <table className="tabular w-full min-w-[520px] text-left text-sm">
                 <thead className="text-xs text-muted">
@@ -164,7 +163,7 @@ export default function AdminSeats() {
               사용 중지된 좌석 <span className="tabular text-muted">{off.length}</span>
             </h2>
             {off.length === 0 ? (
-              <p className="px-4 pb-4 pt-1 text-sm text-muted sm:px-5">중지된 좌석이 없습니다. 모든 좌석을 예약할 수 있습니다.</p>
+              <p className="px-4 pb-4 pt-1 text-sm text-muted sm:px-5">없음</p>
             ) : (
               <ul className="mt-2 divide-y divide-line border-t border-line">
                 {off.map((s) => (
