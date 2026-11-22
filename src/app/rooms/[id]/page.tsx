@@ -151,7 +151,7 @@ export default function RoomPage() {
       {holding ? (
         <>
           <p className="mt-3 text-sm text-[#3d4744]">
-            이동하려고 맡아 둔 좌석입니다. <strong className="tabular font-semibold">{status?.move ? <TimeLeft at={status.move.expires_at} /> : ""}</strong> 안에 이 좌석의 QR을 찍으면 이동합니다.
+            맡아 둔 좌석 · <strong className="tabular font-semibold">{status?.move ? <TimeLeft at={status.move.expires_at} /> : ""}</strong> 안에 이 좌석의 QR을 찍으세요
           </p>
           <Button
             className="mt-3 w-full"
@@ -190,19 +190,13 @@ export default function RoomPage() {
               <dd className="tabular font-semibold">{exam ? "제한 없음" : `${extendsLeft}회`}</dd>
             </div>
           </dl>
-          <p className="mt-3 text-xs text-muted">
-            {info.state === "in_use" && !exam && extendsLeft === 0 && info.end_at
-              ? `연장이 끝나 ${fmtTime(info.end_at)}에 비워집니다.`
-              : info.state === "in_use"
-                ? "연장하면 종료 시각이 늦어질 수 있습니다."
-                : "시간 안에 오지 않으면 자동으로 빈자리가 됩니다."}
-          </p>
+          {info.state === "in_use" && !exam && extendsLeft === 0 && info.end_at && <p className="mt-3 text-xs text-muted">{fmtTime(info.end_at)}에 비워집니다</p>}
         </>
       ) : mine ? (
         mine.status === "in_use" ? (
           <>
             <p className="mt-3 text-sm text-[#3d4744]">
-              지금 좌석 <strong className="font-semibold">{mine.seat_label}</strong>에서 옮깁니다. 이 자리를 {String(settings?.move_hold_minutes ?? 10)}분 동안 맡아 두니, 그 안에 이 좌석의 QR을 찍어 주세요.
+              <strong className="font-semibold">{mine.seat_label}</strong> → <strong className="font-semibold">{selected.label}</strong> · {String(settings?.move_hold_minutes ?? 10)}분 안에 이 좌석의 QR을 찍으세요
             </p>
             <Button variant="primary" size="lg" className="mt-3 w-full" busy={busy === "move"} disabled={blocked} onClick={move}>
               이 자리로 이동
@@ -210,7 +204,7 @@ export default function RoomPage() {
           </>
         ) : (
           <p className="mt-3 text-sm text-[#3d4744]">
-            {mine.seat_label} {mine.status === "reserved" ? "체크인 대기 중" : "외출 중"} · 체크인하고 자리에 있을 때 옮길 수 있습니다.
+            {mine.seat_label} {mine.status === "reserved" ? "체크인 대기 중" : "외출 중"} · 체크인 후 옮길 수 있습니다
           </p>
         )
       ) : (

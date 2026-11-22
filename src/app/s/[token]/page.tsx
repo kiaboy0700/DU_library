@@ -90,7 +90,7 @@ export default function SeatQrPage() {
     return (
       <Panel>
         <Empty icon={<CircleSlash size={36} strokeWidth={1.6} aria-hidden />} title="사용할 수 없는 QR입니다">
-          QR이 교체되었거나 주소가 잘못되었습니다. 책상의 QR을 다시 스캔하거나 안내 데스크에 알려 주세요.
+          책상의 QR을 다시 스캔해 주세요
           <Link href="/" className="mt-3 block font-semibold text-du-deep-dark underline underline-offset-4">
             홈으로 가기
           </Link>
@@ -155,7 +155,7 @@ export default function SeatQrPage() {
             </>
           )}
 
-          {loggedIn && !seat.is_active && <Notice tone="warn">지금은 사용이 중지된 좌석입니다. 다른 좌석을 이용해 주세요.</Notice>}
+          {loggedIn && !seat.is_active && <Notice tone="warn">사용이 중지된 좌석입니다</Notice>}
 
           {/* 빈 좌석: 바로 예약 + 체크인 */}
           {loggedIn && seat.is_active && ctx.state === "free" && !ctx.have_other && !ctx.held_by_other && (
@@ -205,7 +205,7 @@ export default function SeatQrPage() {
           {loggedIn && ctx.state === "free" && ctx.have_other && !ctx.held_by_other && status?.reservation?.status === "in_use" && (
             <>
               <p className="text-sm text-[#3d4744]">
-                지금 좌석 <strong className="font-semibold">{status.reservation.seat_label}</strong>에서 이 자리로 옮깁니다. 남은 시간은 그대로입니다.
+                <strong className="font-semibold">{status.reservation.seat_label}</strong> → <strong className="font-semibold">{seat.label}</strong> · 남은 시간 그대로
               </p>
               <Button
                 variant="primary"
@@ -220,7 +220,7 @@ export default function SeatQrPage() {
           )}
           {loggedIn && ctx.state === "free" && ctx.have_other && !ctx.held_by_other && status?.reservation?.status !== "in_use" && (
             <Notice tone="warn">
-              {status?.reservation?.seat_label} {status?.reservation?.status === "away" ? "외출 중" : "체크인 대기 중"} · 체크인하고 자리에 있을 때 옮길 수 있습니다.
+              {status?.reservation?.seat_label} {status?.reservation?.status === "away" ? "외출 중" : "체크인 대기 중"} · 체크인 후 옮길 수 있습니다
             </Notice>
           )}
           {loggedIn && ctx.state === "free" && ctx.held_by_other && <Notice tone="warn">다른 학생이 이동하려고 맡아 둔 좌석입니다.</Notice>}
@@ -299,7 +299,6 @@ export default function SeatQrPage() {
               <p className="font-semibold">
                 지금 외출하면 <span className="tabular text-du-deep-dark">{ctx.away_minutes}분</span> 안에 돌아와야 합니다
               </p>
-              <p className="mt-0.5 text-sm text-muted">돌아와서 이 QR을 다시 스캔하세요.</p>
               <div className="mt-3">
                 <OccupancyMeter pct={ctx.occupancy} rules={ruleTexts(settings, "away")} />
               </div>
@@ -347,10 +346,8 @@ export default function SeatQrPage() {
                     <li>
                       이용자가 <strong className="tabular">{ctx.report_minutes}분</strong> 안에 응답하지 않으면 자동 반납됩니다.
                     </li>
-                    <li>잠깐 비운 자리일 수 있으니 한동안 비어 있었는지 확인해 주세요.</li>
-                    <li>이용자가 금방 돌아와도 신고한 사람에게 불이익은 없습니다.</li>
                     <li>
-                      이용자가 <strong className="font-semibold">앉아 있는 좌석</strong>을 신고하면 허위 신고입니다. <span className="tabular">{String(settings?.false_report_limit ?? 3)}회</span> 확인되면{" "}
+                      <strong className="font-semibold">앉아 있는 좌석</strong>을 신고하면 허위 신고입니다. <span className="tabular">{String(settings?.false_report_limit ?? 3)}회</span> 확인되면{" "}
                       <span className="tabular">{String(settings?.false_report_ban_days ?? 7)}일간</span> 신고할 수 없고 벌점이 부여됩니다.
                     </li>
                   </ul>

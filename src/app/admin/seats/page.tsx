@@ -72,7 +72,7 @@ export default function AdminSeats() {
             </div>
             {room.is_closed && <p className="mt-1 text-sm text-muted">폐쇄 사유: {room.closed_reason ?? "-"}</p>}
             <div className="mt-4 max-w-md">
-              <Field label="사유" hint="좌석 중지·구역 차단·임시 폐쇄 때 학생에게 함께 전달됩니다.">
+              <Field label="사유 (학생에게 전달됩니다)">
                 <input className={inputClass} value={reason} onChange={(e) => setReason(e.target.value)} placeholder="예: 냉난방 점검, 청소, 행사" />
               </Field>
             </div>

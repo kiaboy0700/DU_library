@@ -180,9 +180,7 @@ export default function AdminHome() {
 
         <Panel className="lg:sticky lg:top-[72px]">
           {!picked ? (
-            <Empty icon={<MousePointerClick size={32} strokeWidth={1.6} aria-hidden />} title="좌석을 선택하세요">
-              이용자 확인, 대리 배정·체크인·반납
-            </Empty>
+            <Empty icon={<MousePointerClick size={32} strokeWidth={1.6} aria-hidden />} title="좌석을 선택하세요" />
           ) : (
             <SeatPanel
               key={picked.seat_id}
@@ -291,8 +289,8 @@ function SeatPanel(p: {
               <dd className="tabular text-right">{r.points}점</dd>
             </div>
           </dl>
-          {r.report && <p className="mt-2 rounded-md bg-danger-tint px-2.5 py-2 text-[13px] font-semibold text-[#7d1a14]">자리비움 신고가 접수되어 응답을 기다리고 있습니다.</p>}
-          {r.on_hold && <p className="mt-2 rounded-md bg-warn-tint px-2.5 py-2 text-[13px] font-semibold text-[#5c3d00]">도움 요청 중이라 자동 취소가 멈춰 있습니다.</p>}
+          {r.report && <p className="mt-2 rounded-md bg-danger-tint px-2.5 py-2 text-[13px] font-semibold text-[#7d1a14]">자리비움 신고 접수 · 응답 대기 중</p>}
+          {r.on_hold && <p className="mt-2 rounded-md bg-warn-tint px-2.5 py-2 text-[13px] font-semibold text-[#5c3d00]">도움 요청 중 · 자동 취소 멈춤</p>}
 
           <div className="mt-4 border-t border-line pt-3">
             <h3 className="text-xs font-bold text-muted">대신 처리</h3>
@@ -395,7 +393,7 @@ function SeatPanel(p: {
         <Button className="w-full" busy={p.busy === "toggle"} onClick={p.onToggle}>
           {seat.is_active ? "이 좌석 사용 중지" : "이 좌석 다시 열기"}
         </Button>
-        {seat.is_active && r && <p className="mt-1.5 text-xs text-muted">사용을 중지하면 이용 중인 학생은 벌점 없이 반납됩니다.</p>}
+        {seat.is_active && r && <p className="mt-1.5 text-xs text-muted">이용 중인 학생은 벌점 없이 반납됩니다</p>}
       </div>
     </div>
   );

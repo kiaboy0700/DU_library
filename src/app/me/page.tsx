@@ -240,7 +240,6 @@ export default function MePage() {
             {open === "move" && res.status === "in_use" && (
               <div className="rise mt-3 rounded-[var(--radius-ctl)] border border-line bg-surface p-3.5">
                 <p className="font-semibold">옮길 좌석의 QR을 찍으면 이동합니다</p>
-                <p className="mt-0.5 text-sm text-muted">남은 시간과 연장 횟수는 그대로 따라갑니다.</p>
                 <div className="mt-3 grid grid-cols-2 gap-2">
                   <Button variant="primary" onClick={() => setOpen("scan")}>
                     <QrCode size={16} aria-hidden />
@@ -378,7 +377,7 @@ export default function MePage() {
           {status.help_open ? (
             <p className="flex items-start gap-2 text-sm">
               <LifeBuoy size={18} className="mt-0.5 shrink-0 text-du-deep" aria-hidden />
-              관리자가 확인하고 있습니다. 처리될 때까지 예약은 자동 취소되지 않습니다.
+              관리자가 확인하고 있습니다
             </p>
           ) : open === "help" ? (
             <form
@@ -411,10 +410,10 @@ export default function MePage() {
             </form>
           ) : (
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-sm text-[#3d4744]">QR·휴대폰 문제는 관리자가 대신 처리합니다.</p>
+              <p className="text-sm text-[#3d4744]">QR이나 휴대폰이 안 될 때</p>
               <Button className="w-full sm:w-auto" onClick={() => setOpen("help")}>
                 <LifeBuoy size={16} aria-hidden />
-                도움 요청
+                관리자에게 요청
               </Button>
             </div>
           )}

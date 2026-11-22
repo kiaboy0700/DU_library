@@ -73,10 +73,9 @@ export default function AdminStats() {
       ) : (
         <>
           <Panel className="p-4 sm:p-5">
-            <h2 className="text-[17px] font-bold">방치된 자리를 얼마나 되찾았나</h2>
-            <p className="mt-1 max-w-2xl text-[15px] text-[#3d4744]">
-              최근 {days}일 동안 미체크인·외출 초과·자리비움 신고로 <strong className="tabular text-du-deep-dark">{s.totals.recovered}석</strong>이 자동으로 회수되어 다른 학생에게 돌아갔습니다. 예약 {sum("reservations")}건 중 노쇼는{" "}
-              <span className="tabular">{noShowRate}%</span>, 평균 이용 시간은 <span className="tabular">{s.totals.avg_minutes}분</span>입니다.
+            <h2 className="text-[17px] font-bold">되찾은 자리</h2>
+            <p className="tabular mt-1 text-[15px] text-[#3d4744]">
+              <strong className="text-2xl font-bold text-du-deep-dark">{s.totals.recovered}석</strong> 자동 회수 · 노쇼 {noShowRate}% · 평균 이용 {s.totals.avg_minutes}분
             </p>
             <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 border-t border-line pt-3 text-sm sm:grid-cols-4">
               {[
@@ -133,7 +132,7 @@ export default function AdminStats() {
           <Panel>
             <h2 className="px-4 pt-4 text-[17px] font-bold sm:px-5">관리자 처리 기록</h2>
             {s.actions.length === 0 ? (
-              <p className="px-4 pb-4 pt-1 text-sm text-muted sm:px-5">아직 기록이 없습니다. 관리자가 처리한 모든 일이 여기에 남습니다.</p>
+              <p className="px-4 pb-4 pt-1 text-sm text-muted sm:px-5">기록이 없습니다</p>
             ) : (
               <ul className="mt-2 divide-y divide-line border-t border-line">
                 {s.actions.map((a) => (

@@ -113,7 +113,7 @@ export default function StatsPage() {
         {cells === null ? (
           <Skeleton className="mt-3 h-64" />
         ) : cells.length === 0 ? (
-          <p className="mt-2 text-sm text-muted">아직 기록이 충분하지 않습니다. 며칠 뒤에 다시 확인해 주세요.</p>
+          <p className="mt-2 text-sm text-muted">기록이 부족합니다</p>
         ) : (
           <div className="mt-3 overflow-x-auto" tabIndex={0} aria-label="요일·시간대별 평균 이용률 표, 스크롤 가능">
             <table className="tabular w-full min-w-[620px] border-separate border-spacing-[3px] text-center text-[11px]">

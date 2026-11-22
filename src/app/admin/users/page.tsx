@@ -71,7 +71,7 @@ export default function AdminUsers() {
                 <Skeleton className="h-40" />
               </div>
             ) : rows.length === 0 ? (
-              <p className="px-4 pb-5 pt-1 text-sm text-muted">{q.trim() ? "검색 결과가 없습니다." : "벌점이 있거나 예약이 정지된 학생이 없습니다. 학번이나 이름으로 검색해 보세요."}</p>
+              <p className="px-4 pb-5 pt-1 text-sm text-muted">{q.trim() ? "검색 결과가 없습니다." : "벌점·정지 학생이 없습니다"}</p>
             ) : (
               <>
                 {!q.trim() && <p className="px-4 pb-1 text-xs text-muted">벌점이 있거나 정지된 학생</p>}
@@ -145,9 +145,7 @@ export default function AdminUsers() {
 
         {!d ? (
           <Panel>
-            <Empty icon={<UserRound size={36} strokeWidth={1.6} aria-hidden />} title="학생을 선택하세요">
-              벌점·예약 기록, 정지·해제, 비밀번호 초기화
-            </Empty>
+            <Empty icon={<UserRound size={36} strokeWidth={1.6} aria-hidden />} title="학생을 선택하세요" />
           </Panel>
         ) : (
           <div className="space-y-4">
@@ -282,7 +280,7 @@ export default function AdminUsers() {
             <Panel>
               <h3 className="px-4 pt-4 text-[17px] font-bold">벌점 기록</h3>
               {d.penalties.length === 0 ? (
-                <p className="px-4 pb-4 pt-1 text-sm text-muted">벌점 기록이 없습니다.</p>
+                <p className="px-4 pb-4 pt-1 text-sm text-muted">없음</p>
               ) : (
                 <ul className="mt-2 divide-y divide-line border-t border-line">
                   {d.penalties.map((p) => (
@@ -310,7 +308,7 @@ export default function AdminUsers() {
             <Panel>
               <h3 className="px-4 pt-4 text-[17px] font-bold">최근 예약</h3>
               {d.reservations.length === 0 ? (
-                <p className="px-4 pb-4 pt-1 text-sm text-muted">예약 기록이 없습니다.</p>
+                <p className="px-4 pb-4 pt-1 text-sm text-muted">없음</p>
               ) : (
                 <div className="mt-2 overflow-x-auto border-t border-line">
                   <table className="tabular w-full min-w-[480px] text-left text-sm">

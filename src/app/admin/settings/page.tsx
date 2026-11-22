@@ -33,20 +33,20 @@ const SECTIONS: Section[] = [
       {
         sub: "예약",
         rows: [
-          ["max_minutes", "1회 최대 이용 시간", "분", "한 번 예약으로 쓸 수 있는 시간"],
-          ["checkin_minutes", "체크인 마감", "분", "예약 후 이 시간 안에 좌석 QR을 찍지 않으면 자동 취소"],
+          ["max_minutes", "1회 최대 이용 시간", "분"],
+          ["checkin_minutes", "체크인 마감", "분", "넘기면 자동 취소"],
         ],
       },
       {
         sub: "자리 이동",
-        rows: [["move_hold_minutes", "옮길 좌석 맡아 두는 시간", "분", "좌석을 먼저 고른 경우, 이 시간 안에 그 좌석의 QR을 찍어야 함"]],
+        rows: [["move_hold_minutes", "옮길 좌석 맡아 두는 시간", "분", "이 시간 안에 그 좌석의 QR을 찍어야 함"]],
       },
       {
         sub: "연장",
         rows: [
           ["extend_minutes", "1회 연장 시간", "분"],
-          ["extend_window_min", "연장 가능 시점", "분 전", "종료 몇 분 전부터 연장할 수 있는지"],
-          ["max_extends", "최대 연장 횟수", "회", "평소 기준입니다. 시험기간에는 제한이 없습니다"],
+          ["extend_window_min", "연장 가능 시점", "분 전", "종료 전"],
+          ["max_extends", "최대 연장 횟수", "회", "시험기간에는 제한 없음"],
         ],
       },
     ],
@@ -60,25 +60,25 @@ const SECTIONS: Section[] = [
       {
         sub: "신고할 수 있는 조건",
         rows: [
-          ["report_min_after_checkin", "체크인 직후 신고 금지", "분", "방금 앉은 좌석은 이 시간 동안 신고할 수 없음"],
-          ["report_cooldown", "응답 후 재신고 금지", "분", "이용자가 응답한 좌석을 다시 신고할 수 없는 시간"],
-          ["report_hourly_limit", "1시간 신고 한도", "건", "한 사람이 1시간에 할 수 있는 신고"],
+          ["report_min_after_checkin", "체크인 직후 신고 금지", "분", "방금 앉은 좌석 보호"],
+          ["report_cooldown", "응답 후 재신고 금지", "분", "응답한 좌석 보호"],
+          ["report_hourly_limit", "1시간 신고 한도", "건"],
           ["report_daily_limit", "하루 신고 한도", "건"],
         ],
       },
       {
         sub: "허위 신고",
-        desc: "관리자가 '앉아 있었음'으로 판정한 신고만 허위로 셉니다. 이용자가 돌아와 응답한 신고는 세지 않습니다.",
+        desc: "관리자가 '앉아 있었음'으로 판정한 신고만 셉니다",
         rows: [
-          ["false_report_limit", "신고 정지 기준", "회", "허위 신고가 이 횟수가 되면 신고 정지"],
+          ["false_report_limit", "신고 정지 기준", "회"],
           ["false_report_ban_days", "신고 정지 기간", "일"],
           ["pen_false_report", "벌점", "점"],
-          ["false_report_window_days", "누적 기간", "일", "이 기간 안의 허위 신고만 셈"],
+          ["false_report_window_days", "누적 기간", "일"],
         ],
       },
       {
         sub: "즉시 응답 (확인 필요)",
-        desc: "신고 직후 이용자가 바로 응답한 경우입니다. 벌점 없이 횟수만 세고 관리자에게 알립니다.",
+        desc: "신고 직후 바로 응답한 경우 · 벌점 없이 관리자에게만 알림",
         rows: [
           ["false_quick_seconds", "즉시 응답으로 보는 시간", "초"],
           ["false_quick_flag", "관리자 알림 기준", "회"],
@@ -107,7 +107,7 @@ const SECTIONS: Section[] = [
           ["ban1_days", "1차 정지 기간", "일"],
           ["ban2_points", "2차 정지 기준", "점"],
           ["ban2_days", "2차 정지 기간", "일"],
-          ["penalty_window_days", "벌점 누적 기간", "일", "이 기간 안의 벌점만 합산"],
+          ["penalty_window_days", "벌점 누적 기간", "일"],
         ],
       },
     ],
@@ -119,7 +119,7 @@ const SECTIONS: Section[] = [
     groups: [
       {
         sub: "개관·폐관 시각",
-        desc: "시험기간에는 '좌석·열람실'에서 24시간 운영으로 지정한 열람실이 종일 열립니다.",
+        desc: "시험기간의 24시간 운영은 '좌석·열람실'에서 지정",
         rows: [
           ["semester_open", "학기 중 개관", "시"],
           ["semester_close", "학기 중 폐관", "시"],
@@ -138,7 +138,7 @@ const SECTIONS: Section[] = [
         rows: [
           ["library_lat", "위도", ""],
           ["library_lng", "경도", ""],
-          ["gps_radius_m", "허용 반경", "m", "이 거리 안에서만 QR 체크인 가능"],
+          ["gps_radius_m", "허용 반경", "m"],
         ],
       },
     ],
@@ -148,8 +148,8 @@ const SECTIONS: Section[] = [
 
 /** 테스트할 때만 켜는 설정. 실제 운영에서는 둘 다 끈다 */
 const TEST_TOGGLES: { key: string; label: string; desc: string }[] = [
-  { key: "force_open", label: "운영시간 무시", desc: "켜 두면 주말·야간·휴관일에도 예약할 수 있습니다." },
-  { key: "gps_disabled", label: "위치 확인 끄기", desc: "켜 두면 도서관 밖에서도 QR 체크인·이동·신고가 됩니다." },
+  { key: "force_open", label: "운영시간 무시", desc: "주말·야간·휴관일에도 예약 가능" },
+  { key: "gps_disabled", label: "위치 확인 끄기", desc: "도서관 밖에서도 QR 체크인·이동·신고 가능" },
 ];
 
 /** 혼잡도별 규칙 표에 들어가는 키 */
@@ -323,7 +323,7 @@ export default function AdminSettings() {
                 </h2>
               </div>
               {hits.length === 0 ? (
-                <p className="border-t border-line px-4 py-6 text-sm text-muted sm:px-5">맞는 설정이 없습니다. 다른 낱말로 찾아보거나 왼쪽 구역에서 골라 주세요.</p>
+                <p className="border-t border-line px-4 py-6 text-sm text-muted sm:px-5">맞는 설정이 없습니다</p>
               ) : (
                 <div className="divide-y divide-line border-t border-line">
                   {hits.map(({ sec, r }) => (
@@ -341,7 +341,7 @@ export default function AdminSettings() {
                 <Panel className="divide-y divide-line overflow-hidden">
                   <div className="px-4 pb-3 pt-4 sm:px-5">
                     <h2 className="text-lg font-bold tracking-[-0.01em]">{section.title}</h2>
-                    <p className="text-[13px] text-muted">누르는 즉시 적용됩니다. 실제로 운영할 때는 둘 다 꺼 주세요.</p>
+                    <p className="text-[13px] text-muted">누르는 즉시 적용됩니다</p>
                   </div>
                   {TEST_TOGGLES.map((t) => {
                     const on = !!settings[t.key];
@@ -375,7 +375,6 @@ export default function AdminSettings() {
                 <Panel className="overflow-hidden">
                   <div className="px-4 pb-3 pt-4 sm:px-5">
                     <h2 className="text-lg font-bold tracking-[-0.01em]">{section.title}</h2>
-                    <p className="text-[13px] text-muted">이용률이 높을수록 외출 시간과 신고 응답 시간이 짧아집니다. 한 줄이 한 단계입니다.</p>
                   </div>
                   <div className="overflow-x-auto border-t border-line">
                     <table className="w-full min-w-[520px] text-sm">
@@ -443,7 +442,7 @@ export default function AdminSettings() {
             <>
           <Panel className="p-4 sm:p-5">
             <h2 className="text-lg font-bold tracking-[-0.01em]">운영 기간</h2>
-            <p className="mt-0.5 text-sm text-muted">기간이 겹치면 시험기간이 우선합니다. 어느 기간에도 속하지 않는 날은 학기 중으로 봅니다.</p>
+            <p className="mt-0.5 text-sm text-muted">겹치면 시험기간이 우선합니다</p>
             {periods === null ? (
               <Skeleton className="mt-3 h-24" />
             ) : (
@@ -494,7 +493,7 @@ export default function AdminSettings() {
             </form>
 
             <h3 className="mt-6 text-sm font-bold">휴관일</h3>
-            <p className="text-sm text-muted">토요일과 일요일은 자동으로 휴관입니다. 공휴일·개교기념일·장서점검일을 등록하세요.</p>
+            <p className="text-sm text-muted">토·일요일은 자동 휴관</p>
             <ul className="mt-2 flex flex-wrap gap-1.5">
               {closed.map((c) => (
                 <li key={c.day} className="tabular flex items-center gap-1 rounded-full border border-line py-1 pl-3 pr-1 text-sm">

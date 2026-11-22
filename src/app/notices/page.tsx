@@ -161,14 +161,12 @@ export default function NoticesPage() {
         <Skeleton className="h-48 !rounded-[var(--radius-panel)]" />
       ) : list.length === 0 ? (
         <Panel>
-          <Empty icon={<Megaphone size={36} strokeWidth={1.6} aria-hidden />} title="공지가 없습니다">
-            {admin ? "위의 '공지 쓰기'로 첫 공지를 올려 보세요." : "조기 폐관이나 휴관 같은 소식이 있으면 여기에 올라옵니다."}
-          </Empty>
+          <Empty icon={<Megaphone size={36} strokeWidth={1.6} aria-hidden />} title="공지가 없습니다" />
         </Panel>
       ) : (
         <>
           <Panel className="overflow-hidden">
-            {current.length === 0 ? <p className="px-4 py-6 text-sm text-muted sm:px-5">지금 게시 중인 공지가 없습니다.</p> : <ul className="divide-y divide-line">{current.map((a) => item(a, false))}</ul>}
+            {current.length === 0 ? <p className="px-4 py-6 text-sm text-muted sm:px-5">게시 중인 공지가 없습니다</p> : <ul className="divide-y divide-line">{current.map((a) => item(a, false))}</ul>}
           </Panel>
           {past.length > 0 && (
             <section aria-labelledby="past-h">

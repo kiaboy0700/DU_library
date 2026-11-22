@@ -99,9 +99,7 @@ export default function AdminReports() {
 
       {empty && (
         <Panel>
-          <Empty icon={<Inbox size={36} strokeWidth={1.6} aria-hidden />} title="처리할 일이 없습니다">
-            신고·도움 요청·이의신청이 들어오면 여기에 표시됩니다.
-          </Empty>
+          <Empty icon={<Inbox size={36} strokeWidth={1.6} aria-hidden />} title="처리할 일이 없습니다" />
         </Panel>
       )}
 

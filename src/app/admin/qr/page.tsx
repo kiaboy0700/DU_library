@@ -177,7 +177,7 @@ export default function AdminQrPage() {
           ))}
         </ul>
       )}
-      {seats && shown.length === 0 && <p className="py-10 text-center text-sm text-muted">조건에 맞는 좌석이 없습니다. 검색어나 구역을 바꿔 보세요.</p>}
+      {seats && shown.length === 0 && <p className="py-10 text-center text-sm text-muted">좌석이 없습니다</p>}
     </div>
   );
 }
