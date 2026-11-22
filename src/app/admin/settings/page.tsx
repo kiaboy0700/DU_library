@@ -145,6 +145,13 @@ const SECTIONS: Section[] = [
     ],
   },
   { id: "notice", title: "공지", hint: "홈 화면 공지, 푸시" },
+  { id: "test", title: "테스트 설정", hint: "운영시간 무시, 위치 확인 끄기" },
+];
+
+/** 테스트할 때만 켜는 설정. 실제 운영에서는 둘 다 끈다 */
+const TEST_TOGGLES: { key: string; label: string; desc: string }[] = [
+  { key: "force_open", label: "운영시간 무시", desc: "켜 두면 주말·야간·휴관일에도 예약할 수 있습니다." },
+  { key: "gps_disabled", label: "위치 확인 끄기", desc: "켜 두면 도서관 밖에서도 QR 체크인·이동·신고가 됩니다." },
 ];
 
 /** 혼잡도별 규칙 표에 들어가는 키 */
@@ -314,6 +321,7 @@ export default function AdminSettings() {
                       {sec.title}
                       <span className={cx("hidden text-xs font-normal lg:block", on ? "text-du-deep-dark/80" : "text-muted")}>{sec.hint}</span>
                     </span>
+                    {sec.id === "test" && TEST_TOGGLES.some((t) => settings[t.key]) && <span className="size-2 shrink-0 rounded-full bg-[#c98a12]" aria-label="켜진 항목 있음" />}
                     {n > 0 && <span className="tabular grid h-5 min-w-5 shrink-0 place-items-center rounded-full bg-du-deep px-1 text-[11px] font-bold text-white lg:bg-du-deep">{n}</span>}
                   </button>
                 </li>
@@ -345,6 +353,40 @@ export default function AdminSettings() {
             </Panel>
           ) : (
             <>
+              {section.id === "test" && (
+                <Panel className="divide-y divide-line overflow-hidden">
+                  <div className="px-4 py-3 sm:px-5">
+                    <h2 className="font-bold">{section.title}</h2>
+                    <p className="text-[13px] text-muted">누르는 즉시 적용됩니다. 실제로 운영할 때는 둘 다 꺼 주세요.</p>
+                  </div>
+                  {TEST_TOGGLES.map((t) => {
+                    const on = !!settings[t.key];
+                    return (
+                      <div key={t.key} className="flex items-center justify-between gap-4 px-4 py-3.5 sm:px-5">
+                        <div className="min-w-0">
+                          <p className="flex items-center gap-2 font-semibold">
+                            {t.label}
+                            {on && <Tag tone="warn">켜짐</Tag>}
+                          </p>
+                          <p className="mt-0.5 text-[13px] text-muted">{t.desc}</p>
+                        </div>
+                        <button
+                          type="button"
+                          role="switch"
+                          aria-checked={on}
+                          aria-label={t.label}
+                          disabled={busy === t.key}
+                          onClick={() => save(t.key, [[t.key, !on]], `${t.label}: ${on ? "껐습니다" : "켰습니다"}.`)}
+                          className={cx("relative h-7 w-12 shrink-0 rounded-full transition-colors duration-150", on ? "bg-du-deep" : "bg-[#b9c6c2]")}
+                        >
+                          <span className={cx("absolute left-0.5 top-0.5 size-6 rounded-full bg-white shadow transition-transform duration-150", on && "translate-x-5")} />
+                        </button>
+                      </div>
+                    );
+                  })}
+                </Panel>
+              )}
+
               {section.id === "crowd" && (
                 <Panel className="overflow-hidden">
                   <div className="px-4 py-3 sm:px-5">
