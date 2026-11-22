@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { RotateCcw, Play } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { ArrowDown, ArrowUp, Play, Plus, RotateCcw, Square, X } from "lucide-react";
 import { OccupancyMeter } from "@/components/OccupancyMeter";
 import { useApp } from "@/components/Providers";
 import { Button, Panel, Skeleton, Tag, TimeLeft, inputClass, useAction } from "@/components/ui";
@@ -86,6 +86,27 @@ const SCENARIOS: { title: string; items: { action: string; label: string; arg?: 
   },
 ];
 
+const ITEMS = [...SCENARIOS.flatMap((g) => g.items.map((it) => ({ ...it, key: it.action + (it.arg ?? "") }))), { action: "reset", label: "처음으로", key: "reset", arg: undefined, danger: false }];
+const itemOf = (key: string) => ITEMS.find((i) => i.key === key);
+
+interface Step {
+  id: number;
+  key: string;
+  /** 앞 상황이 끝난 뒤 이 상황을 실행하기까지 기다리는 시간(초) */
+  delay: number;
+}
+/** 자주 보여 주는 흐름 */
+const FLOWS: { label: string; keys: string[] }[] = [
+  { label: "미체크인", keys: ["reset", "reserved", "checkin_soon", "no_show"] },
+  { label: "이용·연장", keys: ["reset", "reserved", "in_use", "end_soon", "expire"] },
+  { label: "외출 초과", keys: ["reset", "in_use", "away", "away_soon", "away_timeout"] },
+  { label: "자리비움 신고", keys: ["reset", "in_use", "report", "report_timeout"] },
+  { label: "벌점 누적 → 정지", keys: ["reset", "no_show", "away_timeout", "report_timeout"] },
+];
+const SEQ_KEY = "du-demo-seq";
+let stepId = 1;
+const toSteps = (keys: string[], delay: number): Step[] => keys.map((key, i) => ({ id: stepId++, key, delay: i === 0 ? 0 : delay }));
+
 function RoomFill({ room, onDone }: { room: RoomSummary; onDone: () => void }) {
   const { toast } = useApp();
   const { busy, run } = useAction((m) => toast(m, "error"));
@@ -150,7 +171,12 @@ export default function DemoPage() {
   const { toast } = useApp();
   const { home, reload } = useHome();
   const { busy, run } = useAction((m) => toast(m, "error"));
-  const [students, setStudents] = useState<{ student_id: string; name: string }[]>([]);
+  const [students, setStudents] = useState<{ student_id: string; name: string; virtual?: boolean }[]>([]);
+  // 자동 시연: 상황을 순서대로 담아 두고, 사이사이 기다리는 시간을 두고 실행한다
+  const [seq, setSeq] = useState<Step[]>([]);
+  const [gap, setGap] = useState(5);
+  const [playing, setPlaying] = useState<{ index: number; left: number } | null>(null);
+  const stop = useRef(false);
   const [sid, setSid] = useState("");
   const [roomId, setRoomId] = useState<number | null>(null);
   const [state, setState] = useState<DemoState | null>(null);
@@ -167,18 +193,39 @@ export default function DemoPage() {
   }, []);
 
   useEffect(() => {
-    supabase
-      .from("profiles")
-      .select("student_id,name")
-      .eq("role", "student")
-      .eq("is_virtual", false)
-      .order("student_id")
-      .then(({ data }) => {
-        setStudents(data ?? []);
-        if (data?.[0]) setSid(data[0].student_id);
-      });
+    Promise.all([
+      supabase.from("profiles").select("student_id,name").eq("role", "student").eq("is_virtual", false).order("student_id"),
+      // 시연 전용 가상 학생: 실제 계정을 건드리지 않고 보여 줄 수 있다
+      supabase.from("profiles").select("student_id,name").eq("is_virtual", true).like("student_id", "2599%").limit(140),
+    ]).then(([real, virt]) => {
+      const pool = virt.data ?? [];
+      const v = pool.length ? [{ ...pool[Math.floor(Math.random() * pool.length)], virtual: true }] : [];
+      const list = [...v, ...(real.data ?? [])];
+      setStudents(list);
+      if (list[0]) setSid(list[0].student_id);
+    });
     loadOps();
+    try {
+      const saved = JSON.parse(localStorage.getItem(SEQ_KEY) ?? "[]") as { key: string; delay: number }[];
+      setSeq(saved.filter((x) => itemOf(x.key)).map((x) => ({ id: stepId++, key: x.key, delay: Number(x.delay) || 0 })));
+    } catch {}
+    return () => {
+      stop.current = true;
+    };
   }, [loadOps]);
+
+  const saveSeq = (next: Step[]) => {
+    setSeq(next);
+    try {
+      localStorage.setItem(SEQ_KEY, JSON.stringify(next.map(({ key, delay }) => ({ key, delay }))));
+    } catch {}
+  };
+  const swap = (i: number, j: number) => {
+    if (j < 0 || j >= seq.length) return;
+    const next = [...seq];
+    [next[i], next[j]] = [next[j], next[i]];
+    saveSeq(next);
+  };
 
   useEffect(() => {
     if (!sid) return;
@@ -209,6 +256,33 @@ export default function DemoPage() {
       setFlags((f) => ({ ...f, [key]: on }));
       reload();
     });
+
+  // 담아 둔 상황을 차례로 실행. 멈추면 지금 기다리던 상황부터 실행하지 않는다
+  async function play() {
+    if (!sid || seq.length === 0 || playing) return;
+    stop.current = false;
+    try {
+      for (let i = 0; i < seq.length; i++) {
+        for (let left = seq[i].delay; left > 0; left--) {
+          setPlaying({ index: i, left });
+          await new Promise((r) => setTimeout(r, 1000));
+          if (stop.current) return;
+        }
+        setPlaying({ index: i, left: 0 });
+        const it = itemOf(seq[i].key);
+        if (!it) continue;
+        const r = await rpc<DemoResult>("admin_demo", { p_action: it.action, p_student: sid, p_room: room, p_arg: it.arg ?? null });
+        if (stop.current) return;
+        if (r.state) setState(r.state);
+        if (r.message) toast(r.message, "ok");
+        reload();
+      }
+    } catch (e) {
+      toast(e instanceof Error ? e.message : "오류가 발생했습니다.", "error");
+    } finally {
+      setPlaying(null);
+    }
+  }
 
   const res = state?.res;
   const deadline = res ? (res.report_deadline ?? (res.status === "reserved" ? res.checkin_deadline : res.status === "away" && res.away_deadline ? res.away_deadline : res.end_at)) : null;
@@ -285,9 +359,10 @@ export default function DemoPage() {
         </h2>
         <Panel className="overflow-hidden">
           <div className="grid grid-cols-2 gap-2 p-4">
-            <select aria-label="학생" className={inputClass} value={sid} onChange={(e) => setSid(e.target.value)}>
+            <select aria-label="학생" className={inputClass} value={sid} disabled={!!playing} onChange={(e) => setSid(e.target.value)}>
               {students.map((s) => (
                 <option key={s.student_id} value={s.student_id}>
+                  {s.virtual ? "가상 학생 · " : ""}
                   {s.name} {s.student_id}
                 </option>
               ))}
@@ -334,7 +409,7 @@ export default function DemoPage() {
                   {g.items.map((it) => {
                     const key = it.action + (it.arg ?? "");
                     return (
-                      <Button key={key} variant={it.danger ? "danger" : "secondary"} busy={busy === key} disabled={!!busy || !sid} onClick={() => scenario(key, it.action, it.arg)}>
+                      <Button key={key} variant={it.danger ? "danger" : "secondary"} busy={busy === key} disabled={!!busy || !!playing || !sid} onClick={() => scenario(key, it.action, it.arg)}>
                         {it.label}
                       </Button>
                     );
@@ -344,8 +419,124 @@ export default function DemoPage() {
             ))}
           </div>
 
+          {/* 자동 시연 */}
+          <div className="border-t-4 border-du-tint p-4">
+            <h3 className="mb-3 text-base font-bold">자동 시연</h3>
+            <div className="flex flex-wrap gap-2">
+              {FLOWS.map((f) => (
+                <Button key={f.label} size="sm" disabled={!!playing} onClick={() => saveSeq(toSteps(f.keys, gap))}>
+                  {f.label}
+                </Button>
+              ))}
+            </div>
+
+            {seq.length > 0 && (
+              <ol className="mt-3 divide-y divide-line overflow-hidden rounded-[var(--radius-ctl)] border border-line">
+                {seq.map((st, i) => {
+                  const it = itemOf(st.key);
+                  const on = playing?.index === i;
+                  const done = !!playing && playing.index > i;
+                  return (
+                    <li key={st.id} aria-current={on ? "step" : undefined} className={cx("flex items-center gap-2 px-3 py-2 transition-colors duration-150", on && "bg-du-tint", done && "text-muted")}>
+                      <span className={cx("tabular grid size-6 shrink-0 place-items-center rounded-full text-xs font-bold", on ? "bg-du-deep text-white" : "bg-[#eaefed]")}>{i + 1}</span>
+                      <span className={cx("min-w-0 flex-1 truncate text-sm font-semibold", it?.danger && !done && "text-danger")}>{it?.label}</span>
+                      {on && playing.left > 0 ? (
+                        <span className="tabular shrink-0 text-sm font-bold text-du-deep-dark">{playing.left}초</span>
+                      ) : (
+                        <label className="flex shrink-0 items-center gap-1 text-[13px] text-muted">
+                          <input
+                            type="number"
+                            min={0}
+                            max={600}
+                            inputMode="numeric"
+                            aria-label={`${i + 1}번 상황 전 대기 시간(초)`}
+                            disabled={!!playing}
+                            value={st.delay}
+                            onChange={(e) => saveSeq(seq.map((x) => (x.id === st.id ? { ...x, delay: Math.max(0, Math.min(600, Number(e.target.value) || 0)) } : x)))}
+                            className="tabular h-9 w-14 rounded-md border border-line bg-surface px-1.5 text-right text-sm text-du-black"
+                          />
+                          초 뒤
+                        </label>
+                      )}
+                      {!playing && (
+                        <span className="flex shrink-0">
+                          <button type="button" aria-label="위로" disabled={i === 0} className="grid size-8 place-items-center rounded-md text-muted hover:bg-canvas disabled:opacity-30" onClick={() => swap(i, i - 1)}>
+                            <ArrowUp size={15} aria-hidden />
+                          </button>
+                          <button type="button" aria-label="아래로" disabled={i === seq.length - 1} className="grid size-8 place-items-center rounded-md text-muted hover:bg-canvas disabled:opacity-30" onClick={() => swap(i, i + 1)}>
+                            <ArrowDown size={15} aria-hidden />
+                          </button>
+                          <button type="button" aria-label="빼기" className="grid size-8 place-items-center rounded-md text-muted hover:bg-danger-tint hover:text-danger" onClick={() => saveSeq(seq.filter((x) => x.id !== st.id))}>
+                            <X size={15} aria-hidden />
+                          </button>
+                        </span>
+                      )}
+                    </li>
+                  );
+                })}
+              </ol>
+            )}
+
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <div className="relative min-w-0 flex-1 basis-40">
+                <Plus size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" aria-hidden />
+                <select
+                  aria-label="상황 추가"
+                  className={cx(inputClass, "pl-9")}
+                  value=""
+                  disabled={!!playing}
+                  onChange={(e) => e.target.value && saveSeq([...seq, { id: stepId++, key: e.target.value, delay: seq.length ? gap : 0 }])}
+                >
+                  <option value="">상황 추가</option>
+                  {ITEMS.map((it) => (
+                    <option key={it.key} value={it.key}>
+                      {it.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <label className="flex shrink-0 items-center gap-1.5 text-sm">
+                간격
+                <input
+                  type="number"
+                  min={0}
+                  max={600}
+                  inputMode="numeric"
+                  aria-label="상황 사이 기본 간격(초)"
+                  disabled={!!playing}
+                  value={gap}
+                  onChange={(e) => {
+                    const v = Math.max(0, Math.min(600, Number(e.target.value) || 0));
+                    setGap(v);
+                    saveSeq(seq.map((x, i) => ({ ...x, delay: i === 0 ? 0 : v })));
+                  }}
+                  className="tabular h-11 w-16 rounded-[var(--radius-ctl)] border border-line bg-surface px-2 text-right"
+                />
+                초
+              </label>
+              {playing ? (
+                <Button
+                  variant="danger"
+                  className="shrink-0"
+                  onClick={() => {
+                    stop.current = true;
+                    setPlaying(null);
+                  }}
+                >
+                  <Square size={15} aria-hidden />
+                  멈춤
+                </Button>
+              ) : (
+                <Button variant="primary" className="shrink-0" disabled={!sid || seq.length === 0 || !!busy} onClick={play}>
+                  <Play size={16} aria-hidden />
+                  시작
+                </Button>
+              )}
+            </div>
+          </div>
+
           <div className="grid grid-cols-2 gap-2 border-t border-line bg-[#f8faf9] p-4">
-            <Button busy={busy === "reset"} disabled={!!busy || !sid} onClick={() => scenario("reset", "reset")}>
+            <Button busy={busy === "reset"} disabled={!!busy || !!playing || !sid} onClick={() => scenario("reset", "reset")}>
               <RotateCcw size={16} aria-hidden />
               처음으로
             </Button>

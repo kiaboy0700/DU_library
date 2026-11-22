@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { CircleAlert } from "lucide-react";
 import { useApp } from "@/components/Providers";
 import { Button, Field, inputClass } from "@/components/ui";
-import { emailOf, supabase } from "@/lib/supabase";
+import { emailOf, rpc, supabase } from "@/lib/supabase";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -15,6 +15,13 @@ export default function LoginPage() {
   const [pw, setPw] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // 로그인 전에도 지금 빈자리 수는 보여 준다
+  const [rooms, setRooms] = useState<{ id: number; name: string; total: number; free: number; pct: number; is_open: boolean }[]>([]);
+  useEffect(() => {
+    rpc<typeof rooms>("public_rooms")
+      .then(setRooms)
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     // 로그인하면 이전에 보던 화면과 상관없이 처음 화면으로 간다
@@ -41,23 +48,44 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-dvh flex-col bg-surface lg:flex-row">
+    <div className="flex min-h-dvh flex-col bg-[#003d34] lg:flex-row lg:bg-surface">
       {/* 창파도서관 사진. 글자가 읽히도록 아래쪽을 초록으로 덮는다 */}
-      <div className="on-deep relative isolate flex min-h-[46dvh] flex-col justify-end overflow-hidden bg-du-deep px-6 pb-16 pt-10 text-white lg:min-h-dvh lg:flex-1 lg:justify-end lg:p-14">
+      <div className="on-deep relative isolate flex flex-col overflow-hidden px-5 pb-6 pt-[max(2.75rem,env(safe-area-inset-top))] text-white lg:min-h-dvh lg:flex-1 lg:justify-between lg:p-14">
         <Image src="/brand/changpa.webp" alt="" fill priority sizes="(min-width: 1024px) 60vw, 100vw" className="-z-20 object-cover object-[68%_100%]" />
-        <span aria-hidden className="absolute inset-0 -z-10 bg-gradient-to-t from-[#003d34] via-[#003d34]/55 to-transparent" />
-        <div className="mx-auto w-full max-w-sm lg:mx-0 lg:max-w-none">
+        <span aria-hidden className="absolute inset-0 -z-10 bg-gradient-to-t from-[#003d34] via-[#003d34]/65 to-[#003d34]/15" />
+        <div>
           <span className="grid size-16 place-items-center rounded-full bg-white shadow-[0_4px_14px_-4px_rgb(0_0_0/0.4)]">
             <Image src="/brand/symbol.png" alt="대구대학교" width={56} height={56} priority />
           </span>
-          <h1 className="mt-4 text-[30px] font-bold leading-tight lg:text-[44px]">
+          <h1 className="mt-4 text-[30px] font-bold leading-tight drop-shadow-[0_1px_8px_rgb(0_40_34/0.6)] lg:text-[44px]">
             창파도서관
             <br />
             좌석예약
           </h1>
         </div>
+        {/* 지금 빈자리 */}
+        <div className="mt-8 grid min-h-[92px] grid-cols-2 gap-2.5 lg:mt-0 lg:max-w-lg" aria-label="지금 빈자리">
+          {rooms.map((r) => (
+            <div key={r.id} className="rounded-xl border border-white/25 bg-white/15 px-3.5 py-3 backdrop-blur-md">
+              <p className="text-[13px] font-semibold text-white/90">{r.name}</p>
+              {r.is_open ? (
+                <>
+                  <p className="tabular mt-0.5 flex items-baseline gap-1">
+                    <span className="text-[26px] font-bold leading-none">{r.free}</span>
+                    <span className="text-[13px] text-white/90">석 남음</span>
+                  </p>
+                  <span className="mt-2 block h-1.5 overflow-hidden rounded-full bg-white/25" role="meter" aria-valuemin={0} aria-valuemax={100} aria-valuenow={r.pct} aria-label={`이용률 ${r.pct}퍼센트`}>
+                    <span className={r.pct >= 80 ? "block h-full rounded-full bg-[#ffb4ab]" : r.pct >= 50 ? "block h-full rounded-full bg-du-light" : "block h-full rounded-full bg-white"} style={{ width: `${Math.max(r.pct, 3)}%` }} />
+                  </span>
+                </>
+              ) : (
+                <p className="mt-1 text-[15px] font-semibold">운영 종료</p>
+              )}
+            </div>
+          ))}
+        </div>
       </div>
-      <main className="-mt-8 flex-1 px-4 pb-10 lg:mt-0 lg:flex lg:w-[440px] lg:flex-none lg:items-center lg:px-10">
+      <main className="flex flex-1 flex-col px-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] lg:w-[440px] lg:flex-none lg:justify-center lg:px-10">
         <form onSubmit={submit} noValidate className="relative mx-auto w-full max-w-sm rounded-[var(--radius-panel)] border border-line bg-surface p-5 shadow-[var(--shadow-float)] sm:p-6 lg:border-0 lg:p-0 lg:shadow-none">
           <h2 className="text-lg font-bold">로그인</h2>
           <div className="mt-5 space-y-4">

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Megaphone, PenLine, Trash2 } from "lucide-react";
 import { useApp } from "@/components/Providers";
-import { Button, Empty, Field, Panel, Skeleton, Tag, inputClass, useAction, useNow } from "@/components/ui";
+import { Button, Empty, Field, Panel, Skeleton, Tag, inputClass, useAction, useNow, useFold } from "@/components/ui";
 import { rpc, supabase } from "@/lib/supabase";
 import type { Room } from "@/lib/types";
 import { NOTICE_SEEN_KEY, cx, fmtDateTime } from "@/lib/util";
@@ -54,6 +54,7 @@ export default function NoticesPage() {
   const live = (a: Announcement) => !a.until || new Date(a.until).getTime() > now;
   const current = list?.filter(live) ?? [];
   const past = list?.filter((a) => !live(a)) ?? [];
+  const pastFold = useFold(past, 3);
 
   const item = (a: Announcement, old: boolean) => (
     <li key={a.id} className={cx("flex items-start gap-3 px-4 py-3.5 sm:px-5", old && "opacity-70")}>
@@ -174,7 +175,8 @@ export default function NoticesPage() {
                 지난 공지
               </h2>
               <Panel className="overflow-hidden">
-                <ul className="divide-y divide-line">{past.map((a) => item(a, true))}</ul>
+                <ul className="divide-y divide-line">{pastFold.shown.map((a) => item(a, true))}</ul>
+                {pastFold.toggle}
               </Panel>
             </section>
           )}

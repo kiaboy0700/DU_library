@@ -7,7 +7,7 @@ import { Armchair, LifeBuoy, LogOut, QrCode, ScanLine, TriangleAlert } from "luc
 import { OccupancyMeter } from "@/components/OccupancyMeter";
 import { useApp } from "@/components/Providers";
 import { QrScanner } from "@/components/QrScanner";
-import { Button, Empty, Field, Notice, Panel, Skeleton, Tag, inputClass, useAction, useNow } from "@/components/ui";
+import { Button, Empty, Field, Notice, Panel, Skeleton, Tag, inputClass, useAction, useFold, useNow } from "@/components/ui";
 import { ruleTexts, useSettings } from "@/lib/hooks";
 import { rpc, supabase } from "@/lib/supabase";
 import { MODE_LABEL, SEAT_TYPE_LABEL, type Penalty } from "@/lib/types";
@@ -30,6 +30,7 @@ export default function MePage() {
   const { busy, run } = useAction((m) => toast(m, "error"));
   const [open, setOpen] = useState<"away" | "return" | "help" | "scan" | "move" | null>(null);
   const [penalties, setPenalties] = useState<Penalty[]>([]);
+  const penFold = useFold(penalties, 2);
   const [appeals, setAppeals] = useState<Appeal[]>([]);
   const [appealFor, setAppealFor] = useState<number | null>(null);
   const [appealText, setAppealText] = useState("");
@@ -319,8 +320,9 @@ export default function MePage() {
             </p>
           </div>
           {penalties.length > 0 && (
-            <ul className="divide-y divide-line border-t border-line">
-              {penalties.map((p) => {
+            <>
+<ul className="divide-y divide-line border-t border-line">
+              {penFold.shown.map((p) => {
                 const ap = appeals.find((a) => a.penalty_id === p.id);
                 return (
                   <li key={p.id} className="px-4 py-3">
@@ -375,6 +377,8 @@ export default function MePage() {
                 );
               })}
             </ul>
+            {penFold.toggle}
+</>
           )}
         </Panel>
       </section>

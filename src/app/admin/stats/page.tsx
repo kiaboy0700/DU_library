@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Panel, Skeleton } from "@/components/ui";
+import { Panel, Skeleton, useFold } from "@/components/ui";
 import { rpc } from "@/lib/supabase";
 import { cx, fmtDate, fmtDateTime } from "@/lib/util";
 
@@ -52,6 +52,8 @@ export default function AdminStats() {
     rpc<Stats>("admin_stats", { p_days: days }).then(setS).catch(() => {});
   }, [days]);
 
+  const dayFold = useFold(s ? [...s.daily].reverse() : [], 7);
+  const actFold = useFold(s?.actions ?? [], 8);
   const max = Math.max(1, ...(s?.daily.map((d) => d.reservations) ?? [1]));
   const sum = (k: "reservations" | "no_shows" | "auto_returns" | "reports") => s?.daily.reduce((a, d) => a + d[k], 0) ?? 0;
   const noShowRate = s && sum("reservations") > 0 ? Math.round((100 * sum("no_shows")) / sum("reservations")) : 0;
@@ -108,7 +110,7 @@ export default function AdminStats() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-line">
-                  {[...s.daily].reverse().map((d) => (
+                  {dayFold.shown.map((d) => (
                     <tr key={d.day}>
                       <th scope="row" className="whitespace-nowrap px-4 py-2 text-left font-medium sm:px-5">
                         {fmtDate(d.day)}
@@ -127,6 +129,7 @@ export default function AdminStats() {
                   ))}
                 </tbody>
               </table>
+              {dayFold.toggle}
             </div>
           </Panel>
 
@@ -135,8 +138,9 @@ export default function AdminStats() {
             {s.actions.length === 0 ? (
               <p className="px-4 pb-4 pt-1 text-sm text-muted sm:px-5">기록이 없습니다</p>
             ) : (
-              <ul className="mt-2 divide-y divide-line border-t border-line">
-                {s.actions.map((a) => (
+              <>
+<ul className="mt-2 divide-y divide-line border-t border-line">
+                {actFold.shown.map((a) => (
                   <li key={a.id} className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5 px-4 py-2.5 text-sm sm:px-5">
                     <span className="tabular w-28 shrink-0 text-xs text-muted">{fmtDateTime(a.created_at)}</span>
                     <span className="font-semibold">{actionName(a.action)}</span>
@@ -150,6 +154,8 @@ export default function AdminStats() {
                   </li>
                 ))}
               </ul>
+              {actFold.toggle}
+</>
             )}
           </Panel>
         </>

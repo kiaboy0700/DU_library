@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Search, UserRound } from "lucide-react";
 import { useApp } from "@/components/Providers";
-import { Button, Empty, Field, Panel, Skeleton, Tag, inputClass, useAction, useNow } from "@/components/ui";
+import { Button, Empty, Field, Panel, Skeleton, Tag, inputClass, useAction, useFold, useNow } from "@/components/ui";
 import { rpc } from "@/lib/supabase";
 import type { Penalty, Profile } from "@/lib/types";
 import { cx, fmtDateTime } from "@/lib/util";
@@ -54,6 +54,8 @@ export default function AdminUsers() {
     });
 
   const d = detail;
+  const penFold = useFold(d?.penalties ?? [], 3);
+  const resFold = useFold(d?.reservations ?? [], 5);
   const banned = d?.profile.banned_until && new Date(d.profile.banned_until).getTime() > now;
 
   return (
@@ -272,8 +274,9 @@ export default function AdminUsers() {
               {d.penalties.length === 0 ? (
                 <p className="px-4 pb-4 pt-1 text-sm text-muted">없음</p>
               ) : (
-                <ul className="mt-2 divide-y divide-line border-t border-line">
-                  {d.penalties.map((p) => (
+                <>
+<ul className="mt-2 divide-y divide-line border-t border-line">
+                  {penFold.shown.map((p) => (
                     <li key={p.id} className="flex items-center justify-between gap-3 px-4 py-2.5">
                       <div className="min-w-0">
                         <p className={cx("text-sm font-semibold", p.revoked_at && "text-muted line-through")}>
@@ -292,6 +295,8 @@ export default function AdminUsers() {
                     </li>
                   ))}
                 </ul>
+                {penFold.toggle}
+</>
               )}
             </Panel>
 
@@ -311,7 +316,7 @@ export default function AdminUsers() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-line">
-                      {d.reservations.map((r) => (
+                      {resFold.shown.map((r) => (
                         <tr key={r.id}>
                           <td className="px-4 py-2 font-semibold">
                             {r.room_name} {r.seat_label}
@@ -327,6 +332,7 @@ export default function AdminUsers() {
                       ))}
                     </tbody>
                   </table>
+                  {resFold.toggle}
                 </div>
               )}
             </Panel>

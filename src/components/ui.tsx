@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { LoaderCircle } from "lucide-react";
+import { ChevronDown, LoaderCircle } from "lucide-react";
 import { cx, fmtLeft } from "@/lib/util";
 
 type Variant = "primary" | "secondary" | "danger" | "quiet";
@@ -185,4 +185,27 @@ export function Confirm({
     </div>,
     document.body,
   );
+}
+
+/**
+ * 계속 쌓이는 목록을 접어 둔다. 처음에는 limit 개만 보여 주고, 아래 버튼으로 펼치고 접는다.
+ * shown 을 그리고, 목록 바로 아래에 toggle 을 둔다.
+ */
+export function useFold<T>(items: T[], limit = 3) {
+  const [open, setOpen] = useState(false);
+  const extra = items.length - limit;
+  const shown = open || extra <= 0 ? items : items.slice(0, limit);
+  const toggle =
+    extra > 0 ? (
+      <button
+        type="button"
+        aria-expanded={open}
+        onClick={() => setOpen(!open)}
+        className="flex min-h-11 w-full items-center justify-center gap-1 border-t border-line text-sm font-semibold text-du-deep-dark transition-colors duration-150 hover:bg-canvas"
+      >
+        {open ? "접기" : `${extra}건 더 보기`}
+        <ChevronDown size={16} aria-hidden className={cx("transition-transform duration-150", open && "rotate-180")} />
+      </button>
+    ) : null;
+  return { shown, toggle };
 }
