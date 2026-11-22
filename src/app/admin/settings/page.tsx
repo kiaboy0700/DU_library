@@ -40,7 +40,7 @@ const GROUPS: { title: string; desc?: string; fields: [string, string, string][]
   },
   {
     title: "자리비움 신고",
-    desc: "응답 시간은 화장실을 다녀오기에 충분해야 합니다. 같은 이용자는 24시간 안에 다시 신고할 수 없습니다.",
+    desc: "허위 신고는 관리자가 '앉아 있었음'으로 판정한 경우만 셉니다. 이용자가 신고 직후 바로 응답한 경우는 벌점 없이 횟수만 세고, 기준에 닿으면 관리자에게 알립니다.",
     fields: [
       ["report_low", "응답 시간: 여유", "분"],
       ["report_mid", "응답 시간: 보통", "분"],
@@ -50,6 +50,8 @@ const GROUPS: { title: string; desc?: string; fields: [string, string, string][]
       ["report_hourly_limit", "1인당 신고 한도", "건/시간"],
       ["report_daily_limit", "하루 신고 한도", "건"],
       ["false_report_limit", "허위 신고 정지 기준", "회"],
+      ["false_quick_seconds", "즉시 응답으로 보는 시간", "초"],
+      ["false_quick_flag", "즉시 응답 알림 기준", "회"],
       ["false_report_window_days", "허위 신고 누적 기간", "일"],
       ["false_report_ban_days", "신고 정지 기간", "일"],
       ["pen_false_report", "허위 신고 벌점", "점"],

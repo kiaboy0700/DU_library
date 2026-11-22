@@ -137,8 +137,17 @@ export default function AdminReports() {
                       <Button variant="danger" busy={busy === `rc${r.id}`} onClick={() => act(`rc${r.id}`, () => rpc("admin_resolve_report", { p_report: r.id, p_decision: "confirm" }), "반납 처리하고 벌점을 부여했습니다. 좌석은 빈자리가 되었습니다.")}>
                         비어 있음 확정
                       </Button>
-                      <Button busy={busy === `rd${r.id}`} onClick={() => act(`rd${r.id}`, () => rpc("admin_resolve_report", { p_report: r.id, p_decision: "dismiss" }), "신고를 기각했습니다. 벌점은 없습니다.")}>
-                        착석 확인 (기각)
+                      <Button busy={busy === `rt${r.id}`} onClick={() => act(`rt${r.id}`, () => rpc("admin_resolve_report", { p_report: r.id, p_decision: "returned" }), "복귀를 확인했습니다. 이용자와 신고자 모두 불이익이 없습니다.")}>
+                        돌아옴 (불이익 없음)
+                      </Button>
+                      <Button
+                        busy={busy === `rd${r.id}`}
+                        onClick={() => {
+                          if (!window.confirm("신고 당시 이용자가 자리에 앉아 있었나요? 허위 신고로 기록되고, 누적되면 신고자에게 벌점이 부여됩니다.")) return;
+                          act(`rd${r.id}`, () => rpc("admin_resolve_report", { p_report: r.id, p_decision: "dismiss" }), "허위 신고로 기록했습니다.");
+                        }}
+                      >
+                        앉아 있었음 (허위 신고)
                       </Button>
                       <Button variant="quiet" busy={busy === `re${r.id}`} onClick={() => act(`re${r.id}`, () => rpc("admin_resolve_report", { p_report: r.id, p_decision: "extend" }), "응답 시간을 10분 늘렸습니다.")}>
                         10분 더 기다리기

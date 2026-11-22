@@ -265,8 +265,10 @@ export default function SeatQrPage() {
                       이용자가 <strong className="tabular">{ctx.report_minutes}분</strong> 안에 응답하지 않으면 자동 반납됩니다.
                     </li>
                     <li>잠깐 비운 자리일 수 있으니 한동안 비어 있었는지 확인해 주세요.</li>
+                    <li>이용자가 금방 돌아와도 신고한 사람에게 불이익은 없습니다.</li>
                     <li>
-                      이용자가 자리에 있었던 신고가 <span className="tabular">{String(settings?.false_report_limit ?? 3)}회</span> 쌓이면 <span className="tabular">{String(settings?.false_report_ban_days ?? 7)}일간</span> 신고할 수 없고 벌점이 부여됩니다.
+                      이용자가 <strong className="font-semibold">앉아 있는 좌석</strong>을 신고하면 허위 신고입니다. <span className="tabular">{String(settings?.false_report_limit ?? 3)}회</span> 확인되면{" "}
+                      <span className="tabular">{String(settings?.false_report_ban_days ?? 7)}일간</span> 신고할 수 없고 벌점이 부여됩니다.
                     </li>
                   </ul>
                   <div className="mt-3">

@@ -28,6 +28,7 @@ export default function AdminUsers() {
   const [q, setQ] = useState("");
   const [rows, setRows] = useState<Row[] | null>(null);
   const [detail, setDetail] = useState<Detail | null>(null);
+  const [rstat, setRstat] = useState<{ made: number; confirmed: number; returned: number; quick: number; false: number } | null>(null);
   const [form, setForm] = useState({ points: 1, note: "", days: 3, banReason: "", pw: "" });
   const [create, setCreate] = useState({ sid: "", name: "", dept: "", grade: 1, pw: "" });
   const { busy, run } = useAction((m) => toast(m, "error"));
@@ -39,7 +40,11 @@ export default function AdminUsers() {
     return () => clearTimeout(t);
   }, [q, search]);
 
-  const open = async (id: string) => setDetail(await rpc<Detail>("admin_user_detail", { p_user: id }));
+  const open = async (id: string) => {
+    const [d, r] = await Promise.all([rpc<Detail>("admin_user_detail", { p_user: id }), rpc<typeof rstat>("admin_report_stats", { p_user: id }).catch(() => null)]);
+    setDetail(d);
+    setRstat(r);
+  };
   const act = (key: string, fn: () => Promise<unknown>, msg: string) =>
     run(key, async () => {
       await fn();
@@ -172,12 +177,16 @@ export default function AdminUsers() {
                   <dd className="tabular font-semibold">{banned ? fmtDateTime(d.profile.banned_until!) : "없음"}</dd>
                 </div>
                 <div>
-                  <dt className="text-xs text-muted">신고한 횟수 / 기각</dt>
-                  <dd className="tabular font-semibold">
-                    {d.reports_made}건 / {d.reports_dismissed}건
-                  </dd>
+                  <dt className="text-xs text-muted">신고 (30일)</dt>
+                  <dd className="tabular font-semibold">{rstat?.made ?? d.reports_made}건</dd>
                 </div>
               </dl>
+              {rstat && rstat.made > 0 && (
+                <p className="tabular mt-2 text-sm text-[#3d4744]">
+                  신고 결과: 반납 확정 {rstat.confirmed} · 이용자 복귀 {rstat.returned} · 즉시 응답 {rstat.quick} ·{" "}
+                  <span className={rstat.false > 0 ? "font-bold text-danger" : undefined}>허위 판정 {rstat.false}</span>
+                </p>
+              )}
               {banned && <p className="mt-2 text-sm text-[#7d1a14]">정지 사유: {d.profile.ban_reason}</p>}
               {d.profile.report_banned_until && new Date(d.profile.report_banned_until).getTime() > now && (
                 <p className="mt-2 flex flex-wrap items-center gap-2 text-sm text-[#7d1a14]">
