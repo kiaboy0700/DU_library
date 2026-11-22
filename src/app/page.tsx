@@ -1,16 +1,18 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { ChevronRight, Megaphone, TriangleAlert, WifiOff } from "lucide-react";
+import { ChevronRight, Megaphone, QrCode, TriangleAlert, WifiOff } from "lucide-react";
 import { Banner } from "@/components/Banner";
 import { useApp } from "@/components/Providers";
+import { QrScanner } from "@/components/QrScanner";
 import { RoomCard, useRoomActions } from "@/components/RoomCards";
 import { Button, Notice, Skeleton, useNow } from "@/components/ui";
 import { useHome, useSettings } from "@/lib/hooks";
 import { supabase } from "@/lib/supabase";
 import { MODE_LABEL } from "@/lib/types";
-import { NOTICE_SEEN_KEY, cx, fmtRemain } from "@/lib/util";
+import { NOTICE_SEEN_KEY, fmtRemain } from "@/lib/util";
 
 interface Announcement {
   id: number;
@@ -27,6 +29,8 @@ export default function HomePage() {
   const actions = useRoomActions(settings);
   const [notices, setNotices] = useState<Announcement[]>([]);
   const [fresh, setFresh] = useState(false);
+  const [scan, setScan] = useState(false);
+  const router = useRouter();
   const now = useNow();
 
   useEffect(() => {
@@ -70,33 +74,49 @@ export default function HomePage() {
               {status.profile.student_id}
             </p>
           </div>
-          <Link
-            href={res ? "/me" : "/rooms"}
-            className={cx(
-              "relative flex min-h-[84px] w-[132px] shrink-0 flex-col justify-center rounded-xl px-3.5 py-2.5 shadow-[0_2px_8px_-2px_rgb(0_60_50/0.18)] transition-transform duration-150 hover:-translate-y-0.5 active:translate-y-0",
-              res ? "bg-du-deep text-white" : "bg-surface text-du-black",
-            )}
-          >
-            {res ? (
-              <>
-                <span className="text-xs font-medium text-white/85">
-                  {res.room_name.replace(" 열람실", "")} · {res.status === "reserved" ? "체크인 대기" : res.status === "away" ? "외출 중" : "이용 중"}
-                </span>
-                <span className="text-[22px] font-bold leading-tight tracking-tight">{res.seat_label}</span>
-                <span className="tabular text-[13px] font-semibold">
-                  {fmtRemain(new Date(res.status === "reserved" ? res.checkin_deadline : res.status === "away" && res.away_deadline ? res.away_deadline : res.end_at).getTime() - now)}
-                  <span className="font-normal text-white/85"> 남음</span>
-                </span>
-              </>
-            ) : (
-              <>
-                <span className="text-xs font-medium text-muted">내 자리</span>
-                <span className="text-[17px] font-bold leading-tight">없음</span>
-                <span className="text-[13px] font-semibold text-du-deep-dark">좌석 고르기</span>
-              </>
-            )}
-          </Link>
+          {/* 내 자리 칸: 좌석이 있든 없든 같은 크기라 화면이 들썩이지 않는다 */}
+          {res ? (
+            <Link
+              href="/me"
+              className="relative flex h-[104px] w-[136px] shrink-0 flex-col justify-center rounded-xl bg-du-deep px-3.5 text-white shadow-[0_2px_8px_-2px_rgb(0_60_50/0.18)] transition-transform duration-150 hover:-translate-y-0.5 active:translate-y-0"
+            >
+              <span className="truncate text-xs font-medium text-white/85">
+                {res.room_name.replace(" 열람실", "")} · {res.status === "reserved" ? "체크인 대기" : res.status === "away" ? "외출 중" : "이용 중"}
+              </span>
+              <span className="text-[24px] font-bold leading-tight tracking-tight">{res.seat_label}</span>
+              <span className="tabular text-[13px] font-semibold">
+                {fmtRemain(new Date(res.status === "reserved" ? res.checkin_deadline : res.status === "away" && res.away_deadline ? res.away_deadline : res.end_at).getTime() - now)}
+                <span className="font-normal text-white/85"> 남음</span>
+              </span>
+            </Link>
+          ) : (
+            <div className="relative flex h-[104px] w-[136px] shrink-0 flex-col overflow-hidden rounded-xl bg-surface shadow-[0_2px_8px_-2px_rgb(0_60_50/0.18)]">
+              <button
+                type="button"
+                onClick={() => setScan(true)}
+                aria-label="좌석 QR 스캔해서 예약"
+                className="flex flex-1 flex-col items-center justify-center gap-0.5 text-du-deep-dark transition-colors duration-150 hover:bg-du-tint"
+              >
+                <QrCode size={30} strokeWidth={1.8} aria-hidden />
+                <span className="text-xs font-semibold">QR 스캔</span>
+              </button>
+              <Link href="/rooms" className="flex h-9 items-center justify-center gap-0.5 border-t border-line text-[13px] font-semibold text-du-deep-dark transition-colors duration-150 hover:bg-du-tint">
+                좌석 고르기
+                <ChevronRight size={14} aria-hidden />
+              </Link>
+            </div>
+          )}
         </section>
+      )}
+
+      {scan && (
+        <QrScanner
+          onToken={(t) => {
+            setScan(false);
+            router.push(`/s/${t}`);
+          }}
+          onClose={() => setScan(false)}
+        />
       )}
 
       {home?.incident && (
