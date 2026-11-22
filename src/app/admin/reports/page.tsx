@@ -179,6 +179,14 @@ export default function AdminReports() {
                   {h.message && <p className="mt-1 rounded-md bg-canvas px-2.5 py-2 text-sm">{h.message}</p>}
                   <p className="tabular mt-1 text-[13px] text-muted">{fmtDateTime(h.created_at)} 접수</p>
                   <div className="mt-3 flex flex-wrap items-center gap-2">
+                    {h.reservation_id && ["reserved", "in_use", "away"].includes(h.res_status ?? "") && (
+                      <Button
+                        busy={busy === `hg${h.id}`}
+                        onClick={() => act(`hg${h.id}`, () => rpc("admin_res_action", { p_res: h.reservation_id, p_action: "grace", p_reason: h.reason, p_arg: 15 }), "마감을 15분 늘렸습니다.")}
+                      >
+                        시간 15분 더 주기
+                      </Button>
+                    )}
                     {h.reservation_id && h.res_status === "reserved" && (
                       <Button
                         variant="primary"

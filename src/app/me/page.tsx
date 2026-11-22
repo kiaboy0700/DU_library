@@ -150,9 +150,9 @@ export default function MePage() {
           </div>
 
           <div className="border-t border-line bg-[#f8faf9] p-4 sm:p-5">
+            {res.on_hold && <p className="mb-3 rounded-[var(--radius-ctl)] bg-warn-tint px-3 py-2 text-sm font-semibold text-[#5c3d00]">도움 요청 접수됨 · 처리될 때까지 자동 취소·반납·벌점이 멈춥니다</p>}
             {res.status === "reserved" && (
               <>
-                {res.on_hold && <p className="mb-3 text-sm font-semibold text-warn">도움 요청 접수됨 · 자동 취소가 멈춰 있습니다</p>}
                 <div className="grid grid-cols-2 gap-2">
                   <Button variant="primary" onClick={() => setOpen("scan")}>
                     <QrCode size={16} aria-hidden />

@@ -288,7 +288,7 @@ function SeatPanel(p: {
             </div>
           </dl>
           {r.report && <p className="mt-2 rounded-md bg-danger-tint px-2.5 py-2 text-[13px] font-semibold text-[#7d1a14]">자리비움 신고 접수 · 응답 대기 중</p>}
-          {r.on_hold && <p className="mt-2 rounded-md bg-warn-tint px-2.5 py-2 text-[13px] font-semibold text-[#5c3d00]">도움 요청 중 · 자동 취소 멈춤</p>}
+          {r.on_hold && <p className="mt-2 rounded-md bg-warn-tint px-2.5 py-2 text-[13px] font-semibold text-[#5c3d00]">도움 요청 중 · 자동 취소·반납·벌점 멈춤</p>}
 
           <div className="mt-4 border-t border-line pt-3">
             <h3 className="text-xs font-bold text-muted">대신 처리</h3>
@@ -311,6 +311,9 @@ function SeatPanel(p: {
             )}
             <Button busy={p.busy === "ex"} className={r.status === "in_use" ? undefined : "col-span-2"} onClick={() => p.onAct("ex", "extend", "이용 시간을 2시간 연장했습니다.")}>
               2시간 연장
+            </Button>
+            <Button busy={p.busy === "gr"} className="col-span-2" onClick={() => p.onAct("gr", "grace", "지금 걸린 마감을 15분 늘렸습니다.", 15)}>
+              {r.status === "reserved" ? "체크인 마감" : r.status === "away" ? "복귀 마감" : "마감"} 15분 더 주기
             </Button>
           </div>
 

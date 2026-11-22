@@ -17,6 +17,7 @@ const ACTION: Record<string, string> = {
   "res:come_back": "대리 복귀",
   "res:away": "외출 처리",
   "res:extend": "이용 시간 연장",
+  "res:grace": "마감 늘려 줌",
   "res:return": "강제 반납",
   "res:move": "좌석 이동",
   "report:confirm": "신고 확정",
