@@ -104,8 +104,6 @@ export function Banner({ label, names, interval = 5000, children }: { label: str
   const edge =
     "group/edge absolute inset-y-0 z-10 hidden w-8 items-center opacity-0 transition-opacity duration-300 ease-[var(--ease-out-expo)] group-hover/banner:opacity-100 focus-visible:opacity-100 [@media(hover:hover)]:flex md:!hidden";
   const chevron = "text-du-deep-dark transition-transform duration-200 ease-[var(--ease-out-expo)]";
-  // 그림자는 카드 양옆에 붙어 있어서 넘길 때 카드와 함께 움직인다
-  const glow = "pointer-events-none absolute inset-y-3 w-4 opacity-0 transition-opacity duration-300 ease-[var(--ease-out-expo)] group-hover/banner:opacity-100 md:hidden";
 
   return (
     <section
@@ -146,12 +144,6 @@ export function Banner({ label, names, interval = 5000, children }: { label: str
                 inert={clone || undefined}
                 className={cx("relative w-full shrink-0 snap-center md:w-auto md:shrink", clone && "md:hidden")}
               >
-                {loop && (
-                  <>
-                    <span aria-hidden className={cx(glow, "-left-4 bg-[linear-gradient(to_left,rgb(0_70_58/0.22),rgb(0_70_58/0.08)_45%,transparent)]")} />
-                    <span aria-hidden className={cx(glow, "-right-4 bg-[linear-gradient(to_right,rgb(0_70_58/0.22),rgb(0_70_58/0.08)_45%,transparent)]")} />
-                  </>
-                )}
                 {s}
               </div>
             );
