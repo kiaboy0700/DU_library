@@ -3,11 +3,10 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
-import { createPortal } from "react-dom";
 import { Bell, BellRing, ChevronRight, Zap } from "lucide-react";
 import { OccupancyMeter } from "./OccupancyMeter";
 import { useApp } from "./Providers";
-import { Button, Panel, Tag, useAction } from "./ui";
+import { Button, Confirm, Panel, Tag, useAction } from "./ui";
 import type { Settings } from "@/lib/hooks";
 import { rpc, supabase } from "@/lib/supabase";
 import type { RoomSummary } from "@/lib/types";
@@ -63,30 +62,21 @@ export function useRoomActions(settings: Settings | null) {
 
 /** 빠른 예약 확인 창: 잘못 눌러 예약되는 일을 막는다 */
 export function QuickConfirm({ roomName, busy, onConfirm, onClose }: { roomName: string; busy?: boolean; onConfirm: () => void; onClose: () => void }) {
-  useEffect(() => {
-    const key = (e: KeyboardEvent) => e.key === "Escape" && onClose();
-    window.addEventListener("keydown", key);
-    return () => window.removeEventListener("keydown", key);
-  }, [onClose]);
-  return createPortal(
-    <div className="fixed inset-0 z-[90] grid place-items-center bg-du-black/45 p-5" onClick={onClose}>
-      <div role="alertdialog" aria-modal="true" aria-labelledby="quick-h" aria-describedby="quick-d" className="pop w-full max-w-[340px] rounded-2xl bg-surface p-5 shadow-[0_16px_40px_-12px_rgb(0_40_34/0.45)]" onClick={(e) => e.stopPropagation()}>
-        <h2 id="quick-h" className="flex items-center gap-1.5 text-lg font-bold">
+  return (
+    <Confirm
+      title={
+        <>
           <Zap size={18} className="text-du-deep" aria-hidden />
           빠른 예약
-        </h2>
-        <p id="quick-d" className="mt-2 text-[15px] leading-relaxed">
-          <b>{roomName}</b>의 빈 좌석 중 한 자리가 무작위로 예약됩니다.
-        </p>
-        <div className="mt-5 grid grid-cols-2 gap-2">
-          <Button onClick={onClose}>취소</Button>
-          <Button variant="primary" busy={busy} autoFocus onClick={onConfirm}>
-            예약
-          </Button>
-        </div>
-      </div>
-    </div>,
-    document.body,
+        </>
+      }
+      confirmLabel="예약"
+      busy={busy}
+      onConfirm={onConfirm}
+      onClose={onClose}
+    >
+      <b>{roomName}</b>의 빈 좌석 중 한 자리가 무작위로 예약됩니다.
+    </Confirm>
   );
 }
 

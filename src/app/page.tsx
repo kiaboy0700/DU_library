@@ -3,14 +3,14 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { ChevronRight, Megaphone, QrCode, TriangleAlert, WifiOff } from "lucide-react";
+import { ChevronRight, DoorOpen, LogOut, Megaphone, QrCode, TriangleAlert, WifiOff, X } from "lucide-react";
 import { Banner } from "@/components/Banner";
 import { useApp } from "@/components/Providers";
 import { QrScanner } from "@/components/QrScanner";
 import { RoomCard, useRoomActions } from "@/components/RoomCards";
-import { Button, Notice, Skeleton, useNow } from "@/components/ui";
+import { Button, Confirm, Notice, Skeleton, useAction, useNow } from "@/components/ui";
 import { useHome, useSettings } from "@/lib/hooks";
-import { supabase } from "@/lib/supabase";
+import { rpc, supabase } from "@/lib/supabase";
 import { MODE_LABEL } from "@/lib/types";
 import { NOTICE_SEEN_KEY, cx, fmtRemain } from "@/lib/util";
 
@@ -23,7 +23,9 @@ interface Announcement {
 
 /** 홈: 내 상황을 한눈에. 프로필과 내 자리, 공지, 그리고 넘겨 보는 열람실 배너 */
 export default function HomePage() {
-  const { status } = useApp();
+  const { status, toast, refresh } = useApp();
+  const { busy, run } = useAction((m) => toast(m, "error"));
+  const [ask, setAsk] = useState<"cancel" | "away" | "return" | null>(null);
   const { home, error, reload } = useHome();
   const { settings } = useSettings();
   const actions = useRoomActions(settings);
@@ -74,15 +76,34 @@ export default function HomePage() {
     </>
   );
 
+  // 홈에서 바로 하는 동작: 확인 창을 거친다
+  const doAsk = async () => {
+    if (!ask) return;
+    await run(ask, async () => {
+      if (ask === "away") {
+        const m = await rpc<number>("go_away");
+        toast(`외출 처리했습니다. ${m}분 안에 돌아와 QR을 스캔하세요.`, "ok");
+      } else {
+        await rpc("return_seat");
+        toast(ask === "cancel" ? "예약을 취소했습니다." : "좌석을 반납했습니다.", "ok");
+      }
+      await refresh();
+      reload();
+    });
+    setAsk(null);
+  };
+  const strip = "inline-flex min-h-10 items-center justify-center gap-1.5 whitespace-nowrap rounded-[var(--radius-ctl)] bg-surface/80 px-3 text-sm font-semibold text-du-black transition-colors duration-150 hover:bg-surface";
+
   return (
     <div className="space-y-5">
       <h1 className="sr-only">홈</h1>
 
       {/* 내 프로필과 내 자리 */}
       {status && (
-        <section aria-label="내 프로필" className="relative flex items-center gap-4 overflow-hidden rounded-[var(--radius-panel)] bg-du-tint p-5">
+        <section aria-label="내 프로필" className="relative overflow-hidden rounded-[var(--radius-panel)] bg-du-tint p-5">
           <span aria-hidden className="absolute -right-10 -top-16 size-48 rounded-full bg-white/45" />
           <span aria-hidden className="absolute -bottom-20 right-24 size-40 rounded-full bg-white/35" />
+          <div className="relative flex items-center gap-4">
           <div className="relative min-w-0 flex-1">
             <p className="text-[26px] font-bold leading-tight tracking-[-0.02em]">{status.profile.name}</p>
             <p className="mt-1 text-[15px] font-semibold text-du-deep-dark">{major ?? "학과 미등록"}</p>
@@ -123,7 +144,56 @@ export default function HomePage() {
               </Link>
             </div>
           )}
+          </div>
+          {/* 내 자리로 지금 할 수 있는 일 */}
+          {res && (
+            <div className={cx("relative mt-4 grid gap-2", res.status === "in_use" ? "grid-cols-3" : "grid-cols-2")}>
+              {res.status === "reserved" && (
+                <button type="button" className={strip} onClick={() => setAsk("cancel")}>
+                  <X size={16} aria-hidden />
+                  예약 취소
+                </button>
+              )}
+              {res.status === "in_use" && (
+                <button type="button" className={strip} onClick={() => setAsk("away")}>
+                  <DoorOpen size={16} aria-hidden />
+                  외출
+                </button>
+              )}
+              {res.status !== "reserved" && (
+                <button type="button" className={strip} onClick={() => setAsk("return")}>
+                  <LogOut size={16} aria-hidden />
+                  반납
+                </button>
+              )}
+              <Link href="/me" className={strip}>
+                내 좌석
+                <ChevronRight size={16} aria-hidden />
+              </Link>
+            </div>
+          )}
         </section>
+      )}
+
+      {ask && res && (
+        <Confirm
+          title={ask === "cancel" ? "예약 취소" : ask === "away" ? "외출" : "반납"}
+          confirmLabel={ask === "cancel" ? "예약 취소" : ask === "away" ? "외출" : "반납"}
+          danger={ask !== "away"}
+          busy={busy === ask}
+          onConfirm={doAsk}
+          onClose={() => setAsk(null)}
+        >
+          {ask === "away" ? (
+            <>
+              <b className="tabular">{res.away_minutes}분</b> 안에 돌아와 QR을 찍지 않으면 자동 반납되고 벌점이 붙습니다.
+            </>
+          ) : (
+            <b>
+              {res.room_name} {res.seat_label}
+            </b>
+          )}
+        </Confirm>
       )}
 
       {scan && (

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { LoaderCircle } from "lucide-react";
 import { cx, fmtLeft } from "@/lib/util";
 
@@ -142,4 +143,46 @@ export function useNow(intervalMs = 1000) {
 export function TimeLeft({ at }: { at: string }) {
   const now = useNow(1000);
   return <>{fmtLeft(new Date(at).getTime() - now)}</>;
+}
+
+/** 확인 창: 되돌릴 수 없거나 불이익이 따르는 동작 앞에 한 번 묻는다 */
+export function Confirm({
+  title,
+  children,
+  confirmLabel,
+  danger,
+  busy,
+  onConfirm,
+  onClose,
+}: {
+  title: React.ReactNode;
+  children?: React.ReactNode;
+  confirmLabel: string;
+  danger?: boolean;
+  busy?: boolean;
+  onConfirm: () => void;
+  onClose: () => void;
+}) {
+  useEffect(() => {
+    const key = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", key);
+    return () => window.removeEventListener("keydown", key);
+  }, [onClose]);
+  return createPortal(
+    <div className="fixed inset-0 z-[90] grid place-items-center bg-du-black/45 p-5" onClick={onClose}>
+      <div role="alertdialog" aria-modal="true" aria-labelledby="confirm-h" className="pop w-full max-w-[340px] rounded-2xl bg-surface p-5 shadow-[0_16px_40px_-12px_rgb(0_40_34/0.45)]" onClick={(e) => e.stopPropagation()}>
+        <h2 id="confirm-h" className="flex items-center gap-1.5 text-lg font-bold">
+          {title}
+        </h2>
+        {children && <div className="mt-2 text-[15px] leading-relaxed">{children}</div>}
+        <div className="mt-5 grid grid-cols-2 gap-2">
+          <Button onClick={onClose}>닫기</Button>
+          <Button variant={danger ? "danger" : "primary"} busy={busy} autoFocus onClick={onConfirm}>
+            {confirmLabel}
+          </Button>
+        </div>
+      </div>
+    </div>,
+    document.body,
+  );
 }
