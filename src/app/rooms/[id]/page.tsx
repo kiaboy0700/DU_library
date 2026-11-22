@@ -1,0 +1,253 @@
+"use client";
+
+import Link from "next/link";
+import { useParams, useRouter } from "next/navigation";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { ArrowLeft, DoorClosed, X } from "lucide-react";
+import { OccupancyMeter } from "@/components/OccupancyMeter";
+import { useApp } from "@/components/Providers";
+import { LEGEND, LegendSwatch, SeatMap, type SeatVisual } from "@/components/SeatMap";
+import { Button, Empty, Notice, Panel, Skeleton, useAction, useNow } from "@/components/ui";
+import { ruleTexts, useHome, useSettings } from "@/lib/hooks";
+import { rpc, supabase } from "@/lib/supabase";
+import { SEAT_TYPE_LABEL, type Room, type Seat, type SeatState, type SeatType } from "@/lib/types";
+import { cx, fmtTime, level } from "@/lib/util";
+
+export default function RoomPage() {
+  const { id } = useParams<{ id: string }>();
+  const roomId = Number(id);
+  const router = useRouter();
+  const { status, toast, refresh } = useApp();
+  const { home } = useHome();
+  const { settings } = useSettings();
+  const [room, setRoom] = useState<Room | null | undefined>(undefined);
+  const [seats, setSeats] = useState<Seat[]>([]);
+  const [states, setStates] = useState<Map<number, SeatState>>(new Map());
+  const [selected, setSelected] = useState<Seat | null>(null);
+  const [hours, setHours] = useState(4);
+  const [onlyType, setOnlyType] = useState<SeatType | null>(null);
+  const { busy, run } = useAction((m) => toast(m, "error"));
+  const now = useNow(30000);
+
+  const loadStates = useCallback(async () => {
+    const { data } = await supabase.from("seat_state").select("seat_id,state").eq("room_id", roomId);
+    if (data) setStates(new Map(data.map((s) => [s.seat_id, s.state as SeatState])));
+  }, [roomId]);
+
+  useEffect(() => {
+    if (!Number.isFinite(roomId)) return setRoom(null);
+    (async () => {
+      const [r, s] = await Promise.all([
+        supabase.from("rooms").select("*").eq("id", roomId).maybeSingle(),
+        supabase.from("seats_public").select("*").eq("room_id", roomId).order("id"),
+      ]);
+      setRoom((r.data as Room) ?? null);
+      setSeats((s.data as Seat[]) ?? []);
+      loadStates();
+    })();
+    const ch = supabase
+      .channel(`room-${roomId}`)
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "seat_state", filter: `room_id=eq.${roomId}` }, (p) => {
+        const row = p.new as { seat_id: number; state: SeatState };
+        setStates((m) => new Map(m).set(row.seat_id, row.state));
+      })
+      .subscribe();
+    const poll = setInterval(loadStates, 45000);
+    return () => {
+      supabase.removeChannel(ch);
+      clearInterval(poll);
+    };
+  }, [roomId, loadStates]);
+
+  const summary = home?.rooms.find((r) => r.id === roomId);
+  const mine = status?.reservation;
+  const types = useMemo(() => [...new Set(seats.map((s) => s.seat_type))], [seats]);
+  const dim = useMemo(() => (onlyType ? new Set(types.filter((t) => t !== onlyType)) : undefined), [onlyType, types]);
+
+  const visual = useCallback(
+    (seat: Seat): SeatVisual => {
+      if (mine?.seat_id === seat.id) return "mine";
+      if (!seat.is_active) return "inactive";
+      return states.get(seat.id) ?? "free";
+    },
+    [mine, states],
+  );
+
+  // 선택한 좌석을 다른 사람이 먼저 잡으면 선택 해제
+  useEffect(() => {
+    if (selected && states.get(selected.id) !== "free" && states.has(selected.id) && mine?.seat_id !== selected.id) {
+      setSelected(null);
+      toast(`${selected.label} 좌석이 방금 예약되었습니다. 다른 좌석을 골라 주세요.`);
+    }
+  }, [states, selected, mine, toast]);
+
+  function reserve() {
+    if (!selected) return;
+    if (!status) return router.push(`/login?next=/rooms/${roomId}`);
+    run("reserve", async () => {
+      await rpc("reserve_seat", { p_seat: selected.id, p_minutes: hours * 60 });
+      await refresh();
+      toast(`${selected.label} 좌석을 예약했습니다. ${settings?.checkin_minutes ?? 15}분 안에 좌석 QR을 스캔하세요.`, "ok");
+      router.push("/me");
+    });
+  }
+
+  if (room === null)
+    return (
+      <Empty icon={<DoorClosed size={32} aria-hidden />} title="열람실을 찾을 수 없습니다">
+        <Link href="/" className="font-semibold text-du-deep-dark underline underline-offset-4">
+          홈으로 돌아가기
+        </Link>
+      </Empty>
+    );
+
+  const maxHours = Number(settings?.max_minutes ?? 240) / 60;
+  const lv = summary ? level(summary.pct) : null;
+  const free = summary ? summary.total - summary.occupied : null;
+  const banned = status?.profile.banned_until && new Date(status.profile.banned_until).getTime() > now;
+
+  return (
+    <div className={cx("space-y-4", selected && "pb-44 sm:pb-0")}>
+      <div>
+        <Link href="/" className="-ml-1 inline-flex h-9 items-center gap-1 rounded-md px-1 text-sm font-semibold text-muted hover:text-du-black">
+          <ArrowLeft size={16} aria-hidden />
+          열람실 목록
+        </Link>
+        <div className="mt-1 flex flex-wrap items-end justify-between gap-x-4 gap-y-1">
+          <h1 className="text-[22px] font-bold">{room?.name ?? <Skeleton className="h-7 w-32" />}</h1>
+          {summary && lv && (
+            <p className="tabular text-sm">
+              <span className="font-bold">{free}석 남음</span>
+              <span className="text-muted"> / {summary.total}석 · </span>
+              <span className="font-semibold" style={{ color: lv.color }}>
+                이용률 {summary.pct}% {lv.name}
+              </span>
+            </p>
+          )}
+        </div>
+      </div>
+
+      {summary && !summary.is_open && (
+        <Notice tone="warn" icon={<DoorClosed size={18} aria-hidden />}>
+          지금은 예약할 수 없습니다. {summary.reason}
+        </Notice>
+      )}
+      {banned && (
+        <Notice tone="danger">
+          예약이 정지된 상태입니다. {status?.profile.ban_reason} ·{" "}
+          <Link href="/me" className="font-semibold underline underline-offset-2">
+            내 벌점 보기
+          </Link>
+        </Notice>
+      )}
+
+      {summary && (
+        <Panel className="p-4">
+          <OccupancyMeter pct={summary.pct} rules={ruleTexts(settings, "away")} />
+        </Panel>
+      )}
+
+      <Panel className="p-3 sm:p-4">
+        <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+          <ul className="flex flex-wrap gap-x-3 gap-y-1 text-[13px]" aria-label="좌석 상태 범례">
+            {LEGEND.map((l) => (
+              <li key={l.key} className="flex items-center gap-1.5">
+                <LegendSwatch kind={l.key} />
+                {l.label}
+              </li>
+            ))}
+          </ul>
+        </div>
+        {types.length > 1 && (
+          <div role="group" aria-label="좌석 종류로 보기" className="mb-3 flex flex-wrap gap-1.5">
+            {[null, ...types].map((t) => {
+              const on = onlyType === t;
+              return (
+                <button
+                  key={t ?? "all"}
+                  type="button"
+                  aria-pressed={on}
+                  onClick={() => setOnlyType(t)}
+                  className={cx(
+                    "min-h-9 rounded-full border px-3 text-[13px] font-semibold transition-colors duration-150",
+                    on ? "border-du-deep bg-du-deep text-white" : "border-line bg-surface text-[#3d4744] hover:bg-canvas",
+                  )}
+                >
+                  {t ? SEAT_TYPE_LABEL[t] : "전체"}
+                </button>
+              );
+            })}
+          </div>
+        )}
+        {room ? (
+          <SeatMap
+            title={room.name}
+            width={room.layout_w}
+            height={room.layout_h}
+            decor={room.decor}
+            seats={seats}
+            visual={visual}
+            selectedId={selected?.id}
+            onSelect={(s) => setSelected((cur) => (cur?.id === s.id ? null : s))}
+            dimTypes={dim}
+            selectable={(v) => v === "free"}
+          />
+        ) : (
+          <Skeleton className="h-[420px]" />
+        )}
+        <p className="mt-2 text-xs text-muted">초록색 빈자리를 누르면 예약할 수 있습니다. 배치도는 좌우로 밀어서 볼 수 있어요.</p>
+      </Panel>
+
+      {selected && (
+        <div className="rise no-print fixed inset-x-0 bottom-[calc(60px+env(safe-area-inset-bottom))] z-30 px-3 sm:static sm:px-0">
+          <div className="mx-auto max-w-3xl rounded-[var(--radius-panel)] border border-line bg-surface p-4 shadow-[var(--shadow-float)] sm:shadow-none">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-xl font-bold tracking-tight">{selected.label}</p>
+                <p className="text-sm text-muted">
+                  {room?.name} · {SEAT_TYPE_LABEL[selected.seat_type]}
+                </p>
+              </div>
+              <button type="button" aria-label="선택 취소" onClick={() => setSelected(null)} className="-m-1 grid size-9 place-items-center rounded-lg text-muted hover:bg-canvas">
+                <X size={18} aria-hidden />
+              </button>
+            </div>
+            {mine ? (
+              <p className="mt-3 text-sm text-[#3d4744]">
+                이미 {mine.seat_label} 좌석을 이용 중입니다. 좌석을 바꾸려면{" "}
+                <Link href="/me" className="font-semibold text-du-deep-dark underline underline-offset-2">
+                  내 좌석
+                </Link>
+                에서 먼저 반납해 주세요.
+              </p>
+            ) : (
+              <>
+                <fieldset className="mt-3">
+                  <legend className="text-[13px] font-semibold">이용 시간</legend>
+                  <div className="mt-1.5 grid grid-cols-4 gap-1.5">
+                    {Array.from({ length: maxHours }, (_, i) => i + 1).map((h) => (
+                      <label
+                        key={h}
+                        className={cx(
+                          "flex min-h-11 cursor-pointer items-center justify-center rounded-[var(--radius-ctl)] border text-sm font-semibold transition-colors duration-150 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-du-deep",
+                          hours === h ? "border-du-deep bg-du-tint text-du-deep-dark" : "border-line hover:bg-canvas",
+                        )}
+                      >
+                        <input type="radio" name="hours" value={h} checked={hours === h} onChange={() => setHours(h)} className="sr-only" />
+                        {h}시간
+                      </label>
+                    ))}
+                  </div>
+                  {summary?.closes_at && <p className="mt-1.5 text-xs text-muted">폐관 시각 {fmtTime(summary.closes_at)}을 넘지 않게 자동으로 맞춰집니다.</p>}
+                </fieldset>
+                <Button variant="primary" size="lg" className="mt-3 w-full" busy={busy === "reserve"} disabled={!!banned || (summary && !summary.is_open)} onClick={reserve}>
+                  {status ? `${selected.label} 예약하기` : "로그인하고 예약하기"}
+                </Button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
