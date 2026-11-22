@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { CircleCheck, CircleSlash, MapPin, QrCode } from "lucide-react";
 import { OccupancyMeter } from "@/components/OccupancyMeter";
 import { useApp } from "@/components/Providers";
@@ -51,6 +51,25 @@ export default function SeatQrPage() {
       setConfirm(null);
       await Promise.all([refresh(), load()]);
     });
+
+  // QR을 찍고 들어오면 버튼을 한 번 더 누르지 않아도 되게, 할 일이 하나뿐인 경우는 바로 처리한다
+  // (체크인 대기 → 체크인, 외출 중 → 복귀, 자리 확인 요청 → 자리에 있음 확인)
+  const auto = useRef(false);
+  useEffect(() => {
+    if (auto.current || !ctx?.is_mine || !ctx.my_reservation) return;
+    const st = ctx.my_reservation.status;
+    if (st === "reserved") {
+      auto.current = true;
+      scan("in", "check_in", () => "체크인했습니다. 열공하세요!");
+    } else if (st === "away") {
+      auto.current = true;
+      scan("back", "come_back", () => "복귀 처리했습니다.");
+    } else if (st === "in_use" && ctx.pending_report) {
+      auto.current = true;
+      scan("here", "confirm_presence", () => "자리에 있음을 확인했습니다. 벌점은 없습니다.");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 좌석 정보를 처음 받았을 때 한 번만
+  }, [ctx]);
 
   if (ctx === undefined) return <Skeleton className="h-72 !rounded-[var(--radius-panel)]" />;
   if (ctx === null)
