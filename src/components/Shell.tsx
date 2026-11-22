@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { Armchair, BellRing, ChartNoAxesColumn, ChevronDown, ClipboardList, House, Inbox, LayoutGrid, LogOut, MonitorDot, QrCode, ScanLine, Settings, TriangleAlert, UserRound, Users, X } from "lucide-react";
+import { Armchair, BellRing, ChartNoAxesColumn, ChevronDown, ClipboardList, House, Inbox, LayoutGrid, LogOut, Megaphone, MonitorDot, QrCode, ScanLine, Settings, TriangleAlert, UserRound, Users, X } from "lucide-react";
 import { NotificationBell } from "./NotificationBell";
 import { QrScanner } from "./QrScanner";
 import { useApp } from "./Providers";
@@ -23,6 +23,7 @@ const ADMIN_NAV = [
   { href: "/admin", label: "관제", icon: MonitorDot, match: (p: string) => p.startsWith("/admin") && !p.startsWith("/admin/reports") && !p.startsWith("/admin/users") },
   { href: "/admin/reports", label: "처리 대기", icon: Inbox, match: (p: string) => p.startsWith("/admin/reports") },
   { href: "/admin/users", label: "학생", icon: Users, match: (p: string) => p.startsWith("/admin/users") },
+  { href: "/notices", label: "공지", icon: Megaphone, match: (p: string) => p.startsWith("/notices") },
   { href: "/stats", label: "혼잡도", icon: ChartNoAxesColumn, match: (p: string) => p.startsWith("/stats") },
 ];
 
@@ -397,10 +398,16 @@ function ProfileMenu({ pending }: { pending: number }) {
               </Link>
             </>
           ) : (
-            <Link role="menuitem" href="/me" onClick={() => setOpen(false)} className={item}>
-              <UserRound size={16} aria-hidden />
-              내 좌석·벌점
-            </Link>
+            <>
+              <Link role="menuitem" href="/me" onClick={() => setOpen(false)} className={item}>
+                <UserRound size={16} aria-hidden />
+                내 좌석·벌점
+              </Link>
+              <Link role="menuitem" href="/notices" onClick={() => setOpen(false)} className={item}>
+                <Megaphone size={16} aria-hidden />
+                공지
+              </Link>
+            </>
           )}
           <button
             role="menuitem"

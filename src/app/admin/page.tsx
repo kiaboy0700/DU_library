@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ChevronRight, MousePointerClick } from "lucide-react";
+import { ChevronRight, MousePointerClick, PenLine } from "lucide-react";
 import { OccupancyMeter } from "@/components/OccupancyMeter";
 import { useApp } from "@/components/Providers";
 import { LEGEND, LegendSwatch, SeatMap, type SeatVisual } from "@/components/SeatMap";
@@ -74,6 +74,10 @@ export default function AdminHome() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <h1 className="text-[22px] font-bold">열람실 관제</h1>
+        <Link href="/notices?write" className="ml-auto inline-flex min-h-11 items-center gap-1.5 whitespace-nowrap rounded-[var(--radius-ctl)] border border-line bg-surface px-4 text-sm font-semibold transition-colors duration-150 hover:bg-canvas">
+          <PenLine size={16} aria-hidden />
+          공지 쓰기
+        </Link>
         <Link
           href="/admin/reports"
           className={cx(

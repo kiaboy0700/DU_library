@@ -3,12 +3,11 @@
 import { useCallback, useEffect, useState } from "react";
 import { LocateFixed, Search, Trash2 } from "lucide-react";
 import { useApp } from "@/components/Providers";
-import { Button, Field, Panel, Skeleton, Tag, inputClass, useAction, useNow } from "@/components/ui";
-import { useRooms } from "@/lib/admin";
+import { Button, Field, Panel, Skeleton, Tag, inputClass, useAction } from "@/components/ui";
 import { useSettings, type Settings } from "@/lib/hooks";
 import { rpc, supabase } from "@/lib/supabase";
 import { MODE_LABEL, type Mode } from "@/lib/types";
-import { cx, fmtDateTime, getPosition } from "@/lib/util";
+import { cx, getPosition } from "@/lib/util";
 
 /** 항목 하나: [키, 이름, 단위, 도움말] */
 type Row = [key: string, label: string, unit: string, help?: string];
@@ -144,7 +143,6 @@ const SECTIONS: Section[] = [
       },
     ],
   },
-  { id: "notice", title: "공지", hint: "홈 화면 공지, 푸시" },
   { id: "test", title: "테스트 설정", hint: "운영시간 무시, 위치 확인 끄기" },
 ];
 
@@ -165,28 +163,16 @@ interface Period {
   start_date: string;
   end_date: string;
 }
-interface Announcement {
-  id: number;
-  title: string;
-  body: string;
-  room_id: number | null;
-  until: string | null;
-  created_at: string;
-}
 
 export default function AdminSettings() {
   const { toast } = useApp();
   const { settings, reload } = useSettings();
-  const { rooms } = useRooms();
   const [draft, setDraft] = useState<Settings>({});
   const [periods, setPeriods] = useState<Period[] | null>(null);
   const [closed, setClosed] = useState<{ day: string; reason: string | null }[]>([]);
-  const [anns, setAnns] = useState<Announcement[]>([]);
   const [np, setNp] = useState({ mode: "exam" as Mode, label: "", start: "", end: "" });
   const [nc, setNc] = useState({ day: "", reason: "" });
-  const [na, setNa] = useState({ title: "", body: "", room: "", hours: 24, push: true });
   const { busy, run } = useAction((m) => toast(m, "error"));
-  const now = useNow(30000);
   const [tab, setTab] = useState("reserve");
   const [q, setQ] = useState("");
 
@@ -195,14 +181,12 @@ export default function AdminSettings() {
   }, [reload]);
 
   const loadLists = useCallback(async () => {
-    const [p, c, a] = await Promise.all([
+    const [p, c] = await Promise.all([
       supabase.from("operating_periods").select("*").order("start_date"),
       supabase.from("closed_days").select("*").order("day"),
-      supabase.from("announcements").select("*").order("created_at", { ascending: false }).limit(20),
     ]);
     setPeriods((p.data as Period[]) ?? []);
     setClosed(c.data ?? []);
-    setAnns((a.data as Announcement[]) ?? []);
   }, []);
   useEffect(() => {
     loadLists();
@@ -544,83 +528,6 @@ export default function AdminSettings() {
             </form>
           </Panel>
 
-            </>
-          )}
-          {!query && section.id === "notice" && (
-            <>
-          <Panel className="p-4 sm:p-5">
-            <h2 className="text-lg font-bold tracking-[-0.01em]">공지</h2>
-            <p className="mt-0.5 text-sm text-muted">홈 화면 위쪽에 표시됩니다. 푸시를 켠 학생에게는 알림으로도 보낼 수 있습니다.</p>
-            <form
-              className="mt-3 space-y-3"
-              onSubmit={(e) => {
-                e.preventDefault();
-                run("na", async () => {
-                  await rpc("admin_announce", { p_title: na.title, p_body: na.body, p_room: na.room ? Number(na.room) : null, p_hours: na.hours, p_push: na.push });
-                  toast("공지를 등록했습니다.", "ok");
-                  setNa({ ...na, title: "", body: "" });
-                  await loadLists();
-                });
-              }}
-            >
-              <div className="grid gap-3 sm:grid-cols-[1fr_170px_150px]">
-                <Field label="제목">
-                  <input className={inputClass} required maxLength={60} value={na.title} onChange={(e) => setNa({ ...na, title: e.target.value })} placeholder="예: 오늘 18시 조기 폐관" />
-                </Field>
-                <Field label="대상">
-                  <select className={inputClass} value={na.room} onChange={(e) => setNa({ ...na, room: e.target.value })}>
-                    <option value="">전체</option>
-                    {rooms?.map((r) => (
-                      <option key={r.id} value={r.id}>
-                        {r.name}
-                      </option>
-                    ))}
-                  </select>
-                </Field>
-                <Field label="게시 기간">
-                  <select className={inputClass} value={na.hours} onChange={(e) => setNa({ ...na, hours: Number(e.target.value) })}>
-                    <option value={6}>6시간</option>
-                    <option value={24}>하루</option>
-                    <option value={72}>3일</option>
-                    <option value={168}>일주일</option>
-                    <option value={0}>삭제할 때까지</option>
-                  </select>
-                </Field>
-              </div>
-              <Field label="내용 (선택)">
-                <textarea className={cx(inputClass, "py-2.5")} rows={2} maxLength={300} value={na.body} onChange={(e) => setNa({ ...na, body: e.target.value })} />
-              </Field>
-              <div className="flex flex-wrap items-center gap-4">
-                <label className="flex min-h-11 items-center gap-2 text-sm font-semibold">
-                  <input type="checkbox" className="size-[18px]" checked={na.push} onChange={(e) => setNa({ ...na, push: e.target.checked })} />
-                  푸시 알림으로도 보내기
-                </label>
-                <Button type="submit" variant="primary" busy={busy === "na"}>
-                  공지 등록
-                </Button>
-              </div>
-            </form>
-            {anns.length > 0 && (
-              <ul className="mt-4 divide-y divide-line rounded-[var(--radius-ctl)] border border-line">
-                {anns.map((a) => {
-                  const over = a.until && new Date(a.until).getTime() < now;
-                  return (
-                    <li key={a.id} className="flex items-center justify-between gap-3 px-3 py-2">
-                      <p className={cx("min-w-0 text-sm", over && "text-muted")}>
-                        <strong className="font-semibold">{a.title}</strong> <span className="text-muted">{a.body}</span>
-                        <span className="tabular block text-xs text-muted">
-                          {fmtDateTime(a.created_at)} 등록 · {over ? "게시 종료" : a.until ? `${fmtDateTime(a.until)}까지` : "계속 게시"}
-                        </span>
-                      </p>
-                      <button type="button" aria-label={`공지 "${a.title}" 삭제`} className="grid size-9 shrink-0 place-items-center rounded-lg text-muted hover:bg-danger-tint hover:text-danger" onClick={() => db(`da${a.id}`, () => supabase.from("announcements").delete().eq("id", a.id), "공지를 삭제했습니다.")}>
-                        <Trash2 size={16} aria-hidden />
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </Panel>
             </>
           )}
 

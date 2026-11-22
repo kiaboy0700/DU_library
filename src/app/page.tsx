@@ -10,7 +10,7 @@ import { Button, Notice, Skeleton, useNow } from "@/components/ui";
 import { useHome, useSettings } from "@/lib/hooks";
 import { supabase } from "@/lib/supabase";
 import { MODE_LABEL } from "@/lib/types";
-import { cx, fmtRemain } from "@/lib/util";
+import { NOTICE_SEEN_KEY, cx, fmtRemain } from "@/lib/util";
 
 interface Announcement {
   id: number;
@@ -26,6 +26,7 @@ export default function HomePage() {
   const { settings } = useSettings();
   const actions = useRoomActions(settings);
   const [notices, setNotices] = useState<Announcement[]>([]);
+  const [fresh, setFresh] = useState(false);
   const now = useNow();
 
   useEffect(() => {
@@ -34,7 +35,14 @@ export default function HomePage() {
       .select("id,title,body,room_id,until")
       .order("created_at", { ascending: false })
       .limit(5)
-      .then(({ data }) => setNotices((data ?? []).filter((a) => !a.until || new Date(a.until).getTime() > Date.now())));
+      .then(({ data }) => {
+        const live = (data ?? []).filter((a) => !a.until || new Date(a.until).getTime() > Date.now());
+        setNotices(live);
+        // 공지 화면에서 마지막으로 읽은 것보다 새 공지가 있으면 점으로 알린다
+        try {
+          setFresh(live.length > 0 && live[0].id > Number(localStorage.getItem(NOTICE_SEEN_KEY) ?? 0));
+        } catch {}
+      });
   }, []);
 
   // 소속을 '전공'과 '단과대학·학부'로 나눠 두 줄로 보여 준다
@@ -98,12 +106,20 @@ export default function HomePage() {
         </Notice>
       )}
 
-      {notices.map((n) => (
-        <Notice key={n.id} icon={<Megaphone size={18} aria-hidden />}>
-          <strong className="font-semibold">{n.title}</strong>
-          {n.body && <span className="block">{n.body}</span>}
-        </Notice>
-      ))}
+      {/* 공지: 최근 두 건만 보여 주고 나머지는 공지 화면에서 */}
+      {notices.length > 0 && (
+        <Link href="/notices" className="flex items-center gap-3 rounded-[var(--radius-panel)] border border-line bg-surface px-4 py-3 transition-colors duration-150 hover:bg-canvas">
+          <span className="relative grid size-9 shrink-0 place-items-center rounded-full bg-du-tint text-du-deep-dark">
+            <Megaphone size={18} aria-hidden />
+            {fresh && <span className="absolute -right-0.5 -top-0.5 size-2.5 rounded-full bg-danger ring-2 ring-surface" aria-label="새 공지" />}
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block truncate font-semibold">{notices[0].title}</span>
+            <span className="block truncate text-[13px] text-muted">{notices.length > 1 ? `외 ${notices.length - 1}건의 공지` : notices[0].body || "공지 보기"}</span>
+          </span>
+          <ChevronRight size={18} className="shrink-0 text-muted" aria-hidden />
+        </Link>
+      )}
 
       <section aria-labelledby="rooms-h">
         <div className="mb-3 flex items-end justify-between gap-3">

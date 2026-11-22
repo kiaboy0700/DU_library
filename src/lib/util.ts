@@ -53,3 +53,6 @@ export function getPosition(): Promise<{ lat: number; lng: number } | null> {
 export const errMsg = (e: unknown) => (e instanceof Error ? e.message : "알 수 없는 오류가 발생했습니다.");
 
 export const cx = (...a: (string | false | null | undefined)[]) => a.filter(Boolean).join(" ");
+
+/** 마지막으로 읽은 공지 번호를 기억하는 저장 키 (새 공지 표시용) */
+export const NOTICE_SEEN_KEY = "du-notice-seen";
