@@ -3,15 +3,14 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
-import { Armchair, Bell, BellOff, LifeBuoy, LogOut, QrCode, ScanLine, TriangleAlert } from "lucide-react";
+import { Armchair, LifeBuoy, LogOut, QrCode, ScanLine, TriangleAlert } from "lucide-react";
 import { OccupancyMeter } from "@/components/OccupancyMeter";
 import { useApp } from "@/components/Providers";
 import { QrScanner } from "@/components/QrScanner";
 import { Button, Empty, Field, Notice, Panel, Skeleton, Tag, inputClass, useAction, useNow } from "@/components/ui";
 import { ruleTexts, useSettings } from "@/lib/hooks";
-import { disablePush, enablePush, pushEnabled } from "@/lib/push";
 import { rpc, supabase } from "@/lib/supabase";
-import { MODE_LABEL, SEAT_TYPE_LABEL, type Notice as NoticeRow, type Penalty } from "@/lib/types";
+import { MODE_LABEL, SEAT_TYPE_LABEL, type Penalty } from "@/lib/types";
 import { cx, fmtDateTime, fmtRemain, fmtTime } from "@/lib/util";
 
 const PENALTY_LABEL: Record<string, string> = { no_show: "예약 후 미체크인", away_timeout: "외출 시간 초과", vacancy_report: "자리비움", false_report: "허위 신고", manual: "관리자 부여" };
@@ -32,37 +31,26 @@ export default function MePage() {
   const [open, setOpen] = useState<"away" | "return" | "help" | "scan" | null>(null);
   const [penalties, setPenalties] = useState<Penalty[]>([]);
   const [appeals, setAppeals] = useState<Appeal[]>([]);
-  const [notices, setNotices] = useState<NoticeRow[]>([]);
   const [appealFor, setAppealFor] = useState<number | null>(null);
   const [appealText, setAppealText] = useState("");
   const [helpReason, setHelpReason] = useState(HELP_REASONS[0]);
   const [helpText, setHelpText] = useState("");
-  const [push, setPush] = useState<boolean | null>(null);
   const uid = status?.profile.id;
 
   const load = useCallback(async () => {
     if (!uid) return;
     const since = new Date(Date.now() - 30 * 86400_000).toISOString();
-    const [p, a, n] = await Promise.all([
+    const [p, a] = await Promise.all([
       supabase.from("penalties").select("id,type,points,note,created_at,revoked_at").eq("user_id", uid).gt("created_at", since).order("created_at", { ascending: false }),
       supabase.from("appeals").select("penalty_id,status,reply").eq("user_id", uid),
-      supabase.from("notifications").select("id,title,body,url,created_at,read_at").eq("user_id", uid).order("created_at", { ascending: false }).limit(12),
     ]);
     setPenalties((p.data as Penalty[]) ?? []);
     setAppeals((a.data as Appeal[]) ?? []);
-    setNotices((n.data as NoticeRow[]) ?? []);
-    // 화면에 보인 알림은 읽음 처리
-    if (n.data?.some((x) => !x.read_at)) {
-      await supabase.from("notifications").update({ read_at: new Date().toISOString() }).eq("user_id", uid).is("read_at", null);
-    }
   }, [uid]);
 
   useEffect(() => {
     load();
   }, [load, pulse]);
-  useEffect(() => {
-    pushEnabled().then(setPush);
-  }, []);
   useEffect(() => {
     if (status === null) router.replace("/login?next=/me");
   }, [status, router]);
@@ -359,57 +347,6 @@ export default function MePage() {
         </Panel>
       </section>
 
-      <section aria-labelledby="noti-h">
-        <div className="flex items-center justify-between gap-3">
-          <h2 id="noti-h" className="text-base font-bold">
-            알림
-          </h2>
-          {push !== null && (
-            <Button
-              size="sm"
-              busy={busy === "push"}
-              aria-pressed={push}
-              onClick={() =>
-                run("push", async () => {
-                  if (push) {
-                    await disablePush();
-                    setPush(false);
-                    toast("이 기기의 푸시 알림을 껐습니다.");
-                  } else {
-                    await enablePush(status.profile.id);
-                    setPush(true);
-                    toast("푸시 알림을 켰습니다. 종료 10분 전과 자리 확인 요청을 알려 드립니다.", "ok");
-                  }
-                })
-              }
-            >
-              {push ? <Bell size={15} aria-hidden /> : <BellOff size={15} aria-hidden />}
-              {push ? "푸시 켜짐" : "푸시 알림 켜기"}
-            </Button>
-          )}
-        </div>
-        <Panel className="mt-2">
-          {notices.length === 0 ? (
-            <Empty title="알림이 없습니다" />
-          ) : (
-            <ul className="divide-y divide-line">
-              {notices.map((n) => (
-                <li key={n.id} className="flex gap-3 px-4 py-3">
-                  <span aria-hidden className={cx("mt-2 size-1.5 shrink-0 rounded-full", n.read_at ? "bg-transparent" : "bg-du-deep")} />
-                  <div className="min-w-0 flex-1">
-                    <p className="font-semibold">
-                      {!n.read_at && <span className="sr-only">새 알림: </span>}
-                      {n.title}
-                    </p>
-                    <p className="text-sm text-[#3d4744]">{n.body}</p>
-                    <p className="tabular mt-0.5 text-xs text-muted">{fmtDateTime(n.created_at)}</p>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </Panel>
-      </section>
 
       <section aria-labelledby="help-h">
         <h2 id="help-h" className="text-base font-bold">

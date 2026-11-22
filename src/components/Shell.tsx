@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Armchair, BellRing, ChartNoAxesColumn, ChevronDown, ClipboardList, House, Inbox, LogOut, MonitorDot, QrCode, Settings, TriangleAlert, UserRound, Users, X } from "lucide-react";
+import { NotificationBell } from "./NotificationBell";
 import { useApp } from "./Providers";
 import { useSettings } from "@/lib/hooks";
 import { rpc } from "@/lib/supabase";
@@ -166,9 +167,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
             <span className="grid size-9 shrink-0 place-items-center rounded-full bg-white">
               <Image src="/brand/symbol.png" alt="대구대학교" width={32} height={32} priority />
             </span>
-            <span className="truncate text-[17px] font-bold tracking-[-0.02em]">
-              <span className="max-[430px]:hidden">창파도서관 </span>좌석예약
-            </span>
+            <span className="truncate text-[17px] font-bold tracking-[-0.02em] max-[430px]:sr-only">창파도서관 좌석예약</span>
           </Link>
           <nav aria-label="주 메뉴" className="ml-auto hidden items-center gap-1 sm:flex">
             {items.map((it) => {
@@ -195,6 +194,11 @@ export function Shell({ children }: { children: React.ReactNode }) {
               );
             })}
           </nav>
+          {!isAdmin && (
+            <div className="ml-auto sm:ml-1">
+              <NotificationBell />
+            </div>
+          )}
           <ProfileMenu pending={pending} />
         </div>
       </header>
@@ -286,7 +290,7 @@ function ProfileMenu({ pending }: { pending: number }) {
       : [];
 
   return (
-    <div ref={box} className="relative ml-auto min-w-0 max-w-[62%] shrink-0 sm:ml-2 sm:max-w-72">
+    <div ref={box} className={cx("relative min-w-0 max-w-[68%] shrink sm:max-w-72", admin && "ml-auto sm:ml-2")}>
       <button
         type="button"
         aria-haspopup="menu"
