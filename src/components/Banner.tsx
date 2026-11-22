@@ -99,11 +99,13 @@ export function Banner({ label, names, interval = 5000, children }: { label: str
 
   // 넘기기 버튼은 카드 아래 줄에 둔다 (카드 위에 띄우면 내용을 가린다)
   const arrow = "grid size-8 place-items-center rounded-full text-[#3d4744] transition-colors duration-150 hover:bg-[#e6ecea]";
-  // 옆으로 넘기는 자리: 마우스를 배너에 올리면 양옆 여백에 그림자가 번지듯 나타나고, 누르면 그쪽으로 넘어간다.
+  // 옆으로 넘기는 자리: 마우스를 배너에 올리면 양옆 여백에 화살표가 나타나고, 누르면 그쪽으로 넘어간다.
   // 카드 안쪽 여백(16px)까지만 걸치므로 카드의 글자나 버튼을 가리지 않는다
   const edge =
     "group/edge absolute inset-y-0 z-10 hidden w-8 items-center opacity-0 transition-opacity duration-300 ease-[var(--ease-out-expo)] group-hover/banner:opacity-100 focus-visible:opacity-100 [@media(hover:hover)]:flex md:!hidden";
   const chevron = "text-du-deep-dark transition-transform duration-200 ease-[var(--ease-out-expo)]";
+  // 그림자는 카드 양옆에 붙어 있어서 넘길 때 카드와 함께 움직인다
+  const glow = "pointer-events-none absolute inset-y-3 w-4 opacity-0 transition-opacity duration-300 ease-[var(--ease-out-expo)] group-hover/banner:opacity-100 md:hidden";
 
   return (
     <section
@@ -142,8 +144,14 @@ export function Banner({ label, names, interval = 5000, children }: { label: str
                 aria-label={`${names[real] ?? ""} (${real + 1} / ${count})`}
                 aria-hidden={clone || undefined}
                 inert={clone || undefined}
-                className={cx("w-full shrink-0 snap-center md:w-auto md:shrink", clone && "md:hidden")}
+                className={cx("relative w-full shrink-0 snap-center md:w-auto md:shrink", clone && "md:hidden")}
               >
+                {loop && (
+                  <>
+                    <span aria-hidden className={cx(glow, "-left-4 bg-[linear-gradient(to_left,rgb(0_70_58/0.22),rgb(0_70_58/0.08)_45%,transparent)]")} />
+                    <span aria-hidden className={cx(glow, "-right-4 bg-[linear-gradient(to_right,rgb(0_70_58/0.22),rgb(0_70_58/0.08)_45%,transparent)]")} />
+                  </>
+                )}
                 {s}
               </div>
             );
@@ -155,7 +163,7 @@ export function Banner({ label, names, interval = 5000, children }: { label: str
               type="button"
               aria-label={`이전: ${names[(index - 1 + count) % count] ?? ""}`}
               onClick={() => step(-1)}
-              className={cx(edge, "left-0 justify-start rounded-r-2xl bg-[linear-gradient(to_right,rgb(0_70_58/0.22)_0%,rgb(0_70_58/0.12)_30%,rgb(0_70_58/0.04)_65%,transparent_100%)] hover:bg-[linear-gradient(to_right,rgb(0_70_58/0.34)_0%,rgb(0_70_58/0.18)_35%,rgb(0_70_58/0.05)_70%,transparent_100%)]")}
+              className={cx(edge, "left-0 justify-start")}
             >
               <ChevronLeft size={18} strokeWidth={2.4} aria-hidden className={cx(chevron, "group-hover/edge:-translate-x-0.5")} />
             </button>
@@ -163,7 +171,7 @@ export function Banner({ label, names, interval = 5000, children }: { label: str
               type="button"
               aria-label={`다음: ${names[(index + 1) % count] ?? ""}`}
               onClick={() => step(1)}
-              className={cx(edge, "right-0 justify-end rounded-l-2xl bg-[linear-gradient(to_left,rgb(0_70_58/0.22)_0%,rgb(0_70_58/0.12)_30%,rgb(0_70_58/0.04)_65%,transparent_100%)] hover:bg-[linear-gradient(to_left,rgb(0_70_58/0.34)_0%,rgb(0_70_58/0.18)_35%,rgb(0_70_58/0.05)_70%,transparent_100%)]")}
+              className={cx(edge, "right-0 justify-end")}
             >
               <ChevronRight size={18} strokeWidth={2.4} aria-hidden className={cx(chevron, "group-hover/edge:translate-x-0.5")} />
             </button>
