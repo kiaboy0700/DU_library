@@ -171,7 +171,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
       <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-50 focus:rounded-md focus:bg-surface focus:px-3 focus:py-2 focus:text-sm focus:font-semibold">
         본문으로 건너뛰기
       </a>
-      <header className="no-print sticky top-0 z-40 border-b border-line bg-surface text-du-black">
+      <header className="no-print sticky top-0 z-40 border-b border-line bg-surface pt-[env(safe-area-inset-top)] text-du-black">
         <div className={cx("mx-auto flex h-[60px] items-center gap-2 px-4", isAdmin ? "max-w-7xl" : "max-w-5xl")}>
           <Link href={isAdmin ? "/admin" : "/"} aria-label="대구대학교 창파도서관 좌석예약, 처음 화면으로" className="flex shrink-0 items-center gap-3 rounded-md">
             <Image src="/brand/signature.png" alt="대구대학교" width={500} height={147} priority className="h-9 w-auto" />
@@ -237,13 +237,13 @@ export function Shell({ children }: { children: React.ReactNode }) {
 
       {isAdmin && <AdminAlerts items={pendingItems} hidden={path.startsWith("/admin/reports")} />}
 
-      <main id="main" className={cx("mx-auto w-full flex-1 px-4 pb-28 pt-5 sm:pb-12", width)}>
+      <main id="main" className={cx("mx-auto w-full flex-1 px-4 pb-[calc(7rem+env(safe-area-inset-bottom))] pt-5 sm:pb-12", width)}>
         {children}
       </main>
 
       <nav
         aria-label="주 메뉴"
-        className="no-print fixed inset-x-0 bottom-0 z-40 border-t border-line bg-surface pb-[env(safe-area-inset-bottom)] sm:hidden"
+        className="no-print fixed inset-x-0 bottom-0 z-40 border-t border-line bg-surface pb-[max(env(safe-area-inset-bottom),6px)] sm:hidden"
       >
         <ul className="mx-auto flex max-w-3xl">
           {items.map((it) => {

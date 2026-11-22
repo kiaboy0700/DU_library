@@ -15,6 +15,8 @@ export const viewport: Viewport = {
   themeColor: "#ffffff",
   width: "device-width",
   initialScale: 1,
+  // 화면 끝까지 쓰겠다고 알려야 아이폰의 아래 홈 막대 높이(safe-area)를 알 수 있다
+  viewportFit: "cover",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
