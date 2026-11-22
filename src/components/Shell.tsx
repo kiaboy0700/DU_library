@@ -4,17 +4,16 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { Armchair, BellRing, ChartNoAxesColumn, ChevronDown, ClipboardList, Inbox, LayoutGrid, LogOut, MonitorDot, QrCode, ScanLine, Settings, TriangleAlert, UserRound, Users, X } from "lucide-react";
+import { Armchair, BellRing, ChartNoAxesColumn, ChevronDown, ClipboardList, House, Inbox, LogOut, MonitorDot, QrCode, ScanLine, Settings, TriangleAlert, UserRound, Users, X } from "lucide-react";
 import { NotificationBell } from "./NotificationBell";
 import { QrScanner } from "./QrScanner";
 import { useApp } from "./Providers";
-import { useSettings } from "@/lib/hooks";
 import { rpc } from "@/lib/supabase";
 import { cx, fmtRemain, fmtTime } from "@/lib/util";
 import { useNow } from "./ui";
 
 const NAV = [
-  { href: "/", label: "열람실", icon: LayoutGrid, match: (p: string) => p === "/" || p.startsWith("/rooms") },
+  { href: "/", label: "홈", icon: House, match: (p: string) => p === "/" || p.startsWith("/rooms") },
   { href: "/me", label: "내 좌석", icon: Armchair, match: (p: string) => p.startsWith("/me") || p.startsWith("/s/") },
   { href: "/stats", label: "혼잡도", icon: ChartNoAxesColumn, match: (p: string) => p.startsWith("/stats") },
 ];
@@ -313,7 +312,6 @@ function MoveBar({ onScan }: { onScan: () => void }) {
 /** 상단 바 오른쪽의 내 프로필. 누르면 내 정보와 로그아웃이 열린다 */
 function ProfileMenu({ pending }: { pending: number }) {
   const { status, signOut } = useApp();
-  const { settings } = useSettings();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const box = useRef<HTMLDivElement>(null);
@@ -337,17 +335,6 @@ function ProfileMenu({ pending }: { pending: number }) {
   const admin = p.role === "admin";
   const sub = admin ? (major ?? "관리자") : `${major ? `${major} · ` : ""}${p.student_id}`;
   const item = "flex min-h-11 items-center gap-2.5 px-4 text-sm font-semibold hover:bg-canvas";
-  // 관리자가 켜 둔 특수 상태: 잊고 두면 안 되는 것들
-  const flags =
-    admin && settings
-      ? (
-          [
-            ["incident_mode", "장애 모드"],
-            ["force_open", "운영시간 무시"],
-            ["gps_disabled", "위치 확인 끔"],
-          ] as const
-        ).filter(([k]) => settings[k])
-      : [];
 
   return (
     <div ref={box} className={cx("relative min-w-0 shrink-0 sm:max-w-72", admin && "ml-auto sm:ml-2")}>
@@ -407,16 +394,6 @@ function ProfileMenu({ pending }: { pending: number }) {
                 <ClipboardList size={16} aria-hidden />
                 통계·처리 기록
               </Link>
-              {flags.length > 0 && (
-                <Link role="menuitem" href="/admin/settings" onClick={() => setOpen(false)} className="flex flex-wrap items-center gap-1.5 border-t border-line bg-warn-tint px-4 py-2.5 text-xs font-semibold text-[#5c3d00]">
-                  켜져 있음
-                  {flags.map(([k, label]) => (
-                    <span key={k} className={cx("rounded-md px-1.5 py-0.5", k === "incident_mode" ? "bg-danger text-white" : "bg-white/70")}>
-                      {label}
-                    </span>
-                  ))}
-                </Link>
-              )}
             </>
           ) : (
             <Link role="menuitem" href="/me" onClick={() => setOpen(false)} className={item}>

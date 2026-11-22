@@ -34,7 +34,6 @@ export default function AdminHome() {
   const [reason, setReason] = useState("");
   const [moveTo, setMoveTo] = useState("");
   const [points, setPoints] = useState(0);
-  const [fill, setFill] = useState(85);
   const { busy, run } = useAction((m) => toast(m, "error"));
 
   const loadOv = useCallback(() => rpc<Overview>("admin_overview").then(setOv).catch(() => {}), []);
@@ -222,30 +221,6 @@ export default function AdminHome() {
         </Panel>
       </div>
 
-      <details className="rounded-[var(--radius-panel)] border border-line bg-surface">
-        <summary className="cursor-pointer px-4 py-3 text-sm font-semibold">발표·시연용 도구</summary>
-        <div className="border-t border-line p-4">
-          <p className="text-sm text-muted">가상 학생으로 {room?.name}을 채웁니다.</p>
-          <div className="mt-3 flex flex-wrap items-center gap-3">
-            <label className="flex items-center gap-3 text-sm font-semibold">
-              목표 이용률
-              <input type="range" min={0} max={100} step={5} value={fill} onChange={(e) => setFill(Number(e.target.value))} className="w-48" />
-              <span className="tabular w-10">{fill}%</span>
-            </label>
-            <Button
-              busy={busy === "fill"}
-              onClick={() =>
-                run("fill", async () => {
-                  const n = await rpc<number>("admin_demo_fill", { p_room: roomId, p_pct: fill });
-                  await done(`가상 학생 ${n}명을 배치했습니다.`);
-                })
-              }
-            >
-              채우기
-            </Button>
-          </div>
-        </div>
-      </details>
     </div>
   );
 }
@@ -285,30 +260,30 @@ function SeatPanel(p: {
         <>
           <dl className="mt-3 space-y-1.5 border-t border-line pt-3 text-sm">
             <div className="flex justify-between gap-3">
-              <dt className="text-muted">이용자</dt>
+              <dt className="shrink-0 whitespace-nowrap text-muted">이용자</dt>
               <dd className="text-right font-semibold">
                 {r.name} <span className="tabular font-normal text-muted">{r.student_id}</span>
               </dd>
             </div>
             <div className="flex justify-between gap-3">
-              <dt className="text-muted">소속</dt>
-              <dd className="text-right">
+              <dt className="shrink-0 whitespace-nowrap text-muted">소속</dt>
+              <dd className="min-w-0 text-right text-[13px] leading-snug">
                 {r.department ?? "-"}
                 {r.grade && ` ${r.grade}학년`}
               </dd>
             </div>
             <div className="flex justify-between gap-3">
-              <dt className="text-muted">이용 시간</dt>
+              <dt className="shrink-0 whitespace-nowrap text-muted">이용 시간</dt>
               <dd className="tabular text-right">
                 {fmtTime(r.start_at)} ~ {fmtTime(r.end_at)} · 연장 {r.extend_count}회
               </dd>
             </div>
             <div className="flex justify-between gap-3">
-              <dt className="text-muted">{r.status === "reserved" ? "체크인 마감" : r.status === "away" ? "복귀 마감" : "남은 시간"}</dt>
+              <dt className="shrink-0 whitespace-nowrap text-muted">{r.status === "reserved" ? "체크인 마감" : r.status === "away" ? "복귀 마감" : "남은 시간"}</dt>
               <dd className="tabular text-right font-semibold">{target ? fmtRemain(new Date(target).getTime() - now) : "-"}</dd>
             </div>
             <div className="flex justify-between gap-3">
-              <dt className="text-muted">벌점</dt>
+              <dt className="shrink-0 whitespace-nowrap text-muted">벌점</dt>
               <dd className="tabular text-right">{r.points}점</dd>
             </div>
           </dl>

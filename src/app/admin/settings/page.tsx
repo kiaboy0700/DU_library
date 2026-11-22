@@ -10,12 +10,6 @@ import { rpc, supabase } from "@/lib/supabase";
 import { MODE_LABEL, type Mode } from "@/lib/types";
 import { cx, fmtDateTime, getPosition } from "@/lib/util";
 
-const TOGGLES: { key: string; label: string; desc: string; danger?: boolean }[] = [
-  { key: "incident_mode", label: "장애 모드", desc: "시스템·인터넷 장애 때 켭니다. 자동 취소, 자동 반납, 벌점 부여가 모두 멈추고 사이트에 안내가 표시됩니다.", danger: true },
-  { key: "force_open", label: "운영시간 무시 (시연용)", desc: "켜 두면 주말·야간에도 예약할 수 있습니다. 실제 운영에서는 끄세요." },
-  { key: "gps_disabled", label: "위치 확인 끄기 (시연용)", desc: "켜 두면 도서관 밖에서도 QR 체크인이 됩니다. 실제 운영에서는 끄세요." },
-];
-
 /** 항목 하나: [키, 이름, 단위, 도움말] */
 type Row = [key: string, label: string, unit: string, help?: string];
 interface Group {
@@ -32,7 +26,6 @@ interface Section {
 }
 
 const SECTIONS: Section[] = [
-  { id: "mode", title: "시연·장애 모드", hint: "운영시간 무시, 위치 확인, 장애 모드" },
   {
     id: "reserve",
     title: "예약·연장",
@@ -187,7 +180,7 @@ export default function AdminSettings() {
   const [na, setNa] = useState({ title: "", body: "", room: "", hours: 24, push: true });
   const { busy, run } = useAction((m) => toast(m, "error"));
   const now = useNow(30000);
-  const [tab, setTab] = useState("mode");
+  const [tab, setTab] = useState("reserve");
   const [q, setQ] = useState("");
 
   useEffect(() => {
@@ -303,7 +296,6 @@ export default function AdminSettings() {
             {SECTIONS.map((sec) => {
               const on = !query && sec.id === tab;
               const n = dirtyIn(sec);
-              const flag = sec.id === "mode" && TOGGLES.some((t) => settings[t.key]);
               return (
                 <li key={sec.id} className="shrink-0">
                   <button
@@ -323,7 +315,6 @@ export default function AdminSettings() {
                       <span className={cx("hidden text-xs font-normal lg:block", on ? "text-du-deep-dark/80" : "text-muted")}>{sec.hint}</span>
                     </span>
                     {n > 0 && <span className="tabular grid h-5 min-w-5 shrink-0 place-items-center rounded-full bg-du-deep px-1 text-[11px] font-bold text-white lg:bg-du-deep">{n}</span>}
-                    {flag && n === 0 && <span className="size-2 shrink-0 rounded-full bg-[#c98a12]" aria-label="켜진 항목 있음" />}
                   </button>
                 </li>
               );
@@ -354,40 +345,6 @@ export default function AdminSettings() {
             </Panel>
           ) : (
             <>
-              {section.id === "mode" && (
-                <Panel className="divide-y divide-line overflow-hidden">
-                  <div className="px-4 py-3 sm:px-5">
-                    <h2 className="font-bold">{section.title}</h2>
-                    <p className="text-[13px] text-muted">누르는 즉시 적용됩니다.</p>
-                  </div>
-                  {TOGGLES.map((t) => {
-                    const on = !!settings[t.key];
-                    return (
-                      <div key={t.key} className="flex items-center justify-between gap-4 px-4 py-3.5 sm:px-5">
-                        <div className="min-w-0">
-                          <p className="flex items-center gap-2 font-semibold">
-                            {t.label}
-                            {on && <Tag tone={t.danger ? "danger" : "warn"}>켜짐</Tag>}
-                          </p>
-                          <p className="mt-0.5 text-[13px] text-muted">{t.desc}</p>
-                        </div>
-                        <button
-                          type="button"
-                          role="switch"
-                          aria-checked={on}
-                          aria-label={t.label}
-                          disabled={busy === t.key}
-                          onClick={() => save(t.key, [[t.key, !on]], `${t.label}를 ${on ? "껐습니다" : "켰습니다"}.`)}
-                          className={cx("relative h-7 w-12 shrink-0 rounded-full transition-colors duration-150", on ? (t.danger ? "bg-danger" : "bg-du-deep") : "bg-[#b9c6c2]")}
-                        >
-                          <span className={cx("absolute left-0.5 top-0.5 size-6 rounded-full bg-white shadow transition-transform duration-150", on && "translate-x-5")} />
-                        </button>
-                      </div>
-                    );
-                  })}
-                </Panel>
-              )}
-
               {section.id === "crowd" && (
                 <Panel className="overflow-hidden">
                   <div className="px-4 py-3 sm:px-5">
