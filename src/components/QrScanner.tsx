@@ -171,7 +171,7 @@ export function QrScanner({
             <div className="absolute inset-x-0 bottom-[calc(50%+min(31vw,150px)+20px)] flex flex-col items-center px-6 text-center text-white">
               {seat && (
                 <>
-                  <p className="text-[13px] font-medium text-white/85">{seat.room} · 내 좌석</p>
+                  <p className="text-[13px] font-medium text-white/85">{seat.room.includes("·") ? seat.room : `${seat.room} · 내 좌석`}</p>
                   <p className="text-[34px] font-bold leading-tight tracking-tight">{seat.label}</p>
                 </>
               )}

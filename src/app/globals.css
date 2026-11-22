@@ -71,6 +71,14 @@ button:disabled {
   cursor: not-allowed;
 }
 
+p,
+li,
+dd,
+dt,
+legend {
+  text-wrap: pretty;
+}
+
 h1,
 h2,
 h3 {

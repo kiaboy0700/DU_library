@@ -28,7 +28,7 @@ export default function MePage() {
   const { settings } = useSettings();
   const now = useNow();
   const { busy, run } = useAction((m) => toast(m, "error"));
-  const [open, setOpen] = useState<"away" | "return" | "help" | "scan" | null>(null);
+  const [open, setOpen] = useState<"away" | "return" | "help" | "scan" | "move" | null>(null);
   const [penalties, setPenalties] = useState<Penalty[]>([]);
   const [appeals, setAppeals] = useState<Appeal[]>([]);
   const [appealFor, setAppealFor] = useState<number | null>(null);
@@ -167,7 +167,7 @@ export default function MePage() {
 
             {res.status === "in_use" && (
               <>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                   <Button aria-expanded={open === "away"} onClick={() => setOpen(open === "away" ? null : "away")}>
                     외출
                   </Button>
@@ -184,6 +184,9 @@ export default function MePage() {
                     }
                   >
                     연장
+                  </Button>
+                  <Button aria-expanded={open === "move"} onClick={() => setOpen(open === "move" ? null : "move")}>
+                    자리 이동
                   </Button>
                   <Button variant="danger" aria-expanded={open === "return"} onClick={() => setOpen(open === "return" ? null : "return")}>
                     반납
@@ -230,6 +233,25 @@ export default function MePage() {
                     외출 시작
                   </Button>
                   <Button onClick={() => setOpen(null)}>닫기</Button>
+                </div>
+              </div>
+            )}
+
+            {open === "move" && res.status === "in_use" && (
+              <div className="rise mt-3 rounded-[var(--radius-ctl)] border border-line bg-surface p-3.5">
+                <p className="font-semibold">옮길 좌석의 QR을 찍으면 이동합니다</p>
+                <p className="mt-0.5 text-sm text-muted">남은 시간과 연장 횟수는 그대로 따라갑니다.</p>
+                <div className="mt-3 grid grid-cols-2 gap-2">
+                  <Button variant="primary" onClick={() => setOpen("scan")}>
+                    <QrCode size={16} aria-hidden />
+                    바로 QR 찍기
+                  </Button>
+                  <Link
+                    href={`/rooms/${res.room_id}`}
+                    className="inline-flex min-h-11 items-center justify-center rounded-[var(--radius-ctl)] border border-line bg-surface px-4 text-sm font-semibold hover:bg-canvas"
+                  >
+                    좌석 먼저 고르기
+                  </Link>
                 </div>
               </div>
             )}
@@ -388,9 +410,9 @@ export default function MePage() {
               </div>
             </form>
           ) : (
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <p className="min-w-0 flex-1 basis-40 text-sm text-[#3d4744]">QR·휴대폰 문제는 관리자가 대신 처리합니다.</p>
-              <Button onClick={() => setOpen("help")}>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-sm text-[#3d4744]">QR·휴대폰 문제는 관리자가 대신 처리합니다.</p>
+              <Button className="w-full sm:w-auto" onClick={() => setOpen("help")}>
                 <LifeBuoy size={16} aria-hidden />
                 도움 요청
               </Button>

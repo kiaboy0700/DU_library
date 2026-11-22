@@ -10,7 +10,8 @@ import { QrScanner } from "./QrScanner";
 import { useApp } from "./Providers";
 import { useSettings } from "@/lib/hooks";
 import { rpc } from "@/lib/supabase";
-import { cx, fmtTime } from "@/lib/util";
+import { cx, fmtRemain, fmtTime } from "@/lib/util";
+import { useNow } from "./ui";
 
 const NAV = [
   { href: "/", label: "열람실", icon: LayoutGrid, match: (p: string) => p === "/" || p.startsWith("/rooms") },
@@ -213,9 +214,12 @@ export function Shell({ children }: { children: React.ReactNode }) {
             router.push(`/s/${t}`);
           }}
           onClose={() => setScan(false)}
-          seat={active ? { label: active.seat_label, room: active.room_name } : undefined}
+          seat={status.move ? { label: status.move.seat_label, room: `${status.move.room_name} · 옮길 좌석` } : active ? { label: active.seat_label, room: active.room_name } : undefined}
+          deadline={status.move ? { label: "이동 마감까지", at: status.move.expires_at } : undefined}
         />
       )}
+
+      {status.move && <MoveBar onScan={() => setScan(true)} />}
 
       {active?.report_deadline && !path.startsWith("/me") && (
         <Link href="/me" className="no-print flex items-center justify-center gap-2 bg-danger px-4 py-2.5 text-sm font-semibold text-white">
@@ -260,6 +264,48 @@ export function Shell({ children }: { children: React.ReactNode }) {
           })}
         </ul>
       </nav>
+    </div>
+  );
+}
+
+/** 자리 이동 중: 맡아 둔 좌석과 남은 시간. 그 좌석의 QR을 찍으면 이동이 끝난다 */
+function MoveBar({ onScan }: { onScan: () => void }) {
+  const { status, refresh, toast } = useApp();
+  const now = useNow();
+  const m = status?.move;
+  if (!m) return null;
+  const left = new Date(m.expires_at).getTime() - now;
+  return (
+    <div className="no-print border-b border-du-deep/25 bg-du-tint">
+      <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-3 gap-y-2 px-4 py-2.5">
+        <p className="min-w-0 flex-1 basis-52 text-sm">
+          <strong className="font-bold">
+            {m.room_name} {m.seat_label}
+          </strong>
+          로 이동 중 · <span className="tabular font-semibold">{fmtRemain(left)}</span> 안에 그 좌석의 QR을 찍으세요
+        </p>
+        <div className="flex gap-2">
+          <button type="button" onClick={onScan} className="flex min-h-10 items-center gap-1.5 rounded-[var(--radius-ctl)] bg-du-deep px-3.5 text-sm font-semibold text-white hover:bg-du-deep-dark">
+            <ScanLine size={16} aria-hidden />
+            QR 찍기
+          </button>
+          <button
+            type="button"
+            onClick={async () => {
+              try {
+                await rpc("cancel_move");
+                await refresh();
+                toast("자리 이동을 취소했습니다.");
+              } catch {
+                toast("취소하지 못했습니다. 다시 시도해 주세요.", "error");
+              }
+            }}
+            className="min-h-10 rounded-[var(--radius-ctl)] border border-line bg-surface px-3.5 text-sm font-semibold hover:bg-canvas"
+          >
+            취소
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

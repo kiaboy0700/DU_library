@@ -29,7 +29,7 @@ export function Button({
       disabled={disabled || busy}
       aria-busy={busy || undefined}
       className={cx(
-        "inline-flex items-center justify-center gap-1.5 rounded-[var(--radius-ctl)] font-semibold transition-colors duration-150",
+        "inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-[var(--radius-ctl)] font-semibold transition-colors duration-150",
         size === "sm" && "min-h-9 px-3 text-[13px]",
         size === "md" && "min-h-11 px-4 text-sm",
         size === "lg" && "min-h-[52px] px-5 text-base",

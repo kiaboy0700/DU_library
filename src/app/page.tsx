@@ -3,10 +3,9 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
-import { Bell, BellRing, ChevronRight, Megaphone, QrCode, TriangleAlert, WifiOff, Zap } from "lucide-react";
+import { Bell, BellRing, ChevronRight, Megaphone, TriangleAlert, WifiOff, Zap } from "lucide-react";
 import { OccupancyMeter } from "@/components/OccupancyMeter";
 import { useApp } from "@/components/Providers";
-import { QrScanner } from "@/components/QrScanner";
 import { Button, Notice, Panel, Skeleton, Tag, useAction, useNow } from "@/components/ui";
 import { ruleTexts, useHome, useSettings } from "@/lib/hooks";
 import { rpc, supabase } from "@/lib/supabase";
@@ -28,7 +27,6 @@ export default function HomePage() {
   const { settings } = useSettings();
   const [notices, setNotices] = useState<Announcement[]>([]);
   const [watching, setWatching] = useState<Set<number>>(new Set());
-  const [scan, setScan] = useState(false);
   const now = useNow();
   const uid = status?.profile.id;
 
@@ -77,6 +75,11 @@ export default function HomePage() {
       router.push("/me");
     });
 
+  // 소속을 '전공'과 '단과대학·학부'로 나눠 두 줄로 보여 준다
+  const dept = status?.profile.department ?? null;
+  const major = dept ? (dept.match(/\(([^)]+)\)/)?.[1] ?? dept.replace(/^\S+\s+/, "")) : null;
+  const upper = dept ? (dept.includes("(") ? dept.replace(/\([^)]*\)/, "").trim() : dept.split(" ")[0]) : null;
+
   const res = status?.reservation;
   const mode = home?.mode;
 
@@ -89,35 +92,44 @@ export default function HomePage() {
           <span aria-hidden className="absolute -bottom-20 right-24 size-40 rounded-full bg-white/35" />
           <div className="relative min-w-0 flex-1">
             <p className="text-[26px] font-bold leading-tight tracking-[-0.02em]">{status.profile.name}</p>
-            <p className="mt-1 text-sm font-medium text-du-deep-dark">{status.profile.department ?? "학과 미등록"}</p>
+            <p className="mt-1 text-[15px] font-semibold text-du-deep-dark">{major ?? "학과 미등록"}</p>
+            {upper && <p className="text-[13px] text-[#3d4744]">{upper}</p>}
             <p className="tabular mt-0.5 text-[13px] text-[#3d4744]">
               {status.profile.student_id}
               {status.profile.grade && ` · ${status.profile.grade}학년`}
             </p>
           </div>
-          <button
-            type="button"
-            onClick={() => setScan(true)}
-            className="relative flex size-[84px] shrink-0 flex-col items-center justify-center gap-1 rounded-xl bg-surface text-du-deep-dark shadow-[0_2px_8px_-2px_rgb(0_60_50/0.18)] transition-transform duration-150 hover:-translate-y-0.5 active:translate-y-0"
+          <Link
+            href={res ? "/me" : "#rooms-h"}
+            className={cx(
+              "relative flex min-h-[84px] w-[132px] shrink-0 flex-col justify-center rounded-xl px-3.5 py-2.5 shadow-[0_2px_8px_-2px_rgb(0_60_50/0.18)] transition-transform duration-150 hover:-translate-y-0.5 active:translate-y-0",
+              res ? "bg-du-deep text-white" : "bg-surface text-du-black",
+            )}
           >
-            <QrCode size={34} strokeWidth={1.8} aria-hidden />
-            <span className="text-[13px] font-semibold">QR 스캔</span>
-          </button>
+            {res ? (
+              <>
+                <span className="text-xs font-medium text-white/85">
+                  {res.room_name.replace(" 열람실", "")} · {res.status === "reserved" ? "체크인 대기" : res.status === "away" ? "외출 중" : "이용 중"}
+                </span>
+                <span className="text-[22px] font-bold leading-tight tracking-tight">{res.seat_label}</span>
+                <span className="tabular text-[13px] font-semibold">
+                  {fmtRemain(new Date(res.status === "reserved" ? res.checkin_deadline : res.status === "away" && res.away_deadline ? res.away_deadline : res.end_at).getTime() - now)}
+                  <span className="font-normal text-white/85"> 남음</span>
+                </span>
+              </>
+            ) : (
+              <>
+                <span className="text-xs font-medium text-muted">내 자리</span>
+                <span className="text-[17px] font-bold leading-tight">없음</span>
+                <span className="text-[13px] font-semibold text-du-deep-dark">좌석 고르기</span>
+              </>
+            )}
+          </Link>
         </section>
-      )}
-      {scan && (
-        <QrScanner
-          onToken={(t) => {
-            setScan(false);
-            router.push(`/s/${t}`);
-          }}
-          onClose={() => setScan(false)}
-          seat={res ? { label: res.seat_label, room: res.room_name } : undefined}
-        />
       )}
 
       <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-1">
-        <h1 className="text-[20px] font-bold leading-snug">열람실</h1>
+        <h1 id="rooms-h" className="scroll-mt-20 text-[20px] font-bold leading-snug">열람실</h1>
         {mode && (
           <p className="text-sm text-muted">
             {MODE_LABEL[mode]} 운영
@@ -139,25 +151,6 @@ export default function HomePage() {
         </Notice>
       ))}
 
-      {res && (
-        <Link href="/me" className="block rounded-[var(--radius-panel)] bg-du-deep p-4 text-white transition-colors duration-150 hover:bg-du-deep-dark">
-          <div className="flex items-center justify-between gap-3">
-            <div className="min-w-0">
-              <p className="text-sm text-white/85">
-                {res.room_name} · {res.status === "reserved" ? "체크인 대기" : res.status === "away" ? "외출 중" : "이용 중"}
-              </p>
-              <p className="mt-0.5 text-2xl font-bold tracking-tight">{res.seat_label}</p>
-            </div>
-            <div className="text-right">
-              <p className="text-sm text-white/85">{res.status === "reserved" ? "체크인까지" : res.status === "away" ? "복귀까지" : "남은 시간"}</p>
-              <p className="tabular mt-0.5 text-2xl font-bold">
-                {fmtRemain(new Date(res.status === "reserved" ? res.checkin_deadline : res.status === "away" && res.away_deadline ? res.away_deadline : res.end_at).getTime() - now)}
-              </p>
-            </div>
-            <ChevronRight size={20} className="shrink-0 text-white/80" aria-hidden />
-          </div>
-        </Link>
-      )}
 
       {error && !home && (
         <Notice tone="danger" icon={<WifiOff size={18} aria-hidden />}>
@@ -237,6 +230,7 @@ export default function HomePage() {
             ["외출", `혼잡도에 따라 ${settings?.away_high ?? 20}~${settings?.away_low ?? 60}분 · 늦으면 자동 반납, 벌점 ${settings?.pen_away ?? 1}점`],
             ["자리비움 신고", `${settings?.report_high ?? 10}~${settings?.report_low ?? 20}분 안에 QR 스캔으로 응답 · 무응답 시 반납, 벌점 ${settings?.pen_report ?? 2}~${settings?.pen_report_busy ?? 3}점`],
             ["허위 신고", `이용자가 앉아 있는 좌석을 신고한 것으로 관리자가 확인한 경우 · ${settings?.false_report_limit ?? 3}회면 ${settings?.false_report_ban_days ?? 7}일 신고 정지, 벌점 ${settings?.pen_false_report ?? 1}점. 비어 있던 자리를 신고했다면 이용자가 금방 돌아와도 불이익이 없습니다`],
+            ["자리 이동", `옮길 좌석의 QR을 찍으면 이동 · 좌석을 먼저 고르면 ${settings?.move_hold_minutes ?? 10}분 동안 맡아 둠 · 남은 시간은 그대로`],
             ["이용 시간", `최대 ${Number(settings?.max_minutes ?? 240) / 60}시간 · 종료 ${settings?.extend_window_min ?? 30}분 전부터 연장`],
             ["예약 정지", `벌점 ${settings?.ban1_points ?? 3}점 ${settings?.ban1_days ?? 3}일 · ${settings?.ban2_points ?? 6}점 ${settings?.ban2_days ?? 14}일`],
           ].map(([k, v]) => (

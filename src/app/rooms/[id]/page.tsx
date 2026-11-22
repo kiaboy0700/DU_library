@@ -92,6 +92,15 @@ export default function RoomPage() {
       await rpc("reserve_seat", { p_seat: selected.id, p_minutes: hours * 60 });
       await after(selected.label);
     });
+  // 자리 이동: 좌석을 맡아 두고, 그 좌석의 QR을 찍으면 끝난다
+  const move = () =>
+    selected &&
+    run("move", async () => {
+      const r = await rpc<{ seat_label: string; minutes: number }>("request_move", { p_seat: selected.id });
+      await refresh();
+      setSelected(null);
+      toast(`${r.seat_label} 좌석을 ${r.minutes}분 동안 맡아 뒀습니다. 그 좌석의 QR을 찍으면 이동합니다.`, "ok");
+    });
   const quick = () =>
     run("quick", async () => {
       const r = await rpc<{ seat_label: string }>("quick_reserve", { p_room: roomId, p_minutes: hours * 60 });
@@ -116,6 +125,7 @@ export default function RoomPage() {
 
   // 사용 중인 좌석: 누가 쓰는지는 알 수 없고, 언제 비는지만 알려 준다
   const info = selected ? states.get(selected.id) : undefined;
+  const holding = !!selected && status?.move?.seat_id === selected.id;
   const taken = !!selected && !!info && info.state !== "free" && mine?.seat_id !== selected.id;
   const extendsLeft = info ? Math.max(0, Number(settings?.max_extends ?? 2) - info.extend_count) : 0;
   const hint = (seat: Seat) => {
@@ -138,7 +148,27 @@ export default function RoomPage() {
           <X size={18} aria-hidden />
         </button>
       </div>
-      {taken && info ? (
+      {holding ? (
+        <>
+          <p className="mt-3 text-sm text-[#3d4744]">
+            이동하려고 맡아 둔 좌석입니다. <strong className="tabular font-semibold">{status?.move ? <TimeLeft at={status.move.expires_at} /> : ""}</strong> 안에 이 좌석의 QR을 찍으면 이동합니다.
+          </p>
+          <Button
+            className="mt-3 w-full"
+            busy={busy === "cancel"}
+            onClick={() =>
+              run("cancel", async () => {
+                await rpc("cancel_move");
+                await refresh();
+                setSelected(null);
+                toast("자리 이동을 취소했습니다.");
+              })
+            }
+          >
+            이동 취소
+          </Button>
+        </>
+      ) : taken && info ? (
         <>
           <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2.5 text-sm">
             <div>
@@ -169,12 +199,20 @@ export default function RoomPage() {
           </p>
         </>
       ) : mine ? (
-        <p className="mt-3 text-sm text-[#3d4744]">
-          {mine.seat_label} 이용 중 ·{" "}
-          <Link href="/me" className="font-semibold text-du-deep-dark underline underline-offset-2">
-            반납하고 옮기기
-          </Link>
-        </p>
+        mine.status === "in_use" ? (
+          <>
+            <p className="mt-3 text-sm text-[#3d4744]">
+              지금 좌석 <strong className="font-semibold">{mine.seat_label}</strong>에서 옮깁니다. 이 자리를 {String(settings?.move_hold_minutes ?? 10)}분 동안 맡아 두니, 그 안에 이 좌석의 QR을 찍어 주세요.
+            </p>
+            <Button variant="primary" size="lg" className="mt-3 w-full" busy={busy === "move"} disabled={blocked} onClick={move}>
+              이 자리로 이동
+            </Button>
+          </>
+        ) : (
+          <p className="mt-3 text-sm text-[#3d4744]">
+            {mine.seat_label} {mine.status === "reserved" ? "체크인 대기 중" : "외출 중"} · 체크인하고 자리에 있을 때 옮길 수 있습니다.
+          </p>
+        )
       ) : (
         <>
           <fieldset className="mt-3">
@@ -229,8 +267,8 @@ export default function RoomPage() {
           })}
           {!home && <Skeleton className="h-10 w-56 !rounded-full" />}
         </nav>
-        <div className="mt-3 flex flex-wrap items-end justify-between gap-x-4 gap-y-1">
-          <h1 className="text-[22px] font-bold">{room?.name ?? <Skeleton className="h-7 w-32" />}</h1>
+        <div className="mt-3 flex flex-wrap items-end gap-x-4 gap-y-1">
+          <h1 className="sr-only">{room?.name ?? "열람실"}</h1>
           {summary && lv && (
             <p className="tabular text-sm">
               <span className="font-bold">{free}석 남음</span>

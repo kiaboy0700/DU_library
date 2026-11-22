@@ -46,6 +46,10 @@ const SECTIONS: Section[] = [
         ],
       },
       {
+        sub: "자리 이동",
+        rows: [["move_hold_minutes", "옮길 좌석 맡아 두는 시간", "분", "좌석을 먼저 고른 경우, 이 시간 안에 그 좌석의 QR을 찍어야 함"]],
+      },
+      {
         sub: "연장",
         rows: [
           ["extend_minutes", "1회 연장 시간", "분"],

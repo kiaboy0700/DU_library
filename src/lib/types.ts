@@ -105,7 +105,16 @@ export interface Profile {
   banned_until: string | null;
   ban_reason: string | null;
 }
+/** 진행 중인 자리 이동: 옮길 좌석을 맡아 둔 상태 */
+export interface MoveInfo {
+  seat_id: number;
+  seat_label: string;
+  room_id: number;
+  room_name: string;
+  expires_at: string;
+}
 export interface MyStatus {
+  move?: MoveInfo | null;
   profile: Profile;
   points: number;
   reservation: MyReservation | null;
@@ -128,6 +137,8 @@ export interface SeatContext {
   report_minutes: number;
   gps_required: boolean;
   extend_window_min: number;
+  held_by_me?: boolean;
+  held_by_other?: boolean;
 }
 export interface Notice {
   id: number;

@@ -49,7 +49,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
       return;
     }
     try {
-      setStatus(await rpc<MyStatus>("my_status"));
+      const [st, move] = await Promise.all([rpc<MyStatus>("my_status"), rpc<MyStatus["move"]>("my_move").catch(() => null)]);
+      setStatus({ ...st, move });
     } catch {
       setStatus(null);
     }

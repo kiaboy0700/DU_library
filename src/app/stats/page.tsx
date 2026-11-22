@@ -44,10 +44,12 @@ export default function StatsPage() {
     return (d: number, h: number) => m.get(`${d}-${h}`);
   }, [cells]);
 
-  const today = HOURS.map((h) => ({ h, pct: at(cur.dow, h) ?? 0 }));
-  const upcoming = today.filter((t) => t.h >= cur.hour).slice(0, 6);
-  const quiet = today.filter((t) => t.h >= cur.hour && t.h >= 9).sort((a, b) => a.pct - b.pct)[0];
   const room = home?.rooms.find((r) => r.id === roomId);
+  const today = HOURS.map((h) => ({ h, pct: at(cur.dow, h) ?? 0 }));
+  // '지금'은 평균이 아니라 실제 이용률을 쓴다 (위의 문장과 숫자가 어긋나지 않게)
+  const upcoming = today.filter((t) => t.h >= cur.hour).slice(0, 6).map((t) => (t.h === cur.hour && room ? { ...t, pct: room.pct } : t));
+  const peak = Math.max(40, ...upcoming.map((t) => t.pct));
+  const quiet = today.filter((t) => t.h >= cur.hour && t.h >= 9).sort((a, b) => a.pct - b.pct)[0];
 
   return (
     <div className="space-y-5">
@@ -88,7 +90,7 @@ export default function StatsPage() {
                 </>
               )}
             </p>
-            <ol className="mt-4 flex h-32 items-end gap-2" aria-label="시간대별 예상 이용률">
+            <ol className="mt-4 flex h-28 items-end gap-2" aria-label="시간대별 예상 이용률">
               {upcoming.map((t) => {
                 const lv = level(t.pct);
                 return (
@@ -96,7 +98,7 @@ export default function StatsPage() {
                     <span className="tabular text-xs font-semibold" style={{ color: lv.color }}>
                       {t.pct}%
                     </span>
-                    <span className="w-full max-w-12 rounded-t-md" style={{ height: `${Math.max(t.pct, 3) * 0.72}%`, background: lv.color }} />
+                    <span className="w-full max-w-12 rounded-t-md" style={{ height: `${Math.max(4, (t.pct / peak) * 66)}%`, background: lv.color }} />
                     <span className={cx("tabular text-xs", t.h === cur.hour ? "font-bold" : "text-muted")}>{t.h === cur.hour ? "지금" : `${t.h}시`}</span>
                   </li>
                 );

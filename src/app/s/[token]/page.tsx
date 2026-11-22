@@ -6,11 +6,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { CircleCheck, CircleSlash, MapPin, QrCode } from "lucide-react";
 import { OccupancyMeter } from "@/components/OccupancyMeter";
 import { useApp } from "@/components/Providers";
-import { Button, Empty, Notice, Panel, Skeleton, Tag, useAction, useNow } from "@/components/ui";
+import { Button, Empty, Notice, Panel, Skeleton, Tag, TimeLeft, useAction, useNow } from "@/components/ui";
 import { ruleTexts, useSettings } from "@/lib/hooks";
-import { rpc } from "@/lib/supabase";
-import { SEAT_TYPE_LABEL, STATE_LABEL, type SeatContext } from "@/lib/types";
-import { fmtRemain, fmtTime, getPosition } from "@/lib/util";
+import { rpc, supabase } from "@/lib/supabase";
+import { SEAT_TYPE_LABEL, STATE_LABEL, type SeatContext, type SeatInfo } from "@/lib/types";
+import { cx, fmtRemain, fmtTime, getPosition } from "@/lib/util";
 
 /** 좌석 QR을 스캔하면 열리는 화면. 상황에 맞는 동작 하나를 가장 크게 보여 준다 */
 export default function SeatQrPage() {
@@ -21,12 +21,20 @@ export default function SeatQrPage() {
   const now = useNow();
   const [ctx, setCtx] = useState<SeatContext | null | undefined>(undefined);
   const [done, setDone] = useState<string | null>(null);
+  const [info, setInfo] = useState<SeatInfo | null>(null);
+  const [hours, setHours] = useState<number | null>(null);
   const [confirm, setConfirm] = useState<"report" | "return" | "away" | null>(null);
   const { busy, run } = useAction((m) => toast(m, "error"));
 
   const load = useCallback(async () => {
     try {
-      setCtx(await rpc<SeatContext | null>("seat_context", { p_token: token }));
+      const c = await rpc<SeatContext | null>("seat_context_v2", { p_token: token });
+      setCtx(c);
+      // 누가 쓰는지는 알 수 없고, 언제 비는지만 가져온다
+      if (c) {
+        const { data } = await supabase.from("seat_state").select("seat_id,state,end_at,until_at,extend_count").eq("seat_id", c.seat.id).maybeSingle();
+        setInfo((data as SeatInfo) ?? null);
+      }
     } catch {
       setCtx(null);
     }
@@ -56,6 +64,12 @@ export default function SeatQrPage() {
   // (체크인 대기 → 체크인, 외출 중 → 복귀, 자리 확인 요청 → 자리에 있음 확인)
   const auto = useRef(false);
   useEffect(() => {
+    // 이동하려고 맡아 둔 좌석의 QR을 찍었으면 바로 이동
+    if (!auto.current && ctx?.held_by_me && status?.reservation?.status === "in_use") {
+      auto.current = true;
+      scan("move", "move_seat", (r) => `${(r as { from: string; to: string }).from}에서 ${(r as { from: string; to: string }).to}(으)로 옮겼습니다.`);
+      return;
+    }
     if (auto.current || !ctx?.is_mine || !ctx.my_reservation) return;
     const st = ctx.my_reservation.status;
     if (st === "reserved") {
@@ -85,6 +99,8 @@ export default function SeatQrPage() {
     );
 
   const { seat } = ctx;
+  const maxHours = Number(settings?.max_minutes ?? 240) / 60;
+  const extendsLeft = info ? Math.max(0, Number(settings?.max_extends ?? 2) - info.extend_count) : 0;
   const r = ctx.my_reservation;
   const isAdmin = status?.profile.role === "admin";
   // 좌석을 쓰는 동작은 학생 계정만
@@ -142,10 +158,27 @@ export default function SeatQrPage() {
           {loggedIn && !seat.is_active && <Notice tone="warn">지금은 사용이 중지된 좌석입니다. 다른 좌석을 이용해 주세요.</Notice>}
 
           {/* 빈 좌석: 바로 예약 + 체크인 */}
-          {loggedIn && seat.is_active && ctx.state === "free" && !ctx.have_other && (
+          {loggedIn && seat.is_active && ctx.state === "free" && !ctx.have_other && !ctx.held_by_other && (
             <>
               {ctx.is_open ? (
                 <>
+                  <fieldset>
+                    <legend className="text-[13px] font-semibold">이용 시간</legend>
+                    <div className="mt-1.5 grid grid-cols-4 gap-1.5">
+                      {Array.from({ length: maxHours }, (_, i) => i + 1).map((h) => (
+                        <label
+                          key={h}
+                          className={cx(
+                            "flex min-h-11 cursor-pointer items-center justify-center rounded-[var(--radius-ctl)] border text-sm font-semibold transition-colors duration-150 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-du-deep",
+                            (hours ?? maxHours) === h ? "border-du-deep bg-du-tint text-du-deep-dark" : "border-line hover:bg-canvas",
+                          )}
+                        >
+                          <input type="radio" name="hours" value={h} checked={(hours ?? maxHours) === h} onChange={() => setHours(h)} className="sr-only" />
+                          {h}시간
+                        </label>
+                      ))}
+                    </div>
+                  </fieldset>
                   <Button
                     variant="primary"
                     size="lg"
@@ -153,7 +186,7 @@ export default function SeatQrPage() {
                     busy={busy === "sit"}
                     onClick={() =>
                       run("sit", async () => {
-                        await rpc("reserve_seat", { p_seat: seat.id });
+                        await rpc("reserve_seat", { p_seat: seat.id, p_minutes: (hours ?? maxHours) * 60 });
                         const pos = ctx.gps_required ? await getPosition() : null;
                         await rpc("check_in", { p_token: token, p_lat: pos?.lat ?? null, p_lng: pos?.lng ?? null });
                         setDone(`${seat.label} 좌석 이용을 시작했습니다.`);
@@ -161,7 +194,7 @@ export default function SeatQrPage() {
                       })
                     }
                   >
-                    이 좌석 이용 시작
+                    이 좌석 예약하고 바로 시작
                   </Button>
                 </>
               ) : (
@@ -169,14 +202,28 @@ export default function SeatQrPage() {
               )}
             </>
           )}
-          {loggedIn && ctx.state === "free" && ctx.have_other && (
+          {loggedIn && ctx.state === "free" && ctx.have_other && !ctx.held_by_other && status?.reservation?.status === "in_use" && (
+            <>
+              <p className="text-sm text-[#3d4744]">
+                지금 좌석 <strong className="font-semibold">{status.reservation.seat_label}</strong>에서 이 자리로 옮깁니다. 남은 시간은 그대로입니다.
+              </p>
+              <Button
+                variant="primary"
+                size="lg"
+                className="w-full"
+                busy={busy === "move"}
+                onClick={() => scan("move", "move_seat", (r) => `${(r as { from: string; to: string }).from}에서 ${(r as { from: string; to: string }).to}(으)로 옮겼습니다.`)}
+              >
+                이 자리로 이동
+              </Button>
+            </>
+          )}
+          {loggedIn && ctx.state === "free" && ctx.have_other && !ctx.held_by_other && status?.reservation?.status !== "in_use" && (
             <Notice tone="warn">
-              {status?.reservation?.seat_label} 이용 중 ·{" "}
-              <Link href="/me" className="font-semibold underline underline-offset-2">
-                반납하고 옮기기
-              </Link>
+              {status?.reservation?.seat_label} {status?.reservation?.status === "away" ? "외출 중" : "체크인 대기 중"} · 체크인하고 자리에 있을 때 옮길 수 있습니다.
             </Notice>
           )}
+          {loggedIn && ctx.state === "free" && ctx.held_by_other && <Notice tone="warn">다른 학생이 이동하려고 맡아 둔 좌석입니다.</Notice>}
 
           {/* 내 좌석 */}
           {ctx.is_mine && r?.status === "reserved" && (
@@ -270,6 +317,23 @@ export default function SeatQrPage() {
             </div>
           )}
 
+          {/* 다른 사람의 좌석: 언제 비는지 */}
+          {loggedIn && !ctx.is_mine && ctx.state !== "free" && info && info.state !== "free" && (
+            <dl className="grid grid-cols-3 gap-2 rounded-[var(--radius-ctl)] bg-[#f6f9f8] px-3.5 py-3 text-sm">
+              <div>
+                <dt className="text-xs text-muted">{info.state === "reserved" ? "체크인 마감까지" : info.state === "away" ? "복귀 마감까지" : "남은 시간"}</dt>
+                <dd className="tabular font-bold">{info.until_at ? <TimeLeft at={info.until_at} /> : "–"}</dd>
+              </div>
+              <div>
+                <dt className="text-xs text-muted">이용 종료</dt>
+                <dd className="tabular font-semibold">{info.end_at ? fmtTime(info.end_at) : "–"}</dd>
+              </div>
+              <div>
+                <dt className="text-xs text-muted">남은 연장</dt>
+                <dd className="tabular font-semibold">{ctx.mode === "exam" ? "제한 없음" : `${extendsLeft}회`}</dd>
+              </div>
+            </dl>
+          )}
           {/* 다른 사람의 좌석 */}
           {loggedIn && !ctx.is_mine && ctx.state === "in_use" && (
             <>
