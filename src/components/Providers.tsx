@@ -34,6 +34,10 @@ export function useApp() {
 export function Providers({ children }: { children: React.ReactNode }) {
   const [status, setStatus] = useState<MyStatus | null | undefined>(undefined);
   const [toasts, setToasts] = useState<ToastItem[]>([]);
+  // 로그인 여부가 정해지면 로딩 화면을 걷는다
+  useEffect(() => {
+    if (status !== undefined) document.body.dataset.ready = "1";
+  }, [status]);
   const [pulse, setPulse] = useState(0);
   const nextId = useRef(1);
 

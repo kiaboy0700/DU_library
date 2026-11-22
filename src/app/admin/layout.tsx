@@ -16,6 +16,7 @@ const TABS = [
   { href: "/admin/qr", label: "좌석 QR" },
   { href: "/admin/settings", label: "운영 설정" },
   { href: "/admin/stats", label: "통계·기록" },
+  { href: "/admin/demo", label: "시연" },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

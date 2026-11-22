@@ -41,22 +41,24 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-dvh flex-col bg-surface sm:bg-canvas">
-      <div className="on-deep bg-du-deep px-6 pb-16 pt-12 text-white sm:pb-24">
-        <div className="mx-auto max-w-sm">
-          <span className="grid size-16 place-items-center rounded-full bg-white">
+    <div className="flex min-h-dvh flex-col bg-surface lg:flex-row">
+      {/* 창파도서관 사진. 글자가 읽히도록 아래쪽을 초록으로 덮는다 */}
+      <div className="on-deep relative isolate flex min-h-[46dvh] flex-col justify-end overflow-hidden bg-du-deep px-6 pb-16 pt-10 text-white lg:min-h-dvh lg:flex-1 lg:justify-end lg:p-14">
+        <Image src="/brand/changpa.webp" alt="" fill priority sizes="(min-width: 1024px) 60vw, 100vw" className="-z-20 object-cover object-[68%_100%]" />
+        <span aria-hidden className="absolute inset-0 -z-10 bg-gradient-to-t from-[#003d34] via-[#003d34]/55 to-transparent" />
+        <div className="mx-auto w-full max-w-sm lg:mx-0 lg:max-w-none">
+          <span className="grid size-16 place-items-center rounded-full bg-white shadow-[0_4px_14px_-4px_rgb(0_0_0/0.4)]">
             <Image src="/brand/symbol.png" alt="대구대학교" width={56} height={56} priority />
           </span>
-          <h1 className="mt-5 text-[28px] font-bold leading-tight">
+          <h1 className="mt-4 text-[30px] font-bold leading-tight lg:text-[44px]">
             창파도서관
             <br />
             좌석예약
           </h1>
-          <p className="mt-2 text-[15px] text-white/85">도서관에 오기 전에 빈자리를 확인하세요.</p>
         </div>
       </div>
-      <main className="-mt-8 flex-1 px-4 pb-10 sm:-mt-14">
-        <form onSubmit={submit} noValidate className="mx-auto max-w-sm rounded-[var(--radius-panel)] border border-line bg-surface p-5 shadow-[var(--shadow-float)] sm:p-6">
+      <main className="-mt-8 flex-1 px-4 pb-10 lg:mt-0 lg:flex lg:w-[440px] lg:flex-none lg:items-center lg:px-10">
+        <form onSubmit={submit} noValidate className="relative mx-auto w-full max-w-sm rounded-[var(--radius-panel)] border border-line bg-surface p-5 shadow-[var(--shadow-float)] sm:p-6 lg:border-0 lg:p-0 lg:shadow-none">
           <h2 className="text-lg font-bold">로그인</h2>
           <div className="mt-5 space-y-4">
             <Field label="학번">
