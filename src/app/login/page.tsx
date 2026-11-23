@@ -115,7 +115,10 @@ export default function LoginPage() {
           <Button type="submit" variant="primary" size="lg" busy={busy} className="mt-5 w-full">
             로그인
           </Button>
-          <p className="mt-4 text-[13px] text-muted">비밀번호 문의: 도서관 안내 데스크</p>
+          {/* 과제 시연용: 모든 계정이 같은 비밀번호를 쓴다 */}
+          <p className="mt-4 text-[13px] text-muted">
+            공통 비밀번호 <code className="rounded bg-canvas px-1.5 py-0.5 font-mono text-[13px] font-semibold text-du-black">eorneo1234!</code>
+          </p>
         </form>
       </main>
     </div>
