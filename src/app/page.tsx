@@ -282,6 +282,24 @@ export default function HomePage() {
         )}
       </section>
 
+      {/* 간단한 이용 규칙: 핵심만 한 줄씩. 자세한 조건은 그 행동을 하는 자리에서 알려 준다 */}
+      <details className="rounded-[var(--radius-panel)] border border-line bg-surface">
+        <summary className="flex min-h-12 cursor-pointer items-center px-4 text-sm font-semibold">이용 규칙</summary>
+        <dl className="divide-y divide-line border-t border-line text-sm">
+          {[
+            ["체크인", `예약 후 ${settings?.checkin_minutes ?? 15}분 안에 좌석 QR`],
+            ["외출", `혼잡도에 따라 ${settings?.away_high ?? 20}~${settings?.away_low ?? 60}분`],
+            ["연장", `종료 ${settings?.extend_window_min ?? 30}분 전부터 · 혼잡할 때는 ${settings?.max_extends ?? 2}회까지`],
+            ["재예약", `방금 쓴 좌석은 ${settings?.rebook_same_seat_minutes ?? 10}분 뒤부터`],
+            ["벌점", `${settings?.ban1_points ?? 3}점 ${settings?.ban1_days ?? 3}일 · ${settings?.ban2_points ?? 6}점 ${settings?.ban2_days ?? 14}일 예약 정지`],
+          ].map(([k, v]) => (
+            <div key={k} className="flex gap-3 px-4 py-2.5">
+              <dt className="w-16 shrink-0 font-semibold">{k}</dt>
+              <dd className="tabular min-w-0 text-[#3d4744]">{v}</dd>
+            </div>
+          ))}
+        </dl>
+      </details>
     </div>
   );
 }
