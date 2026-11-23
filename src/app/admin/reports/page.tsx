@@ -64,6 +64,8 @@ export default function AdminReports() {
   const [text, setText] = useState<Record<string, string>>({});
   // 허위 신고로 기록하기 전에 한 번 묻는다
   const [falseId, setFalseId] = useState<number | null>(null);
+  // 위쪽 칩으로 종류를 골라 본다
+  const [tab, setTab] = useState<"all" | "rep" | "help" | "ap">("all");
   const { busy, run } = useAction((m) => toast(m, "error"));
   // 이 화면을 마지막으로 본 시각. 그 뒤에 들어온 건은 '새로 들어옴'으로 표시한다
   const [seenAt] = useState(() => {
@@ -107,6 +109,35 @@ export default function AdminReports() {
   return (
     <div className="space-y-6">
       <h1 className="text-[22px] font-bold">처리 대기</h1>
+      {!empty && (
+        <div role="tablist" aria-label="처리 종류" className="no-scrollbar sticky top-[calc(61px+env(safe-area-inset-top))] z-10 -mx-4 !mt-3 flex gap-2 overflow-x-auto bg-canvas px-4 py-2">
+          {(
+            [
+              ["all", "전체", ov.reports.length + ov.helps.length + ov.appeals.length],
+              ["rep", "자리비움 신고", ov.reports.length],
+              ["help", "도움 요청", ov.helps.length],
+              ["ap", "이의신청", ov.appeals.length],
+            ] as const
+          ).map(([key, label, n]) => (
+            <button
+              key={key}
+              type="button"
+              role="tab"
+              aria-selected={tab === key}
+              onClick={() => setTab(key)}
+              className={`flex min-h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-3.5 text-sm font-semibold transition-colors duration-150 ${tab === key ? "border-du-deep bg-du-deep text-white" : "border-line bg-surface hover:bg-canvas"}`}
+            >
+              {label}
+              <span className={`tabular grid h-5 min-w-5 place-items-center rounded-full px-1 text-xs ${tab === key ? "bg-white/25" : n > 0 ? "bg-danger text-white" : "bg-[#eaefed] text-muted"}`}>{n}</span>
+            </button>
+          ))}
+        </div>
+      )}
+      {!empty && tab !== "all" && (tab === "rep" ? ov.reports : tab === "help" ? ov.helps : ov.appeals).length === 0 && (
+        <Panel>
+          <Empty icon={<Inbox size={36} strokeWidth={1.6} aria-hidden />} title="처리할 일이 없습니다" />
+        </Panel>
+      )}
       {falseId !== null && (
         <Confirm
           title="허위 신고"
@@ -126,7 +157,7 @@ export default function AdminReports() {
         </Panel>
       )}
 
-      {ov.reports.length > 0 && (
+      {ov.reports.length > 0 && (tab === "all" || tab === "rep") && (
         <section aria-labelledby="rep-h">
           <h2 id="rep-h" className="text-lg font-bold">
             자리비움 신고 <span className="tabular text-muted">{ov.reports.length}</span>
@@ -176,19 +207,19 @@ export default function AdminReports() {
                       </div>
                     </dl>
                     <HelpChat kind="report" helpId={r.id} admin className="mt-3 max-w-xl" />
-                    {/* 벌점이 따르는 처리는 빨강, 불이익 없는 처리는 초록, 시간만 늦추는 것은 흰색 */}
+                    {/* 다른 화면과 같은 규칙: 가장 자주 쓰는 처리 하나만 채운 버튼, 나머지는 흰 버튼, 되돌리기 어려운 불이익만 빨간 글자 */}
                     <ActionRow className="mt-3">
-                      <Button variant="danger" busy={busy === `rc${r.id}`} onClick={() => act(`rc${r.id}`, () => rpc("admin_resolve_report", { p_report: r.id, p_decision: "confirm" }), "반납 처리하고 벌점을 부여했습니다.")}>
+                      <Button variant="primary" busy={busy === `rc${r.id}`} onClick={() => act(`rc${r.id}`, () => rpc("admin_resolve_report", { p_report: r.id, p_decision: "confirm" }), "반납 처리하고 벌점을 부여했습니다.")}>
                         반납 확정
                       </Button>
-                      <Button className="!border-du-deep/40 !bg-du-tint !text-du-deep-dark" busy={busy === `rt${r.id}`} onClick={() => act(`rt${r.id}`, () => rpc("admin_resolve_report", { p_report: r.id, p_decision: "returned" }), "복귀를 확인했습니다. 벌점은 없습니다.")}>
+                      <Button busy={busy === `rt${r.id}`} onClick={() => act(`rt${r.id}`, () => rpc("admin_resolve_report", { p_report: r.id, p_decision: "returned" }), "복귀를 확인했습니다. 벌점은 없습니다.")}>
                         돌아옴
-                      </Button>
-                      <Button variant="danger" busy={busy === `rd${r.id}`} onClick={() => setFalseId(r.id)}>
-                        허위 신고
                       </Button>
                       <Button busy={busy === `re${r.id}`} onClick={() => act(`re${r.id}`, () => rpc("admin_resolve_report", { p_report: r.id, p_decision: "extend" }), "자동 반납을 10분 늦췄습니다.")}>
                         반납 10분 연장
+                      </Button>
+                      <Button variant="danger" busy={busy === `rd${r.id}`} onClick={() => setFalseId(r.id)}>
+                        허위 신고
                       </Button>
                     </ActionRow>
                   </div>
@@ -199,7 +230,7 @@ export default function AdminReports() {
         </section>
       )}
 
-      {ov.helps.length > 0 && (
+      {ov.helps.length > 0 && (tab === "all" || tab === "help") && (
         <section aria-labelledby="help-h">
           <h2 id="help-h" className="text-lg font-bold">
             도움 요청 <span className="tabular text-muted">{ov.helps.length}</span>
@@ -299,7 +330,7 @@ export default function AdminReports() {
         </section>
       )}
 
-      {ov.appeals.length > 0 && (
+      {ov.appeals.length > 0 && (tab === "all" || tab === "ap") && (
         <section aria-labelledby="ap-h">
           <h2 id="ap-h" className="text-lg font-bold">
             벌점 이의신청 <span className="tabular text-muted">{ov.appeals.length}</span>
