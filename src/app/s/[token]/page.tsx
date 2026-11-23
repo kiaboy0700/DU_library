@@ -7,6 +7,7 @@ import { CircleCheck, CircleSlash, MapPin, QrCode } from "lucide-react";
 import { OccupancyMeter } from "@/components/OccupancyMeter";
 import { useApp } from "@/components/Providers";
 import { QrScanner } from "@/components/QrScanner";
+import { SeatWatchButton } from "@/components/SeatWatch";
 import { Button, Empty, Notice, Panel, Skeleton, Tag, TimeLeft, useAction, useNow } from "@/components/ui";
 import { ruleTexts, useSettings } from "@/lib/hooks";
 import { rpc, supabase } from "@/lib/supabase";
@@ -377,6 +378,7 @@ export default function SeatQrPage() {
               </div>
             </dl>
           )}
+          {loggedIn && !ctx.is_mine && ctx.state !== "free" && !ctx.priority_until && <SeatWatchButton seatId={seat.id} label={seat.label} className="w-full" />}
           {/* 다른 사람의 좌석 */}
           {loggedIn && !ctx.is_mine && ctx.state === "in_use" && (
             <>

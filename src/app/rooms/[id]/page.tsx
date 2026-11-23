@@ -7,6 +7,7 @@ import { DoorClosed, X, Zap } from "lucide-react";
 import { OccupancyMeter } from "@/components/OccupancyMeter";
 import { QuickConfirm } from "@/components/RoomCards";
 import { useApp } from "@/components/Providers";
+import { SeatWatchButton } from "@/components/SeatWatch";
 import { LEGEND, LegendSwatch, SeatMap, useWideHover, type SeatVisual } from "@/components/SeatMap";
 import { Button, Empty, Notice, Panel, Skeleton, Tag, TimeLeft, useAction, useNow } from "@/components/ui";
 import { useHome, useSettings } from "@/lib/hooks";
@@ -195,6 +196,7 @@ export default function RoomPage() {
             </div>
           </dl>
           {info.state === "in_use" && !exam && extendsLeft === 0 && info.end_at && <p className="mt-3 text-xs text-muted">{fmtTime(info.end_at)}에 비워집니다</p>}
+          <SeatWatchButton key={selected.id} seatId={selected.id} label={selected.label} className="mt-3 w-full" />
         </>
       ) : mine ? (
         mine.status === "in_use" ? (

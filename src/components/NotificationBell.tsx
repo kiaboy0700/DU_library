@@ -2,12 +2,24 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Bell, BellOff, BellRing, CheckCheck, Trash2, X } from "lucide-react";
+import { AlarmClock, Armchair, Bell, BellOff, BellRing, CheckCheck, CircleCheck, LifeBuoy, Megaphone, Siren, Trash2, TriangleAlert, X } from "lucide-react";
 import { useApp } from "./Providers";
 import { disablePush, enablePush, pushEnabled } from "@/lib/push";
 import { rpc, supabase } from "@/lib/supabase";
+import { noticeKind, type NoticeKind } from "@/lib/notice";
 import type { Notice } from "@/lib/types";
 import { cx, errMsg, fmtDateTime } from "@/lib/util";
+
+const KIND_ICON: Record<NoticeKind, { icon: typeof Bell; cls: string }> = {
+  penalty: { icon: TriangleAlert, cls: "bg-danger-tint text-danger" },
+  report: { icon: Siren, cls: "bg-danger-tint text-danger" },
+  time: { icon: AlarmClock, cls: "bg-warn-tint text-warn" },
+  seat: { icon: Armchair, cls: "bg-du-tint text-du-deep-dark" },
+  help: { icon: LifeBuoy, cls: "bg-du-tint text-du-deep-dark" },
+  notice: { icon: Megaphone, cls: "bg-[#eaefed] text-du-black" },
+  ok: { icon: CircleCheck, cls: "bg-du-tint text-du-deep-dark" },
+  etc: { icon: Bell, cls: "bg-[#eaefed] text-du-black" },
+};
 
 /** 상단 바의 알림 종. 읽지 않은 알림 수를 배지로 보여 주고, 누르면 알림 목록이 열린다 */
 export function NotificationBell() {
@@ -166,7 +178,16 @@ export function NotificationBell() {
                       }}
                       className="flex min-w-0 flex-1 gap-3 py-3 pl-4 pr-1 hover:bg-canvas"
                     >
-                      <span aria-hidden className={cx("mt-2 size-2 shrink-0 rounded-full", n.read_at ? "bg-transparent" : "bg-danger")} />
+                      {(() => {
+                        const k = KIND_ICON[noticeKind(n.title)];
+                        const Icon = k.icon;
+                        return (
+                          <span aria-hidden className={cx("relative mt-0.5 grid size-9 shrink-0 place-items-center rounded-full", k.cls)}>
+                            <Icon size={18} />
+                            {!n.read_at && <span className="absolute -right-0.5 -top-0.5 size-2.5 rounded-full bg-danger ring-2 ring-surface" />}
+                          </span>
+                        );
+                      })()}
                       <span className="min-w-0 flex-1">
                         <span className="block font-semibold">
                           {!n.read_at && <span className="sr-only">새 알림: </span>}

@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import * as webpush from "web-push";
+import { NOTICE_EMOJI, noticeKind } from "@/lib/notice";
 
 // DB의 tick()이 1분마다 호출한다. notifications 큐에서 아직 보내지 않은 알림을 웹 푸시로 발송.
 export async function POST(request: Request) {
@@ -35,7 +36,8 @@ export async function POST(request: Request) {
           try {
             await webpush.sendNotification(
               { endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } },
-              JSON.stringify({ title: n.title, body: n.body, url: n.url, tag: `n-${n.id}` }),
+              // 잠금 화면에서도 무슨 알림인지 바로 보이게 종류 아이콘을 제목 앞에 붙인다
+              JSON.stringify({ title: `${NOTICE_EMOJI[noticeKind(n.title)]} ${n.title}`, body: n.body, url: n.url, tag: `n-${n.id}` }),
               { TTL: 600 },
             );
             sent += 1;
