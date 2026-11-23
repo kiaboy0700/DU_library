@@ -9,7 +9,7 @@ import { QuickConfirm } from "@/components/RoomCards";
 import { useApp } from "@/components/Providers";
 import { SeatWatchButton } from "@/components/SeatWatch";
 import { LEGEND, LegendSwatch, SeatMap, useWideHover, type SeatVisual } from "@/components/SeatMap";
-import { Button, Empty, Notice, Panel, Skeleton, Tag, TimeLeft, useAction, useNow } from "@/components/ui";
+import { Button, Empty, Hint, Notice, Panel, Skeleton, Tag, TimeLeft, useAction, useNow } from "@/components/ui";
 import { useHome, useSettings } from "@/lib/hooks";
 import { rpc, supabase } from "@/lib/supabase";
 import { SEAT_TYPE_LABEL, STATE_LABEL, type Room, type Seat, type SeatInfo } from "@/lib/types";
@@ -239,6 +239,9 @@ export default function RoomPage() {
           <Button variant="primary" size="lg" className="mt-3 w-full" busy={busy === "reserve"} disabled={blocked} onClick={reserve}>
             {selected.label} 예약하기
           </Button>
+          <Hint className="mt-2.5">
+            {String(settings?.checkin_minutes ?? 15)}분 안에 좌석 QR 체크인 · 늦으면 자동 취소, 벌점 {String(settings?.pen_no_show ?? 1)}점
+          </Hint>
         </>
       )}
     </>

@@ -8,7 +8,7 @@ import { OccupancyMeter } from "@/components/OccupancyMeter";
 import { useApp } from "@/components/Providers";
 import { HelpChat } from "@/components/HelpChat";
 import { QrScanner } from "@/components/QrScanner";
-import { Button, Confirm, Empty, Field, Notice, Panel, Skeleton, Tag, inputClass, useAction, useFold, useNow } from "@/components/ui";
+import { Button, Confirm, Empty, Field, Hint, Notice, Panel, Skeleton, Tag, inputClass, useAction, useFold, useNow } from "@/components/ui";
 import { ruleTexts, useSettings } from "@/lib/hooks";
 import { rpc, supabase } from "@/lib/supabase";
 import { MODE_LABEL, SEAT_TYPE_LABEL, type Penalty, type SeatContext } from "@/lib/types";
@@ -29,7 +29,7 @@ export default function MePage() {
   const { settings } = useSettings();
   const now = useNow();
   const { busy, run } = useAction((m) => toast(m, "error"));
-  const [open, setOpen] = useState<"away" | "return" | "help" | "scan" | "move" | null>(null);
+  const [open, setOpen] = useState<"away" | "return" | "cancel" | "help" | "scan" | "move" | null>(null);
   const [penalties, setPenalties] = useState<Penalty[]>([]);
   const penFold = useFold(penalties, 2);
   const [appeals, setAppeals] = useState<Appeal[]>([]);
@@ -213,7 +213,7 @@ export default function MePage() {
                     <QrCode size={16} aria-hidden />
                     QR 체크인
                   </Button>
-                  <Button busy={busy === "cancel"} onClick={() => act("cancel", async () => { await rpc("return_seat"); toast("예약을 취소했습니다.", "ok"); })}>
+                  <Button aria-expanded={open === "cancel"} onClick={() => setOpen(open === "cancel" ? null : "cancel")}>
                     예약 취소
                   </Button>
                 </div>
@@ -260,11 +260,13 @@ export default function MePage() {
                 </div>
                 <p className="mt-2 text-xs text-muted">
                   {extendsLeft === 0
-                    ? "연장 횟수를 모두 사용했습니다"
+                    ? "지금 혼잡 · 연장 횟수를 모두 썼습니다 · 0시·12시에 다시 셉니다"
                     : canExtend
                       ? res.mode === "exam"
                         ? "연장은 좌석 QR 스캔으로"
-                        : ""
+                        : res.max_extends != null
+                          ? `지금 혼잡 · 연장 ${res.extend_count}/${res.max_extends}회 · 0시·12시에 다시 셈`
+                          : ""
                       : `연장은 ${fmtTime(new Date(new Date(res.end_at).getTime() - res.extend_window_min * 60_000).toISOString())}부터`}
                 </p>
               </>
@@ -321,9 +323,22 @@ export default function MePage() {
               </div>
             )}
 
+            {open === "cancel" && res.status === "reserved" && (
+              <div className="rise mt-3 rounded-[var(--radius-ctl)] border border-line bg-surface p-3.5">
+                <p className="font-semibold">{res.seat_label} 예약을 취소할까요?</p>
+                <Hint className="mt-1.5">이 좌석은 {String(settings?.rebook_same_seat_minutes ?? 10)}분 동안 다시 예약할 수 없습니다</Hint>
+                <div className="mt-3 flex gap-2">
+                  <Button variant="danger" busy={busy === "cancel"} onClick={() => act("cancel", async () => { await rpc("return_seat"); toast("예약을 취소했습니다.", "ok"); })}>
+                    예약 취소
+                  </Button>
+                  <Button onClick={() => setOpen(null)}>닫기</Button>
+                </div>
+              </div>
+            )}
             {open === "return" && (
               <div className="rise mt-3 rounded-[var(--radius-ctl)] border border-line bg-surface p-3.5">
                 <p className="font-semibold">{res.seat_label} 좌석을 반납할까요?</p>
+                <Hint className="mt-1.5">이 좌석은 {String(settings?.rebook_same_seat_minutes ?? 10)}분 동안 다시 예약할 수 없습니다</Hint>
                 <div className="mt-3 flex gap-2">
                   <Button variant="danger" busy={busy === "return"} onClick={() => act("return", async () => { await rpc("return_seat"); toast("좌석을 반납했습니다. 이용해 주셔서 감사합니다.", "ok"); })}>
                     반납하기

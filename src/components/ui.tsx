@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { ChevronDown, LoaderCircle } from "lucide-react";
+import { ChevronDown, Info, LoaderCircle } from "lucide-react";
 import { cx, fmtLeft } from "@/lib/util";
 
 type Variant = "primary" | "secondary" | "danger" | "quiet" | "soft" | "softDanger" | "softNeutral";
@@ -277,4 +277,14 @@ export function FoldPanel({ head, children, defaultOpen = false }: { head: React
 /** 버튼 줄: 한 줄에 놓인 버튼들을 같은 너비·높이로 맞춘다. 좁은 화면에서는 두 개씩 */
 export function ActionRow({ children, className, wide = 4 }: { children: React.ReactNode; className?: string; wide?: 2 | 3 | 4 }) {
   return <div className={cx("grid grid-cols-2 gap-2 [&>*]:w-full [&>*]:min-w-0", wide === 4 ? "sm:grid-cols-4" : wide === 3 ? "sm:grid-cols-3" : "sm:grid-cols-2", className)}>{children}</div>;
+}
+
+/** 조건 한 줄: 규칙을 한곳에 모아 설명하지 않고, 그 행동을 하려는 자리에서 그 행동의 조건만 알려 준다 */
+export function Hint({ children, className, tone = "muted" }: { children: React.ReactNode; className?: string; tone?: "muted" | "danger" }) {
+  return (
+    <p className={cx("flex items-start gap-1.5 text-[13px] leading-snug", tone === "danger" ? "text-danger" : "text-[#3d4744]", className)}>
+      <Info size={14} className="mt-[2px] shrink-0" aria-hidden />
+      <span className="min-w-0">{children}</span>
+    </p>
+  );
 }

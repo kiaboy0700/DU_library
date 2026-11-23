@@ -6,8 +6,8 @@ import { useCallback, useEffect, useState } from "react";
 import { Bell, BellRing, ChevronRight, Zap } from "lucide-react";
 import { OccupancyMeter } from "./OccupancyMeter";
 import { useApp } from "./Providers";
-import { Button, Confirm, Panel, Tag, useAction } from "./ui";
-import type { Settings } from "@/lib/hooks";
+import { Button, Confirm, Hint, Panel, Tag, useAction } from "./ui";
+import { useSettings, type Settings } from "@/lib/hooks";
 import { rpc, supabase } from "@/lib/supabase";
 import type { RoomSummary } from "@/lib/types";
 import { cx, errMsg, fmtTime, level } from "@/lib/util";
@@ -62,6 +62,7 @@ export function useRoomActions(settings: Settings | null) {
 
 /** 빠른 예약 확인 창: 잘못 눌러 예약되는 일을 막는다 */
 export function QuickConfirm({ roomName, busy, onConfirm, onClose }: { roomName: string; busy?: boolean; onConfirm: () => void; onClose: () => void }) {
+  const { settings } = useSettings();
   return (
     <Confirm
       title={
@@ -76,6 +77,9 @@ export function QuickConfirm({ roomName, busy, onConfirm, onClose }: { roomName:
       onClose={onClose}
     >
       <b>{roomName}</b>의 빈 좌석 중 한 자리가 무작위로 예약됩니다.
+      <Hint className="mt-2">
+        {String(settings?.checkin_minutes ?? 15)}분 안에 좌석 QR 체크인 · 늦으면 자동 취소, 벌점 {String(settings?.pen_no_show ?? 1)}점
+      </Hint>
     </Confirm>
   );
 }

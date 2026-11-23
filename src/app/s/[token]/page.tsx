@@ -8,7 +8,7 @@ import { OccupancyMeter } from "@/components/OccupancyMeter";
 import { useApp } from "@/components/Providers";
 import { QrScanner } from "@/components/QrScanner";
 import { SeatWatchButton } from "@/components/SeatWatch";
-import { Button, Empty, Notice, Panel, Skeleton, Tag, TimeLeft, useAction, useNow } from "@/components/ui";
+import { Button, Empty, Hint, Notice, Panel, Skeleton, Tag, TimeLeft, useAction, useNow } from "@/components/ui";
 import { ruleTexts, useSettings } from "@/lib/hooks";
 import { rpc, supabase } from "@/lib/supabase";
 import { SEAT_TYPE_LABEL, STATE_LABEL, type SeatContext, type SeatInfo } from "@/lib/types";
@@ -330,7 +330,12 @@ export default function SeatQrPage() {
                   반납
                 </Button>
               </div>
-              {!canExtend && <p className="text-xs text-muted">연장은 종료 {ctx.extend_window_min}분 전부터</p>}
+              {!canExtend && <Hint>연장은 종료 {ctx.extend_window_min}분 전부터</Hint>}
+              {canExtend && ctx.occupancy >= Number(settings?.occ_high ?? 80) && (
+                <Hint>
+                  지금 혼잡 · 연장 {r.extend_count}/{String(settings?.max_extends ?? 2)}회 · 0시·12시에 다시 셈
+                </Hint>
+              )}
             </>
           )}
           {ctx.is_mine && r?.status === "away" && (
@@ -355,6 +360,7 @@ export default function SeatQrPage() {
           {confirm === "return" && (
             <div className="rise rounded-[var(--radius-ctl)] border border-line p-3.5">
               <p className="font-semibold">{seat.label} 좌석을 반납할까요?</p>
+              <Hint className="mt-1.5">이 좌석은 {String(settings?.rebook_same_seat_minutes ?? 10)}분 동안 다시 예약할 수 없습니다</Hint>
               <Button variant="danger" className="mt-3" busy={busy === "ret"} onClick={() => plain("ret", async () => { await rpc("return_seat"); return "좌석을 반납했습니다."; })}>
                 반납하기
               </Button>
@@ -530,6 +536,9 @@ export default function SeatQrPage() {
                   >
                     이 좌석 예약
                   </Button>
+                  <Hint>
+                    {String(settings?.checkin_minutes ?? 15)}분 안에 좌석 QR 체크인 · 늦으면 자동 취소, 벌점 {String(settings?.pen_no_show ?? 1)}점
+                  </Hint>
                 </>
               ) : (
                 <Notice tone="warn">{ctx.reason}</Notice>

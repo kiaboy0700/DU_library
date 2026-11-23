@@ -8,7 +8,7 @@ import { Banner } from "@/components/Banner";
 import { useApp } from "@/components/Providers";
 import { QrScanner } from "@/components/QrScanner";
 import { RoomCard, useRoomActions } from "@/components/RoomCards";
-import { Button, Confirm, Notice, Skeleton, useAction, useNow } from "@/components/ui";
+import { Button, Confirm, Hint, Notice, Skeleton, useAction, useNow } from "@/components/ui";
 import { hoursLabel, useHome, useSettings } from "@/lib/hooks";
 import { rpc, supabase } from "@/lib/supabase";
 import { NOTICE_SEEN_KEY, cx, fmtRemain } from "@/lib/util";
@@ -197,9 +197,12 @@ export default function HomePage() {
               <b className="tabular">{res.away_minutes}분</b> 안에 돌아와 QR을 찍지 않으면 자동 반납되고 벌점이 붙습니다.
             </>
           ) : (
-            <b>
-              {res.room_name} {res.seat_label}
-            </b>
+            <>
+              <b>
+                {res.room_name} {res.seat_label}
+              </b>
+              <Hint className="mt-2">이 좌석은 {String(settings?.rebook_same_seat_minutes ?? 10)}분 동안 다시 예약할 수 없습니다</Hint>
+            </>
           )}
         </Confirm>
       )}
@@ -279,27 +282,6 @@ export default function HomePage() {
         )}
       </section>
 
-      <details className="rounded-[var(--radius-panel)] border border-line bg-surface">
-        <summary className="flex min-h-12 cursor-pointer items-center px-4 text-sm font-semibold">이용 규칙</summary>
-        <dl className="divide-y divide-line border-t border-line text-sm">
-          {[
-            ["체크인", `예약 후 ${settings?.checkin_minutes ?? 15}분 안에 좌석 QR 스캔 · 늦으면 자동 취소, 벌점 ${settings?.pen_no_show ?? 1}점`],
-            ["외출", `혼잡도에 따라 ${settings?.away_high ?? 20}~${settings?.away_low ?? 60}분 · 늦으면 자동 반납, 벌점 ${settings?.pen_away ?? 1}점`],
-            ["자리비움 신고", `${settings?.report_high ?? 10}~${settings?.report_low ?? 20}분 안에 QR 스캔으로 응답 · 무응답 시 반납, 벌점 ${settings?.pen_report ?? 2}~${settings?.pen_report_busy ?? 3}점`],
-            ["허위 신고", `앉아 있는 좌석을 신고한 것으로 확인되면 · ${settings?.false_report_limit ?? 3}회면 ${settings?.false_report_ban_days ?? 7}일 신고 정지, 벌점 ${settings?.pen_false_report ?? 1}점`],
-            ["자리 이동", `옮길 좌석의 QR을 찍으면 이동 · 좌석을 먼저 고르면 ${settings?.move_hold_minutes ?? 10}분 동안 맡아 둠 · 남은 시간은 그대로`],
-            ["이용 시간", `최대 ${Number(settings?.max_minutes ?? 240) / 60}시간 · 종료 ${settings?.extend_window_min ?? 30}분 전부터 ${Number(settings?.extend_minutes ?? 120) / 60}시간씩 연장`],
-            ["연장", `혼잡(${settings?.occ_high ?? 80}% 이상)할 때는 ${settings?.max_extends ?? 2}회까지 · 0시·12시에 다시 셈 · 좌석을 바꿔도 합산 · 그 밖에는 제한 없음`],
-            ["재예약", `방금 쓴 좌석(반납·종료·취소)은 ${settings?.rebook_same_seat_minutes ?? 10}분 동안 다시 예약할 수 없음 · 다른 좌석은 바로 가능`],
-            ["예약 정지", `벌점 ${settings?.ban1_points ?? 3}점 ${settings?.ban1_days ?? 3}일 · ${settings?.ban2_points ?? 6}점 ${settings?.ban2_days ?? 14}일 · 정지되면 이용 중인 좌석도 반납`],
-          ].map(([k, v]) => (
-            <div key={k} className="flex gap-3 px-4 py-2.5">
-              <dt className="w-24 shrink-0 font-semibold">{k}</dt>
-              <dd className="min-w-0 text-[#3d4744]">{v}</dd>
-            </div>
-          ))}
-        </dl>
-      </details>
     </div>
   );
 }
