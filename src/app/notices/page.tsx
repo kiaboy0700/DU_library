@@ -146,7 +146,7 @@ export default function NoticesPage() {
             </div>
             <label className="flex min-h-11 items-center gap-2 text-sm font-medium">
               <input type="checkbox" className="size-[18px]" checked={form.push} onChange={(e) => setForm({ ...form, push: e.target.checked })} />
-              푸시 알림으로도 보내기
+              알림도 보내기
             </label>
             <div className="flex gap-2">
               <Button type="submit" variant="primary" busy={busy === "post"}>

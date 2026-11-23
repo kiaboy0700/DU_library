@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
-import { Armchair, Check, LifeBuoy, LogOut, MapPin, QrCode, ScanLine, TriangleAlert } from "lucide-react";
+import { Armchair, Check, LifeBuoy, LogOut, MapPin, Package, QrCode, ScanLine, TriangleAlert } from "lucide-react";
 import { OccupancyMeter } from "@/components/OccupancyMeter";
 import { useApp } from "@/components/Providers";
 import { HelpChat } from "@/components/HelpChat";
@@ -12,10 +12,10 @@ import { Button, Empty, Field, Notice, Panel, Skeleton, Tag, inputClass, useActi
 import { ruleTexts, useSettings } from "@/lib/hooks";
 import { rpc, supabase } from "@/lib/supabase";
 import { MODE_LABEL, SEAT_TYPE_LABEL, type Penalty, type SeatContext } from "@/lib/types";
-import { cx, fmtDateTime, fmtRemain, fmtTime } from "@/lib/util";
+import { cx, fmtDate, fmtDateTime, fmtRemain, fmtTime } from "@/lib/util";
 
 const PENALTY_LABEL: Record<string, string> = { no_show: "예약 후 미체크인", away_timeout: "외출 시간 초과", vacancy_report: "자리비움", false_report: "허위 신고", manual: "관리자 부여" };
-const HELP_REASONS = ["QR이 인식되지 않아요", "위치 확인이 안 돼요", "좌석에 문제가 있어요", "기타"];
+const HELP_REASONS = ["QR이 인식되지 않아요", "위치 확인이 안 돼요", "좌석에 문제가 있어요", "짐을 찾고 싶어요", "기타"];
 
 interface Appeal {
   penalty_id: number;
@@ -53,6 +53,14 @@ export default function MePage() {
     if (!uid) return;
     rpc<typeof myReports>("my_reports")
       .then((r) => setMyReports(r.filter((x) => x.chat)))
+      .catch(() => {});
+  }, [uid, pulse]);
+  // 관리자가 보관하고 있는 내 짐
+  const [items, setItems] = useState<{ id: number; memo: string; place: string; hours: string | null; until_at: string; seat: string | null }[]>([]);
+  useEffect(() => {
+    if (!uid) return;
+    rpc<typeof items>("my_items")
+      .then(setItems)
       .catch(() => {});
   }, [uid, pulse]);
   // 허위 신고로 기록된 내 신고와 이의신청
@@ -427,6 +435,57 @@ export default function MePage() {
         </Panel>
       </section>
 
+
+      {items.length > 0 && (
+        <section aria-labelledby="items-h" id="items">
+          <h2 id="items-h" className="text-[17px] font-bold">
+            보관 중인 짐
+          </h2>
+          <div className="mt-2 space-y-2">
+            {items.map((it) => {
+              const left = new Date(it.until_at).getTime() - now;
+              return (
+                <Panel key={it.id} className="p-4">
+                  <div className="flex items-start gap-3">
+                    <span className="grid size-10 shrink-0 place-items-center rounded-full bg-warn-tint text-warn">
+                      <Package size={20} aria-hidden />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-bold">{it.memo}</p>
+                      {it.seat && <p className="text-[13px] text-muted">{it.seat}</p>}
+                    </div>
+                    <Tag tone={left < 2 * 86400_000 ? "danger" : "warn"}>
+                      <span className="tabular">{fmtDate(it.until_at)}까지</span>
+                    </Tag>
+                  </div>
+                  <dl className="mt-3 grid grid-cols-2 gap-2 text-sm">
+                    <div className="rounded-[var(--radius-ctl)] bg-canvas px-3 py-2">
+                      <dt className="text-xs text-muted">찾는 곳</dt>
+                      <dd className="font-semibold">{it.place}</dd>
+                    </div>
+                    <div className="rounded-[var(--radius-ctl)] bg-canvas px-3 py-2">
+                      <dt className="text-xs text-muted">시간</dt>
+                      <dd className="font-semibold">{it.hours || "-"}</dd>
+                    </div>
+                  </dl>
+                  <Button
+                    className="mt-3 w-full"
+                    disabled={status.help_open}
+                    onClick={() => {
+                      setHelpReason("짐을 찾고 싶어요");
+                      setOpen("help");
+                      document.getElementById("help-h")?.scrollIntoView({ behavior: "smooth", block: "center" });
+                    }}
+                  >
+                    <LifeBuoy size={16} aria-hidden />
+                    문의
+                  </Button>
+                </Panel>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
       {(myReports.length > 0 || falseReports.length > 0) && (
         <section aria-labelledby="reports-h" id="reports">

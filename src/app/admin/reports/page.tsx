@@ -2,12 +2,12 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { Ban, Check, Clock, Inbox, MapPin, Undo2 } from "lucide-react";
+import { Ban, Check, Clock, Inbox, MapPin, Package, Undo2 } from "lucide-react";
 import { HelpChat } from "@/components/HelpChat";
 import { useApp } from "@/components/Providers";
 import { ActionRow, Button, Confirm, Empty, FoldPanel, GraceControl, Panel, Skeleton, Tag, inputClass, useAction, useNow } from "@/components/ui";
 import { rpc } from "@/lib/supabase";
-import { fmtDateTime, fmtRemain, fmtTime } from "@/lib/util";
+import { fmtDate, fmtDateTime, fmtRemain, fmtTime } from "@/lib/util";
 
 interface Report {
   id: number;
@@ -54,6 +54,22 @@ interface Appeal {
   report_seat: string | null;
   report_at: string | null;
 }
+interface Item {
+  id: number;
+  memo: string;
+  place: string;
+  until_at: string;
+  created_at: string;
+  name: string;
+  student_id: string;
+  seat: string | null;
+}
+interface Storage {
+  place: string;
+  hours: string;
+  days: number;
+  items: Item[];
+}
 interface Overview {
   reports: Report[];
   helps: Help[];
@@ -68,7 +84,11 @@ export default function AdminReports() {
   // 허위 신고로 기록하기 전에 한 번 묻는다
   const [falseId, setFalseId] = useState<number | null>(null);
   // 위쪽 칩으로 종류를 골라 본다
-  const [tab, setTab] = useState<"all" | "rep" | "help" | "ap">("all");
+  const [tab, setTab] = useState<"all" | "rep" | "help" | "ap" | "item">("all");
+  // 보관 중인 짐과 보관 안내(장소·시간·기간)
+  const [store, setStore] = useState<Storage | null>(null);
+  const [storeForm, setStoreForm] = useState<{ place: string; hours: string; days: number } | null>(null);
+  const [newItem, setNewItem] = useState({ sid: "", memo: "" });
   const { busy, run } = useAction((m) => toast(m, "error"));
   // 이 화면을 마지막으로 본 시각. 그 뒤에 들어온 건은 '새로 들어옴'으로 표시한다
   const [seenAt] = useState(() => {
@@ -92,7 +112,14 @@ export default function AdminReports() {
   }, []);
   const fresh = (iso: string) => new Date(iso).getTime() > seenAt && <Tag tone="danger">새로 들어옴</Tag>;
 
-  const load = useCallback(() => rpc<Overview>("admin_overview").then(setOv).catch(() => {}), []);
+  const load = useCallback(
+    () =>
+      Promise.all([
+        rpc<Overview>("admin_overview").then(setOv),
+        rpc<Storage>("admin_items").then(setStore),
+      ]).catch(() => {}),
+    [],
+  );
   useEffect(() => {
     load();
     const t = setInterval(load, 15000);
@@ -112,7 +139,7 @@ export default function AdminReports() {
   return (
     <div className="space-y-6">
       <h1 className="text-[22px] font-bold">처리 대기</h1>
-      {!empty && (
+      {(
         <div role="tablist" aria-label="처리 종류" className="no-scrollbar sticky top-[calc(61px+env(safe-area-inset-top))] z-10 -mx-4 !mt-3 flex gap-2 overflow-x-auto bg-canvas px-4 py-2">
           {(
             [
@@ -120,6 +147,7 @@ export default function AdminReports() {
               ["rep", "자리비움 신고", ov.reports.length],
               ["help", "도움 요청", ov.helps.length],
               ["ap", "이의신청", ov.appeals.length],
+              ["item", "보관 중인 짐", store?.items.length ?? 0],
             ] as const
           ).map(([key, label, n]) => (
             <button
@@ -136,7 +164,7 @@ export default function AdminReports() {
           ))}
         </div>
       )}
-      {!empty && tab !== "all" && (tab === "rep" ? ov.reports : tab === "help" ? ov.helps : ov.appeals).length === 0 && (
+      {!empty && tab !== "all" && tab !== "item" && (tab === "rep" ? ov.reports : tab === "help" ? ov.helps : ov.appeals).length === 0 && (
         <Panel>
           <Empty icon={<Inbox size={36} strokeWidth={1.6} aria-hidden />} title="처리할 일이 없습니다" />
         </Panel>
@@ -154,7 +182,7 @@ export default function AdminReports() {
         </Confirm>
       )}
 
-      {empty && (
+      {empty && tab !== "item" && (
         <Panel>
           <Empty icon={<Inbox size={36} strokeWidth={1.6} aria-hidden />} title="처리할 일이 없습니다" />
         </Panel>
@@ -210,9 +238,32 @@ export default function AdminReports() {
                       </div>
                     </dl>
                     <HelpChat kind="report" helpId={r.id} admin className="mt-3 max-w-xl" />
+                    {/* 자리에 짐이 있었으면 적어 둔다: 반납 확정과 함께 보관 기록이 만들어지고 이용자에게 찾는 곳·기한이 간다 */}
+                    <label className="mt-3 flex items-center gap-2">
+                      <Package size={18} className="shrink-0 text-muted" aria-hidden />
+                      <input
+                        className={inputClass}
+                        aria-label="보관할 짐"
+                        placeholder="보관할 짐 (있으면)"
+                        maxLength={200}
+                        value={text[`i${r.id}`] ?? ""}
+                        onChange={(e) => setText({ ...text, [`i${r.id}`]: e.target.value })}
+                      />
+                    </label>
                     {/* 가장 자주 쓰는 처리만 진하게, 나머지는 뜻에 맞는 옅은 색과 아이콘으로 */}
                     <ActionRow className="mt-3">
-                      <Button variant="primary" busy={busy === `rc${r.id}`} onClick={() => act(`rc${r.id}`, () => rpc("admin_resolve_report", { p_report: r.id, p_decision: "confirm" }), "반납 처리하고 벌점을 부여했습니다.")}>
+                      <Button variant="primary" busy={busy === `rc${r.id}`} onClick={() =>
+                          act(
+                            `rc${r.id}`,
+                            async () => {
+                              await rpc("admin_resolve_report", { p_report: r.id, p_decision: "confirm" });
+                              const memo = (text[`i${r.id}`] ?? "").trim();
+                              if (memo) await rpc("admin_store_item", { p_memo: memo, p_report: r.id });
+                            },
+                            (text[`i${r.id}`] ?? "").trim() ? "반납 처리하고 짐 보관을 등록했습니다." : "반납 처리하고 벌점을 부여했습니다.",
+                          )
+                        }
+                      >
                         <Check size={16} aria-hidden />
                         반납 확정
                       </Button>
@@ -389,6 +440,117 @@ export default function AdminReports() {
                 </div>
               </FoldPanel>
             ))}
+          </div>
+        </section>
+      )}
+      {store && (tab === "item" || (tab === "all" && store.items.length > 0)) && (
+        <section aria-labelledby="item-h">
+          <h2 id="item-h" className="text-lg font-bold">
+            보관 중인 짐 <span className="tabular text-muted">{store.items.length}</span>
+          </h2>
+
+          {tab === "item" && (
+            <div className="mt-2 grid gap-2 lg:grid-cols-2">
+              {/* 보관 안내: 신고로 반납될 때 이용자에게 자동으로 가는 내용 */}
+              <Panel className="p-4">
+                <h3 className="text-[13px] font-bold">보관 안내</h3>
+                {storeForm ? (
+                  <form
+                    className="mt-2 grid gap-2"
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      act("st", () => rpc("admin_set_storage", { p_place: storeForm.place, p_hours: storeForm.hours, p_days: storeForm.days }), "보관 안내를 바꿨습니다.").then(() => setStoreForm(null));
+                    }}
+                  >
+                    <input className={inputClass} aria-label="보관 장소" placeholder="보관 장소" required value={storeForm.place} onChange={(e) => setStoreForm({ ...storeForm, place: e.target.value })} />
+                    <div className="grid grid-cols-[minmax(0,1fr)_5.5rem] gap-2">
+                      <input className={inputClass} aria-label="찾을 수 있는 시간" placeholder="찾을 수 있는 시간" value={storeForm.hours} onChange={(e) => setStoreForm({ ...storeForm, hours: e.target.value })} />
+                      <label className="flex items-center gap-1.5 text-sm">
+                        <input className={`${inputClass} tabular text-right`} type="number" min={1} max={90} aria-label="보관 기간(일)" value={storeForm.days} onChange={(e) => setStoreForm({ ...storeForm, days: Number(e.target.value) || 1 })} />
+                        일
+                      </label>
+                    </div>
+                    <ActionRow wide={2}>
+                      <Button onClick={() => setStoreForm(null)}>취소</Button>
+                      <Button type="submit" variant="primary" busy={busy === "st"}>
+                        저장
+                      </Button>
+                    </ActionRow>
+                  </form>
+                ) : (
+                  <div className="mt-1 flex items-center justify-between gap-3">
+                    <p className="min-w-0 text-sm">
+                      <b>{store.place}</b> · {store.hours} · <span className="tabular">{store.days}일</span>
+                    </p>
+                    <Button size="sm" className="shrink-0" onClick={() => setStoreForm({ place: store.place, hours: store.hours, days: store.days })}>
+                      바꾸기
+                    </Button>
+                  </div>
+                )}
+              </Panel>
+              {/* 신고와 상관없이 짐을 보관하게 됐을 때 */}
+              <Panel className="p-4">
+                <h3 className="text-[13px] font-bold">짐 등록</h3>
+                <form
+                  className="mt-2 grid gap-2"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    act("ni", () => rpc("admin_store_item", { p_memo: newItem.memo, p_student: newItem.sid }), "짐 보관을 등록했습니다.").then(() => setNewItem({ sid: "", memo: "" }));
+                  }}
+                >
+                  <div className="grid grid-cols-[7.5rem_minmax(0,1fr)] gap-2">
+                    <input className={`${inputClass} tabular`} aria-label="학번" placeholder="학번" required value={newItem.sid} onChange={(e) => setNewItem({ ...newItem, sid: e.target.value })} />
+                    <input className={inputClass} aria-label="보관한 물건" placeholder="보관한 물건" required maxLength={200} value={newItem.memo} onChange={(e) => setNewItem({ ...newItem, memo: e.target.value })} />
+                  </div>
+                  <Button type="submit" variant="primary" busy={busy === "ni"}>
+                    등록
+                  </Button>
+                </form>
+              </Panel>
+            </div>
+          )}
+
+          <div className="mt-2 space-y-2">
+            {store.items.length === 0 && tab === "item" && (
+              <Panel>
+                <Empty icon={<Package size={36} strokeWidth={1.6} aria-hidden />} title="보관 중인 짐이 없습니다" />
+              </Panel>
+            )}
+            {store.items.map((it, i) => {
+              const over = new Date(it.until_at).getTime() < now;
+              return (
+                <FoldPanel
+                  key={it.id}
+                  defaultOpen={i === 0 && tab === "item"}
+                  head={
+                    <>
+                      <span className="font-bold">{it.memo}</span>
+                      <span className="text-sm text-muted">{it.name}</span>
+                      <Tag tone={over ? "danger" : "warn"}>
+                        <span className="tabular">{over ? "기한 지남" : `${fmtDate(it.until_at)}까지`}</span>
+                      </Tag>
+                    </>
+                  }
+                >
+                  <p className="text-sm text-[#3d4744]">
+                    {it.name} <span className="tabular text-muted">{it.student_id}</span>
+                    {it.seat && ` · ${it.seat}`}
+                  </p>
+                  <p className="tabular text-[13px] text-muted">
+                    {fmtDateTime(it.created_at)} 보관 · {it.place}
+                  </p>
+                  <ActionRow wide={2} className="mt-3">
+                    <Button variant="primary" busy={busy === `ip${it.id}`} onClick={() => act(`ip${it.id}`, () => rpc("admin_item_done", { p_item: it.id, p_status: "picked" }), "찾아간 것으로 처리했습니다.")}>
+                      <Check size={16} aria-hidden />
+                      찾아감
+                    </Button>
+                    <Button variant="softDanger" busy={busy === `id${it.id}`} disabled={!over} title={over ? undefined : "보관 기한이 지난 뒤에 처분할 수 있습니다"} onClick={() => act(`id${it.id}`, () => rpc("admin_item_done", { p_item: it.id, p_status: "disposed" }), "처분한 것으로 처리했습니다.")}>
+                      처분
+                    </Button>
+                  </ActionRow>
+                </FoldPanel>
+              );
+            })}
           </div>
         </section>
       )}

@@ -236,15 +236,15 @@ export default function HomePage() {
       )}
 
       {/* 공지: 최근 두 건만 보여 주고 나머지는 공지 화면에서 */}
-      {notices.length > 0 && (
+      {status && (
         <Link href="/notices" className="flex items-center gap-3 rounded-[var(--radius-panel)] border border-line bg-surface px-4 py-3 transition-colors duration-150 hover:bg-canvas">
           <span className="relative grid size-9 shrink-0 place-items-center rounded-full bg-du-tint text-du-deep-dark">
             <Megaphone size={18} aria-hidden />
             {fresh && <span className="absolute -right-0.5 -top-0.5 size-2.5 rounded-full bg-danger ring-2 ring-surface" aria-label="새 공지" />}
           </span>
           <span className="min-w-0 flex-1">
-            <span className="block truncate font-semibold">{notices[0].title}</span>
-            <span className="block truncate text-[13px] text-muted">{notices.length > 1 ? `외 ${notices.length - 1}건의 공지` : notices[0].body || "공지 보기"}</span>
+            <span className="block truncate font-semibold">{notices[0]?.title ?? "공지"}</span>
+            <span className="block truncate text-[13px] text-muted">{notices.length === 0 ? "새 공지 없음" : notices.length > 1 ? `외 ${notices.length - 1}건의 공지` : notices[0].body || "공지 보기"}</span>
           </span>
           <ChevronRight size={18} className="shrink-0 text-muted" aria-hidden />
         </Link>
