@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { CircleCheck, CircleSlash, MapPin, QrCode } from "lucide-react";
+import { CircleCheck, CircleSlash, MapPin, QrCode, Siren } from "lucide-react";
 import { OccupancyMeter } from "@/components/OccupancyMeter";
 import { useApp } from "@/components/Providers";
 import { QrScanner } from "@/components/QrScanner";
@@ -25,7 +25,7 @@ export default function SeatQrPage() {
   const [done, setDone] = useState<string | null>(null);
   const [info, setInfo] = useState<SeatInfo | null>(null);
   const [hours, setHours] = useState<number | null>(null);
-  const [confirm, setConfirm] = useState<"report" | "return" | "away" | null>(null);
+  const [confirm, setConfirm] = useState<"report" | "return" | "away" | "unreport" | null>(null);
   const [rescan, setRescan] = useState(false);
   const { busy, run } = useAction((m) => toast(m, "error"));
 
@@ -380,15 +380,68 @@ export default function SeatQrPage() {
           )}
           {loggedIn && !ctx.is_mine && ctx.state !== "free" && !ctx.priority_until && <SeatWatchButton seatId={seat.id} label={seat.label} className="w-full" />}
           {/* 다른 사람의 좌석 */}
-          {loggedIn && !ctx.is_mine && ctx.state === "in_use" && (
+          {/* 내가 신고해 둔 좌석: 어디까지 진행됐는지와 취소 */}
+          {loggedIn && !ctx.is_mine && ctx.my_report && (
+            <div className="rounded-[var(--radius-ctl)] border border-danger/30 bg-danger-tint p-3.5">
+              <p className="flex items-center gap-1.5 font-bold text-[#7d1a14]">
+                <Siren size={17} aria-hidden />
+                내가 신고한 좌석
+              </p>
+              <ol className="mt-2.5 grid grid-cols-3 gap-1 text-center text-xs font-semibold">
+                {["신고 접수", ctx.my_report.stage === "checking" ? "관리자 확인 중" : "이용자 응답 대기", "결과 알림"].map((step, i) => {
+                  const on = i <= 1;
+                  return (
+                    <li key={step} className={cx("rounded-md px-1 py-1.5", on ? "bg-danger text-white" : "bg-white/70 text-[#7d1a14]")} aria-current={i === 1 ? "step" : undefined}>
+                      {step}
+                    </li>
+                  );
+                })}
+              </ol>
+              <p className="mt-2.5 text-sm text-[#7d1a14]">
+                {ctx.my_report.stage === "checking" ? (
+                  "관리자가 자리를 확인하고 있습니다"
+                ) : (
+                  <>
+                    이용자가 <strong className="tabular">{fmtRemain(new Date(ctx.my_report.respond_deadline).getTime() - now)}</strong> 안에 응답하지 않으면 자동 반납됩니다
+                  </>
+                )}
+              </p>
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <Link href="/me#reports" className="inline-flex min-h-11 items-center justify-center rounded-[var(--radius-ctl)] bg-white text-sm font-semibold text-du-black hover:bg-canvas">
+                  내 신고
+                </Link>
+                <Button disabled={ctx.my_report.stage === "checking"} aria-expanded={confirm === "unreport"} onClick={() => setConfirm(confirm === "unreport" ? null : "unreport")}>
+                  신고 취소
+                </Button>
+              </div>
+              {confirm === "unreport" && (
+                <Button
+                  variant="danger"
+                  className="rise mt-2 w-full"
+                  busy={busy === "unrep"}
+                  onClick={() =>
+                    plain("unrep", async () => {
+                      await rpc("cancel_report", { p_report: ctx.my_report!.id });
+                      return "신고를 취소했습니다.";
+                    })
+                  }
+                >
+                  신고 취소하기
+                </Button>
+              )}
+            </div>
+          )}
+          {/* 다른 학생의 신고가 이미 처리 중 */}
+          {loggedIn && !ctx.is_mine && ctx.state === "in_use" && !ctx.my_report && ctx.reported && <Notice tone="warn">이미 자리비움 신고가 접수된 좌석 · 처리 중입니다</Notice>}
+          {loggedIn && !ctx.is_mine && ctx.state === "in_use" && !ctx.my_report && !ctx.reported && (
             <>
-              <Button aria-expanded={confirm === "report"} className="w-full" onClick={() => setConfirm(confirm === "report" ? null : "report")}>
-                자리가 비어 있어요
+              <Button variant="softDanger" size="lg" aria-expanded={confirm === "report"} className="w-full" onClick={() => setConfirm(confirm === "report" ? null : "report")}>
+                <Siren size={18} aria-hidden />
+                자리비움 신고
               </Button>
               {confirm === "report" && (
                 <div className="rise rounded-[var(--radius-ctl)] border border-line p-3.5">
-                  <p className="font-semibold">자리비움을 신고할까요?</p>
-                  <ul className="mt-1.5 list-disc space-y-1 pl-5 text-sm text-[#3d4744]">
+                  <ul className="list-disc space-y-1 pl-5 text-sm text-[#3d4744]">
                     <li>
                       이용자가 <strong className="tabular">{ctx.report_minutes}분</strong> 안에 응답하지 않으면 자동 반납됩니다.
                     </li>
@@ -397,12 +450,12 @@ export default function SeatQrPage() {
                       <span className="tabular">{String(settings?.false_report_ban_days ?? 7)}일간</span> 신고할 수 없고 벌점이 부여됩니다.
                     </li>
                   </ul>
-                  <div className="mt-3">
-                    <OccupancyMeter pct={ctx.occupancy} rules={ruleTexts(settings, "report")} ruleLabel="응답" />
+                  <div className="mt-3 grid grid-cols-2 gap-2">
+                    <Button onClick={() => setConfirm(null)}>닫기</Button>
+                    <Button variant="primary" busy={busy === "rep"} onClick={() => scan("rep", "report_seat", () => "신고를 접수했습니다.")}>
+                      신고하기
+                    </Button>
                   </div>
-                  <Button variant="primary" className="mt-3" busy={busy === "rep"} onClick={() => scan("rep", "report_seat", (m) => `신고를 접수했습니다. ${m}분 뒤 결과를 알림으로 알려 드립니다.`)}>
-                    신고 접수
-                  </Button>
                 </div>
               )}
             </>

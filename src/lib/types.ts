@@ -139,6 +139,10 @@ export interface SeatContext {
   extend_window_min: number;
   held_by_me?: boolean;
   held_by_other?: boolean;
+  /** 내가 이 좌석에 넣어 둔 자리비움 신고 (처리 중일 때만) */
+  my_report?: { id: number; stage: "received" | "checking"; respond_deadline: string; created_at: string } | null;
+  /** 누군가의 신고가 처리 중인 좌석 */
+  reported?: boolean;
   /** 내가 신고해서 반납된 좌석: 이 시각까지 나만 예약할 수 있다 */
   priority_until?: string | null;
 }

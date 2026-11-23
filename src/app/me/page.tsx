@@ -549,7 +549,7 @@ export default function MePage() {
                   <Tag tone={r.stage === "checking" ? "deep" : "warn"}>{r.stage === "checking" ? "관리자 확인 중" : "이용자 응답 대기"}</Tag>
                 </div>
                 {r.chat && <HelpChat kind="report" helpId={r.id} className="mt-3" />}
-                <Button className="mt-3 w-full" onClick={() => setCancelRep(r.id)}>
+                <Button className="mt-3 w-full" disabled={r.stage === "checking"} onClick={() => setCancelRep(r.id)}>
                   신고 취소
                 </Button>
               </Panel>
