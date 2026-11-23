@@ -20,7 +20,7 @@ interface Detail {
   reports_made: number;
   reports_dismissed: number;
 }
-const END: Record<string, string> = { user: "직접 반납", expired: "시간 종료", closing: "폐관", away_timeout: "외출 초과", report: "자리비움 신고", admin: "관리자 반납", room_closed: "열람실 폐쇄", no_show: "미체크인" };
+const END: Record<string, string> = { user: "직접 반납", expired: "시간 종료", closing: "폐관", away_timeout: "외출 초과", report: "자리비움 신고", admin: "관리자 반납", room_closed: "열람실 폐쇄", no_show: "미체크인", banned: "예약 정지" };
 const STATUS: Record<string, string> = { reserved: "체크인 대기", in_use: "이용 중", away: "외출", ended: "종료", no_show: "노쇼", cancelled: "취소" };
 
 export default function AdminUsers() {
