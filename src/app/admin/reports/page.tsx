@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Inbox, MapPin } from "lucide-react";
 import { HelpChat } from "@/components/HelpChat";
 import { useApp } from "@/components/Providers";
-import { Button, Empty, FoldPanel, GraceControl, Panel, Skeleton, Tag, inputClass, useAction, useNow } from "@/components/ui";
+import { ActionRow, Button, Confirm, Empty, FoldPanel, GraceControl, Panel, Skeleton, Tag, inputClass, useAction, useNow } from "@/components/ui";
 import { rpc } from "@/lib/supabase";
 import { fmtDateTime, fmtRemain, fmtTime } from "@/lib/util";
 
@@ -62,6 +62,8 @@ export default function AdminReports() {
   const now = useNow();
   const [ov, setOv] = useState<Overview | null>(null);
   const [text, setText] = useState<Record<string, string>>({});
+  // 허위 신고로 기록하기 전에 한 번 묻는다
+  const [falseId, setFalseId] = useState<number | null>(null);
   const { busy, run } = useAction((m) => toast(m, "error"));
   // 이 화면을 마지막으로 본 시각. 그 뒤에 들어온 건은 '새로 들어옴'으로 표시한다
   const [seenAt] = useState(() => {
@@ -105,6 +107,18 @@ export default function AdminReports() {
   return (
     <div className="space-y-6">
       <h1 className="text-[22px] font-bold">처리 대기</h1>
+      {falseId !== null && (
+        <Confirm
+          title="허위 신고"
+          confirmLabel="허위 신고로 기록"
+          danger
+          busy={busy === `rd${falseId}`}
+          onClose={() => setFalseId(null)}
+          onConfirm={() => act(`rd${falseId}`, () => rpc("admin_resolve_report", { p_report: falseId, p_decision: "dismiss" }), "허위 신고로 기록했습니다.").then(() => setFalseId(null))}
+        >
+          이용자가 자리에 앉아 있었던 신고로 기록합니다. 쌓이면 신고자에게 벌점이 붙습니다.
+        </Confirm>
+      )}
 
       {empty && (
         <Panel>
@@ -162,26 +176,20 @@ export default function AdminReports() {
                       </div>
                     </dl>
                     <HelpChat kind="report" helpId={r.id} admin className="mt-3 max-w-xl" />
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      <Button variant="danger" busy={busy === `rc${r.id}`} onClick={() => act(`rc${r.id}`, () => rpc("admin_resolve_report", { p_report: r.id, p_decision: "confirm" }), "반납 처리하고 벌점을 부여했습니다. 좌석은 빈자리가 되었습니다.")}>
-                        비어 있음 확정
+                    <ActionRow className="mt-3">
+                      <Button variant="danger" busy={busy === `rc${r.id}`} onClick={() => act(`rc${r.id}`, () => rpc("admin_resolve_report", { p_report: r.id, p_decision: "confirm" }), "반납 처리하고 벌점을 부여했습니다.")}>
+                        반납 확정
                       </Button>
-                      <Button busy={busy === `rt${r.id}`} onClick={() => act(`rt${r.id}`, () => rpc("admin_resolve_report", { p_report: r.id, p_decision: "returned" }), "복귀를 확인했습니다. 이용자와 신고자 모두 불이익이 없습니다.")}>
-                        돌아옴 (불이익 없음)
+                      <Button busy={busy === `rt${r.id}`} onClick={() => act(`rt${r.id}`, () => rpc("admin_resolve_report", { p_report: r.id, p_decision: "returned" }), "복귀를 확인했습니다. 벌점은 없습니다.")}>
+                        돌아옴
                       </Button>
-                      <Button
-                        busy={busy === `rd${r.id}`}
-                        onClick={() => {
-                          if (!window.confirm("신고 당시 이용자가 자리에 앉아 있었나요? 허위 신고로 기록되고, 누적되면 신고자에게 벌점이 부여됩니다.")) return;
-                          act(`rd${r.id}`, () => rpc("admin_resolve_report", { p_report: r.id, p_decision: "dismiss" }), "허위 신고로 기록했습니다.");
-                        }}
-                      >
-                        앉아 있었음 (허위 신고)
+                      <Button busy={busy === `rd${r.id}`} onClick={() => setFalseId(r.id)}>
+                        허위 신고
                       </Button>
-                      <Button variant="quiet" busy={busy === `re${r.id}`} onClick={() => act(`re${r.id}`, () => rpc("admin_resolve_report", { p_report: r.id, p_decision: "extend" }), "응답 시간을 10분 늘렸습니다.")}>
-                        10분 더 기다리기
+                      <Button busy={busy === `re${r.id}`} onClick={() => act(`re${r.id}`, () => rpc("admin_resolve_report", { p_report: r.id, p_decision: "extend" }), "자동 반납을 10분 늦췄습니다.")}>
+                        반납 10분 연장
                       </Button>
-                    </div>
+                    </ActionRow>
                   </div>
                 </FoldPanel>
               );
@@ -241,10 +249,9 @@ export default function AdminReports() {
                   {h.message && <p className="mt-1 rounded-md bg-canvas px-2.5 py-2 text-sm">{h.message}</p>}
                   <p className="tabular mt-1 text-[13px] text-muted">{fmtDateTime(h.created_at)} 접수</p>
                   <HelpChat helpId={h.id} admin className="mt-3 max-w-xl" />
-                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <div className="mt-3 grid gap-2 sm:grid-cols-2">
                     {h.reservation_id && (h.res_status === "reserved" || h.res_status === "away") && (
                       <GraceControl
-                        className="w-full sm:w-auto"
                         label={h.res_status === "reserved" ? "체크인 대기" : "외출 시간"}
                         busy={busy === `hg${h.id}`}
                         onGive={(m) => act(`hg${h.id}`, () => rpc("admin_res_action", { p_res: h.reservation_id, p_action: "grace", p_reason: h.reason, p_arg: m }), `${m}분 연장했습니다.`)}
@@ -264,23 +271,23 @@ export default function AdminReports() {
                           )
                         }
                       >
-                        대리 체크인하고 완료
+                        대리 체크인
                       </Button>
                     )}
                   </div>
                   {/* 요청 마무리: 대화 보내기와 헷갈리지 않게 따로 */}
                   <div className="mt-4 rounded-[var(--radius-ctl)] border border-line bg-[#f8faf9] p-3">
                     <p className="mb-2 text-[13px] font-bold">요청 마무리</p>
-                    <div className="flex flex-wrap items-center gap-2">
+                    <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto]">
                       <input
-                        className={`${inputClass} !min-h-11 min-w-0 flex-1 basis-40`}
+                        className={inputClass}
                         aria-label="처리 결과"
                         placeholder="처리 결과 (선택)"
                         value={text[`h${h.id}`] ?? ""}
                         onChange={(e) => setText({ ...text, [`h${h.id}`]: e.target.value })}
                       />
                       <Button variant="primary" busy={busy === `hr${h.id}`} onClick={() => act(`hr${h.id}`, () => rpc("admin_resolve_help", { p_help: h.id, p_resolution: text[`h${h.id}`] || null }), "도움 요청을 완료 처리했습니다.")}>
-                        도움 요청 완료
+                        완료 처리
                       </Button>
                     </div>
                   </div>
@@ -317,20 +324,22 @@ export default function AdminReports() {
                     대상 벌점: <span className="tabular">{a.points}점</span> · {a.note} <span className="tabular text-muted">({fmtDateTime(a.penalty_at)})</span>
                   </p>
                   <p className="mt-2 rounded-md bg-canvas px-2.5 py-2 text-sm">{a.message}</p>
-                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <div className="mt-3 grid gap-2">
                     <input
-                      className={`${inputClass} !min-h-11 max-w-sm flex-1`}
+                      className={inputClass}
                       aria-label="학생에게 보낼 답변"
-                      placeholder="답변 (반려할 때는 이유를 적어 주세요)"
+                      placeholder="답변"
                       value={text[`a${a.id}`] ?? ""}
                       onChange={(e) => setText({ ...text, [`a${a.id}`]: e.target.value })}
                     />
+                    <ActionRow wide={2}>
                     <Button variant="primary" busy={busy === `aa${a.id}`} onClick={() => act(`aa${a.id}`, () => rpc("admin_resolve_appeal", { p_appeal: a.id, p_approve: true, p_reply: text[`a${a.id}`] || null }), "이의신청을 승인하고 벌점을 취소했습니다.")}>
-                      승인 (벌점 취소)
+                      승인
                     </Button>
                     <Button busy={busy === `ar${a.id}`} onClick={() => act(`ar${a.id}`, () => rpc("admin_resolve_appeal", { p_appeal: a.id, p_approve: false, p_reply: text[`a${a.id}`] || null }), "이의신청을 반려했습니다.")}>
                       반려
                     </Button>
+                    </ActionRow>
                   </div>
                 </div>
               </FoldPanel>

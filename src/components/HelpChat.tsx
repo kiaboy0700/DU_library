@@ -89,7 +89,7 @@ export function HelpChat({ helpId, admin, className, kind = "help" }: { helpId: 
     <div className={cx("overflow-hidden rounded-[var(--radius-ctl)] border border-line", className)}>
       {admin && (
         <div className="flex items-center justify-between gap-2 border-b border-line bg-surface py-1 pl-3 pr-1">
-          <span className="text-[13px] font-semibold">{k.who}와 대화</span>
+          <span className="text-[13px] font-semibold">{k.who === "학생" ? "학생과 대화" : "신고자와 대화"}</span>
           <button
             type="button"
             aria-pressed={thread.open}
@@ -103,7 +103,7 @@ export function HelpChat({ helpId, admin, className, kind = "help" }: { helpId: 
         </div>
       )}
       {/* 대화 영역은 처음부터 같은 높이. 길어지면 이 안에서 위아래로 넘겨 본다 */}
-      <div ref={list} role="log" aria-label="대화" className="flex h-56 flex-col gap-1.5 overflow-y-auto overscroll-contain bg-canvas p-3">
+      <div ref={list} role="log" aria-label="대화" className="flex h-56 flex-col gap-1.5 overflow-y-auto bg-canvas p-3">
         {count === 0 && <p className="m-auto text-sm text-muted">대화 없음</p>}
           {thread.messages.map((m) => (
             <div key={m.id} className={cx("flex max-w-[85%] flex-col", m.mine ? "items-end self-end" : "items-start self-start")}>

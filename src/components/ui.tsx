@@ -269,3 +269,8 @@ export function FoldPanel({ head, children, defaultOpen = false }: { head: React
     </Panel>
   );
 }
+
+/** 버튼 줄: 한 줄에 놓인 버튼들을 같은 너비·높이로 맞춘다. 좁은 화면에서는 두 개씩 */
+export function ActionRow({ children, className, wide = 4 }: { children: React.ReactNode; className?: string; wide?: 2 | 3 | 4 }) {
+  return <div className={cx("grid grid-cols-2 gap-2 [&>*]:w-full [&>*]:min-w-0", wide === 4 ? "sm:grid-cols-4" : wide === 3 ? "sm:grid-cols-3" : "sm:grid-cols-2", className)}>{children}</div>;
+}
