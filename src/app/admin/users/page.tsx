@@ -17,6 +17,7 @@ interface Detail {
   points: number;
   penalties: Penalty[];
   reservations: { id: number; status: string; start_at: string; end_at: string; ended_at: string | null; end_reason: string | null; seat_label: string; room_name: string; by_admin: boolean }[];
+  moves: { id: number; moved_at: string; by_admin: boolean; from: string | null; to: string | null }[];
   reports_made: number;
   reports_dismissed: number;
 }
@@ -59,6 +60,7 @@ export default function AdminUsers() {
   const [del, setDel] = useState(false);
   const penFold = useFold(d?.penalties ?? [], 3);
   const resFold = useFold(d?.reservations ?? [], 5);
+  const moveFold = useFold(d?.moves ?? [], 5);
   const banned = d?.profile.banned_until && new Date(d.profile.banned_until).getTime() > now;
 
   return (
@@ -417,6 +419,24 @@ export default function AdminUsers() {
                 </div>
               )}
             </Panel>
+            {/* 좌석 이동: 언제 어디서 어디로 옮겼는지 */}
+            {d.moves.length > 0 && (
+              <Panel className="overflow-hidden">
+                <h3 className="px-4 pt-4 text-[17px] font-bold">좌석 이동</h3>
+                <ul className="mt-2 divide-y divide-line border-t border-line">
+                  {moveFold.shown.map((m) => (
+                    <li key={m.id} className="flex flex-wrap items-center gap-x-3 gap-y-0.5 px-4 py-2.5 text-sm">
+                      <span className="tabular w-28 shrink-0 text-xs text-muted">{fmtDateTime(m.moved_at)}</span>
+                      <span className="min-w-0 font-semibold">
+                        {m.from ?? "-"} → {m.to ?? "-"}
+                      </span>
+                      {m.by_admin && <Tag>관리자</Tag>}
+                    </li>
+                  ))}
+                </ul>
+                {moveFold.toggle}
+              </Panel>
+            )}
           </div>
         )}
       </div>
