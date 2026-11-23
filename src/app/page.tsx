@@ -289,7 +289,7 @@ export default function HomePage() {
             ["허위 신고", `앉아 있는 좌석을 신고한 것으로 확인되면 · ${settings?.false_report_limit ?? 3}회면 ${settings?.false_report_ban_days ?? 7}일 신고 정지, 벌점 ${settings?.pen_false_report ?? 1}점`],
             ["자리 이동", `옮길 좌석의 QR을 찍으면 이동 · 좌석을 먼저 고르면 ${settings?.move_hold_minutes ?? 10}분 동안 맡아 둠 · 남은 시간은 그대로`],
             ["이용 시간", `최대 ${Number(settings?.max_minutes ?? 240) / 60}시간 · 종료 ${settings?.extend_window_min ?? 30}분 전부터 ${Number(settings?.extend_minutes ?? 120) / 60}시간씩 연장`],
-            ["연장", `혼잡(${settings?.occ_high ?? 80}% 이상)할 때는 하루 ${settings?.max_extends ?? 2}회까지 · 좌석을 바꿔도 횟수는 합산 · 그 밖에는 제한 없음`],
+            ["연장", `혼잡(${settings?.occ_high ?? 80}% 이상)할 때는 ${settings?.max_extends ?? 2}회까지 · 0시·12시에 다시 셈 · 좌석을 바꿔도 합산 · 그 밖에는 제한 없음`],
             ["예약 취소", `취소한 좌석은 ${settings?.rebook_same_seat_minutes ?? 10}분 동안 다시 예약할 수 없음`],
             ["예약 정지", `벌점 ${settings?.ban1_points ?? 3}점 ${settings?.ban1_days ?? 3}일 · ${settings?.ban2_points ?? 6}점 ${settings?.ban2_days ?? 14}일 · 정지되면 이용 중인 좌석도 반납`],
           ].map(([k, v]) => (
