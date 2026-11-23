@@ -9,9 +9,8 @@ import { useApp } from "@/components/Providers";
 import { QrScanner } from "@/components/QrScanner";
 import { RoomCard, useRoomActions } from "@/components/RoomCards";
 import { Button, Confirm, Notice, Skeleton, useAction, useNow } from "@/components/ui";
-import { useHome, useSettings } from "@/lib/hooks";
+import { hoursLabel, useHome, useSettings } from "@/lib/hooks";
 import { rpc, supabase } from "@/lib/supabase";
-import { MODE_LABEL } from "@/lib/types";
 import { NOTICE_SEEN_KEY, cx, fmtRemain } from "@/lib/util";
 
 interface Announcement {
@@ -67,7 +66,6 @@ export default function HomePage() {
   const upper = dept ? (dept.includes("(") ? dept.replace(/\([^)]*\)/, "").trim() : dept.split(" ")[0]) : null;
 
   const res = status?.reservation;
-  const mode = home?.mode;
   // 내 자리 칸: 좌석이 있든 없든 같은 크기
   const tile = "relative flex h-[104px] w-[136px] shrink-0 flex-col justify-center rounded-xl px-3.5 shadow-[0_2px_8px_-2px_rgb(0_60_50/0.18)] transition-transform duration-150 hover:-translate-y-0.5 active:translate-y-0";
   const needScan = !!res && res.status !== "in_use";
@@ -254,11 +252,7 @@ export default function HomePage() {
         <div className="mb-3 flex items-end justify-between gap-3">
           <h2 id="rooms-h" className="text-[20px] font-bold leading-snug">
             열람실
-            {mode && (
-              <span className="ml-2 text-sm font-normal text-muted">
-                {MODE_LABEL[mode]} 운영{mode === "exam" && " · 24시간"}
-              </span>
-            )}
+            {hoursLabel(home, settings) && <span className="tabular ml-2 text-sm font-normal text-muted">{hoursLabel(home, settings)}</span>}
           </h2>
           <Link href="/rooms" className="-mr-1 flex min-h-9 items-center gap-0.5 whitespace-nowrap rounded-md px-1 text-sm font-semibold text-du-deep-dark hover:underline">
             모두 보기

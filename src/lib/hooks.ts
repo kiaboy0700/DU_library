@@ -86,3 +86,15 @@ export function useHome() {
 
   return { home, error, reload: load };
 }
+
+/** 오늘 운영시간 한 줄. 모든 열람실이 닫혀 있으면 그 이유(주말 휴관 등)를 보여 준다 */
+export function hoursLabel(home: HomeSummary | null, settings: Settings | null): string | null {
+  if (!home) return null;
+  if (home.rooms.length > 0 && home.rooms.every((r) => !r.is_open)) return home.rooms[0].reason ?? "운영 종료";
+  if (home.mode === "exam") return "오늘 24시간";
+  if (!settings) return null;
+  const pad = (n: unknown) => String(Number(n)).padStart(2, "0");
+  const [o, c] = home.mode === "vacation" ? [settings.vacation_open, settings.vacation_close] : [settings.semester_open, settings.semester_close];
+  if (o === undefined || c === undefined) return null;
+  return `오늘 ${pad(o)}:00~${pad(c)}:00`;
+}

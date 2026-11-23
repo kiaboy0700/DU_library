@@ -3,15 +3,13 @@
 import { WifiOff } from "lucide-react";
 import { RoomCard, useRoomActions } from "@/components/RoomCards";
 import { Button, Notice, Skeleton } from "@/components/ui";
-import { useHome, useSettings } from "@/lib/hooks";
-import { MODE_LABEL } from "@/lib/types";
+import { hoursLabel, useHome, useSettings } from "@/lib/hooks";
 
 /** 열람실: 두 열람실의 요약을 한 화면에 모두 보여 주고, 여기서 좌석을 고르거나 바로 예약한다 */
 export default function RoomsPage() {
   const { home, error, reload } = useHome();
   const { settings } = useSettings();
   const actions = useRoomActions(settings);
-  const mode = home?.mode;
   const free = home?.rooms.reduce((n, r) => n + (r.total - r.occupied), 0);
   const total = home?.rooms.reduce((n, r) => n + r.total, 0);
 
@@ -21,7 +19,7 @@ export default function RoomsPage() {
         <h1 className="text-[22px] font-bold">열람실</h1>
         {home && (
           <p className="tabular text-sm text-muted">
-            {mode && `${MODE_LABEL[mode]} 운영${mode === "exam" ? " · 24시간" : ""} · `}
+            {hoursLabel(home, settings) && `${hoursLabel(home, settings)} · `}
             전체 <strong className="font-semibold text-du-black">{free}석</strong> 남음 / {total}석
           </p>
         )}
