@@ -139,6 +139,8 @@ export interface SeatContext {
   extend_window_min: number;
   held_by_me?: boolean;
   held_by_other?: boolean;
+  /** 내가 신고해서 반납된 좌석: 이 시각까지 나만 예약할 수 있다 */
+  priority_until?: string | null;
 }
 export interface Notice {
   id: number;

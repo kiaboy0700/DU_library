@@ -23,7 +23,17 @@ interface Announcement {
 
 /** 홈: 내 상황을 한눈에. 프로필과 내 자리, 공지, 그리고 넘겨 보는 열람실 배너 */
 export default function HomePage() {
-  const { status, toast, refresh } = useApp();
+  const { status, toast, refresh, pulse } = useApp();
+  // 내가 신고한 좌석이 반납되어 먼저 예약할 수 있는 동안
+  const [pri, setPri] = useState<{ seat_label: string; room_name: string; expires_at: string; token: string } | null>(null);
+  const myId = status?.profile.id;
+  const hasSeat = !!status?.reservation;
+  useEffect(() => {
+    if (!myId || hasSeat) return setPri(null);
+    rpc<typeof pri>("my_priority")
+      .then(setPri)
+      .catch(() => {});
+  }, [myId, hasSeat, pulse]);
   const { busy, run } = useAction((m) => toast(m, "error"));
   const [ask, setAsk] = useState<"cancel" | "away" | "return" | null>(null);
   const { home, error, reload } = useHome();
@@ -206,6 +216,17 @@ export default function HomePage() {
           seat={res ? { label: res.seat_label, room: res.room_name } : undefined}
           deadline={res && deadline ? { label: res.status === "reserved" ? "체크인 마감까지" : res.status === "away" ? "복귀 마감까지" : "남은 이용 시간", at: deadline } : undefined}
         />
+      )}
+
+      {pri && new Date(pri.expires_at).getTime() > now && (
+        <Link href={`/s/${pri.token}`} className="flex items-center gap-3 rounded-[var(--radius-panel)] bg-du-deep px-4 py-3 text-white transition-colors duration-150 hover:bg-du-deep-dark">
+          <span className="min-w-0 flex-1">
+            <span className="block text-[13px] font-medium text-white/85">우선 예약 · {pri.room_name}</span>
+            <span className="block text-lg font-bold leading-tight">{pri.seat_label}</span>
+          </span>
+          <span className="tabular shrink-0 rounded-full bg-white/20 px-3 py-1 text-sm font-bold">{fmtRemain(new Date(pri.expires_at).getTime() - now)}</span>
+          <ChevronRight size={18} className="shrink-0" aria-hidden />
+        </Link>
       )}
 
       {home?.incident && (

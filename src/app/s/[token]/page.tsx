@@ -406,7 +406,54 @@ export default function SeatQrPage() {
             </>
           )}
           {loggedIn && !ctx.is_mine && ctx.state === "away" && <Notice>외출 중인 좌석 · 시간이 지나면 자동 반납됩니다</Notice>}
-          {loggedIn && !ctx.is_mine && ctx.state === "reserved" && (
+          {/* 내가 신고해서 반납된 좌석: 정해진 시간 동안 나만 예약할 수 있다 */}
+          {loggedIn && seat.is_active && ctx.priority_until && !ctx.have_other && (
+            <>
+              <Notice>
+                <strong className="font-semibold">우선 예약</strong> · <strong className="tabular">{fmtRemain(new Date(ctx.priority_until).getTime() - now)}</strong> 남음
+              </Notice>
+              {ctx.is_open ? (
+                <>
+                  <fieldset>
+                    <legend className="text-[13px] font-semibold">이용 시간</legend>
+                    <div className="mt-1.5 grid grid-cols-4 gap-1.5">
+                      {Array.from({ length: maxHours }, (_, i) => i + 1).map((h) => (
+                        <button
+                          key={h}
+                          type="button"
+                          aria-pressed={(hours ?? maxHours) === h}
+                          onClick={() => setHours(h)}
+                          className={cx(
+                            "flex min-h-11 items-center justify-center rounded-[var(--radius-ctl)] border text-sm font-semibold transition-colors duration-150",
+                            (hours ?? maxHours) === h ? "border-du-deep bg-du-tint text-du-deep-dark" : "border-line hover:bg-canvas",
+                          )}
+                        >
+                          {h}시간
+                        </button>
+                      ))}
+                    </div>
+                  </fieldset>
+                  <Button
+                    variant="primary"
+                    size="lg"
+                    className="w-full"
+                    busy={busy === "pri"}
+                    onClick={() =>
+                      plain("pri", async () => {
+                        await rpc("reserve_seat", { p_seat: seat.id, p_minutes: (hours ?? maxHours) * 60 });
+                        return `${seat.label} 좌석을 예약했습니다. ${settings?.checkin_minutes ?? 15}분 안에 좌석 QR을 찍어 주세요.`;
+                      })
+                    }
+                  >
+                    이 좌석 예약
+                  </Button>
+                </>
+              ) : (
+                <Notice tone="warn">{ctx.reason}</Notice>
+              )}
+            </>
+          )}
+          {loggedIn && !ctx.is_mine && ctx.state === "reserved" && !ctx.priority_until && (
             <Notice>체크인 대기 중인 좌석 · {settings?.checkin_minutes ?? 15}분 안에 오지 않으면 자동 취소됩니다</Notice>
           )}
         </div>

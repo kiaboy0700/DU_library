@@ -5,13 +5,17 @@ import { createPortal } from "react-dom";
 import { ChevronDown, LoaderCircle } from "lucide-react";
 import { cx, fmtLeft } from "@/lib/util";
 
-type Variant = "primary" | "secondary" | "danger" | "quiet";
+type Variant = "primary" | "secondary" | "danger" | "quiet" | "soft" | "softDanger" | "softNeutral";
 
 const VARIANT: Record<Variant, string> = {
   primary: "bg-du-deep text-white hover:bg-du-deep-dark active:bg-du-deep-dark disabled:bg-[#a9c9c2]",
   secondary: "border border-line bg-surface text-du-black hover:border-[#b9c6c2] hover:bg-canvas active:bg-[#e9eeec] disabled:text-[#9aa5a2]",
   danger: "border border-danger/35 bg-surface text-danger hover:bg-danger-tint active:bg-danger-tint disabled:opacity-50",
   quiet: "text-du-deep-dark hover:bg-du-tint active:bg-du-tint disabled:text-[#9aa5a2]",
+  // 옅게 채운 버튼: 채운 버튼(primary) 옆에서 흰 버튼보다 눈에 잘 들어온다
+  soft: "bg-du-tint text-du-deep-dark hover:bg-[#d8ede8] active:bg-[#d8ede8] disabled:opacity-50",
+  softDanger: "bg-danger-tint text-danger hover:bg-[#f9dcd9] active:bg-[#f9dcd9] disabled:opacity-50",
+  softNeutral: "bg-[#e9eeec] text-du-black hover:bg-[#dde4e1] active:bg-[#dde4e1] disabled:opacity-50",
 };
 
 export function Button({

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { Inbox, MapPin } from "lucide-react";
+import { Ban, Check, Clock, Inbox, MapPin, Undo2 } from "lucide-react";
 import { HelpChat } from "@/components/HelpChat";
 import { useApp } from "@/components/Providers";
 import { ActionRow, Button, Confirm, Empty, FoldPanel, GraceControl, Panel, Skeleton, Tag, inputClass, useAction, useNow } from "@/components/ui";
@@ -46,10 +46,13 @@ interface Appeal {
   message: string;
   name: string;
   student_id: string;
-  penalty_type: string;
-  points: number;
+  penalty_type: string | null;
+  points: number | null;
   note: string | null;
-  penalty_at: string;
+  penalty_at: string | null;
+  report_id: number | null;
+  report_seat: string | null;
+  report_at: string | null;
 }
 interface Overview {
   reports: Report[];
@@ -207,18 +210,22 @@ export default function AdminReports() {
                       </div>
                     </dl>
                     <HelpChat kind="report" helpId={r.id} admin className="mt-3 max-w-xl" />
-                    {/* 다른 화면과 같은 규칙: 가장 자주 쓰는 처리 하나만 채운 버튼, 나머지는 흰 버튼, 되돌리기 어려운 불이익만 빨간 글자 */}
+                    {/* 가장 자주 쓰는 처리만 진하게, 나머지는 뜻에 맞는 옅은 색과 아이콘으로 */}
                     <ActionRow className="mt-3">
                       <Button variant="primary" busy={busy === `rc${r.id}`} onClick={() => act(`rc${r.id}`, () => rpc("admin_resolve_report", { p_report: r.id, p_decision: "confirm" }), "반납 처리하고 벌점을 부여했습니다.")}>
+                        <Check size={16} aria-hidden />
                         반납 확정
                       </Button>
-                      <Button busy={busy === `rt${r.id}`} onClick={() => act(`rt${r.id}`, () => rpc("admin_resolve_report", { p_report: r.id, p_decision: "returned" }), "복귀를 확인했습니다. 벌점은 없습니다.")}>
+                      <Button variant="soft" busy={busy === `rt${r.id}`} onClick={() => act(`rt${r.id}`, () => rpc("admin_resolve_report", { p_report: r.id, p_decision: "returned" }), "복귀를 확인했습니다. 벌점은 없습니다.")}>
+                        <Undo2 size={16} aria-hidden />
                         돌아옴
                       </Button>
-                      <Button busy={busy === `re${r.id}`} onClick={() => act(`re${r.id}`, () => rpc("admin_resolve_report", { p_report: r.id, p_decision: "extend" }), "자동 반납을 10분 늦췄습니다.")}>
+                      <Button variant="softNeutral" busy={busy === `re${r.id}`} onClick={() => act(`re${r.id}`, () => rpc("admin_resolve_report", { p_report: r.id, p_decision: "extend" }), "자동 반납을 10분 늦췄습니다.")}>
+                        <Clock size={16} aria-hidden />
                         반납 10분 연장
                       </Button>
-                      <Button variant="danger" busy={busy === `rd${r.id}`} onClick={() => setFalseId(r.id)}>
+                      <Button variant="softDanger" busy={busy === `rd${r.id}`} onClick={() => setFalseId(r.id)}>
+                        <Ban size={16} aria-hidden />
                         허위 신고
                       </Button>
                     </ActionRow>
@@ -345,15 +352,21 @@ export default function AdminReports() {
                     <span className="font-bold">{a.name}</span>
                     <span className="tabular text-sm text-muted">{a.student_id}</span>
                     {fresh(a.created_at)}
-                    <Tag>
-                      <span className="tabular">벌점 {a.points}점</span>
-                    </Tag>
+                    <Tag tone={a.report_id ? "warn" : "neutral"}>{a.report_id ? "허위 신고" : <span className="tabular">벌점 {a.points}점</span>}</Tag>
                   </>
                 }
               >
                 <div>
                   <p className="text-sm text-[#3d4744]">
-                    대상 벌점: <span className="tabular">{a.points}점</span> · {a.note} <span className="tabular text-muted">({fmtDateTime(a.penalty_at)})</span>
+                    {a.report_id ? (
+                      <>
+                        허위 신고로 기록된 신고: <b>{a.report_seat}</b> <span className="tabular text-muted">({a.report_at ? fmtDateTime(a.report_at) : "-"})</span>
+                      </>
+                    ) : (
+                      <>
+                        대상 벌점: <span className="tabular">{a.points}점</span> · {a.note} <span className="tabular text-muted">({a.penalty_at ? fmtDateTime(a.penalty_at) : "-"})</span>
+                      </>
+                    )}
                   </p>
                   <p className="mt-2 rounded-md bg-canvas px-2.5 py-2 text-sm">{a.message}</p>
                   <div className="mt-3 grid gap-2">
@@ -365,10 +378,10 @@ export default function AdminReports() {
                       onChange={(e) => setText({ ...text, [`a${a.id}`]: e.target.value })}
                     />
                     <ActionRow wide={2}>
-                    <Button variant="primary" busy={busy === `aa${a.id}`} onClick={() => act(`aa${a.id}`, () => rpc("admin_resolve_appeal", { p_appeal: a.id, p_approve: true, p_reply: text[`a${a.id}`] || null }), "이의신청을 승인하고 벌점을 취소했습니다.")}>
+                    <Button variant="primary" busy={busy === `aa${a.id}`} onClick={() => act(`aa${a.id}`, () => rpc("admin_resolve_appeal", { p_appeal: a.id, p_approve: true, p_reply: text[`a${a.id}`] || null }), a.report_id ? "이의신청을 승인하고 허위 신고 기록에서 지웠습니다." : "이의신청을 승인하고 벌점을 취소했습니다.")}>
                       승인
                     </Button>
-                    <Button busy={busy === `ar${a.id}`} onClick={() => act(`ar${a.id}`, () => rpc("admin_resolve_appeal", { p_appeal: a.id, p_approve: false, p_reply: text[`a${a.id}`] || null }), "이의신청을 반려했습니다.")}>
+                    <Button variant="softNeutral" busy={busy === `ar${a.id}`} onClick={() => act(`ar${a.id}`, () => rpc("admin_resolve_appeal", { p_appeal: a.id, p_approve: false, p_reply: text[`a${a.id}`] || null }), "이의신청을 반려했습니다.")}>
                       반려
                     </Button>
                     </ActionRow>

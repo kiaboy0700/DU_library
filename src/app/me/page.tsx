@@ -55,6 +55,19 @@ export default function MePage() {
       .then((r) => setMyReports(r.filter((x) => x.chat)))
       .catch(() => {});
   }, [uid, pulse]);
+  // 허위 신고로 기록된 내 신고와 이의신청
+  const [falseReports, setFalseReports] = useState<{ id: number; seat_label: string; room_name: string; created_at: string; appeal: { status: "open" | "approved" | "rejected"; reply: string | null } | null }[]>([]);
+  const [falseFor, setFalseFor] = useState<number | null>(null);
+  const [falseText, setFalseText] = useState("");
+  const loadFalse = useCallback(() => {
+    if (!uid) return;
+    rpc<typeof falseReports>("my_false_reports")
+      .then(setFalseReports)
+      .catch(() => {});
+  }, [uid]);
+  useEffect(() => {
+    loadFalse();
+  }, [loadFalse, pulse]);
   useEffect(() => {
     supabase
       .from("rooms")
@@ -415,7 +428,7 @@ export default function MePage() {
       </section>
 
 
-      {myReports.length > 0 && (
+      {(myReports.length > 0 || falseReports.length > 0) && (
         <section aria-labelledby="reports-h" id="reports">
           <h2 id="reports-h" className="text-[17px] font-bold">
             내 신고
@@ -428,6 +441,49 @@ export default function MePage() {
                 </p>
                 <p className="tabular text-[13px] text-muted">{fmtDateTime(r.created_at)} 접수</p>
                 <HelpChat kind="report" helpId={r.id} className="mt-3" />
+              </Panel>
+            ))}
+            {falseReports.map((r) => (
+              <Panel key={`f${r.id}`} className="p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="flex flex-wrap items-center gap-2 font-bold">
+                      {r.room_name} {r.seat_label}
+                      <Tag tone="danger">허위 신고</Tag>
+                    </p>
+                    <p className="tabular text-[13px] text-muted">{fmtDateTime(r.created_at)} 신고</p>
+                    {r.appeal && <p className="mt-1 text-[13px]">{r.appeal.status === "open" ? "이의신청을 검토하고 있습니다." : `이의신청이 반려되었습니다${r.appeal.reply ? `: ${r.appeal.reply}` : "."}`}</p>}
+                  </div>
+                  {!r.appeal && (
+                    <Button size="sm" variant="quiet" aria-expanded={falseFor === r.id} onClick={() => { setFalseFor(falseFor === r.id ? null : r.id); setFalseText(""); }}>
+                      이의신청
+                    </Button>
+                  )}
+                </div>
+                {falseFor === r.id && (
+                  <form
+                    className="rise mt-3"
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      act("fappeal", async () => {
+                        await rpc("submit_report_appeal", { p_report: r.id, p_message: falseText });
+                        toast("이의신청을 접수했습니다.", "ok");
+                        setFalseFor(null);
+                        loadFalse();
+                      });
+                    }}
+                  >
+                    <Field label="사유">
+                      <textarea className={cx(inputClass, "py-2.5")} rows={3} maxLength={500} value={falseText} onChange={(e) => setFalseText(e.target.value)} required />
+                    </Field>
+                    <div className="mt-2 grid grid-cols-2 gap-2">
+                      <Button onClick={() => setFalseFor(null)}>취소</Button>
+                      <Button type="submit" variant="primary" busy={busy === "fappeal"}>
+                        신청하기
+                      </Button>
+                    </div>
+                  </form>
+                )}
               </Panel>
             ))}
           </div>
