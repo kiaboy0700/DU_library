@@ -374,7 +374,7 @@ export default function SeatQrPage() {
               </div>
               <div>
                 <dt className="text-xs text-muted">남은 연장</dt>
-                <dd className="tabular font-semibold">{ctx.mode === "exam" ? "제한 없음" : `${extendsLeft}회`}</dd>
+                <dd className="tabular font-semibold">{ctx.occupancy >= Number(settings?.occ_high ?? 80) ? `${extendsLeft}회` : "제한 없음"}</dd>
               </div>
             </dl>
           )}

@@ -126,13 +126,14 @@ export default function RoomPage() {
   const free = summary ? summary.total - summary.occupied : null;
   const banned = !!status?.profile.banned_until && new Date(status.profile.banned_until).getTime() > now;
   const blocked = banned || (!!summary && !summary.is_open);
-  const exam = home?.mode === "exam";
 
   // 사용 중인 좌석: 누가 쓰는지는 알 수 없고, 언제 비는지만 알려 준다
   const info = selected ? states.get(selected.id) : undefined;
   const holding = !!selected && status?.move?.seat_id === selected.id;
   const taken = !!selected && !!info && info.state !== "free" && mine?.seat_id !== selected.id;
   const extendsLeft = info ? Math.max(0, Number(settings?.max_extends ?? 2) - info.extend_count) : 0;
+  // 연장 한도는 혼잡할 때만 있다
+  const limited = (summary?.pct ?? 0) >= Number(settings?.occ_high ?? 80);
   const hint = (seat: Seat) => {
     const i = states.get(seat.id);
     if (!i || i.state === "free" || !i.until_at) return null;
@@ -192,10 +193,10 @@ export default function RoomPage() {
             </div>
             <div>
               <dt className="text-xs text-muted">남은 연장</dt>
-              <dd className="tabular font-semibold">{exam ? "제한 없음" : `${extendsLeft}회`}</dd>
+              <dd className="tabular font-semibold">{limited ? `${extendsLeft}회` : "제한 없음"}</dd>
             </div>
           </dl>
-          {info.state === "in_use" && !exam && extendsLeft === 0 && info.end_at && <p className="mt-3 text-xs text-muted">{fmtTime(info.end_at)}에 비워집니다</p>}
+          {info.state === "in_use" && limited && extendsLeft === 0 && info.end_at && <p className="mt-3 text-xs text-muted">{fmtTime(info.end_at)}에 비워집니다</p>}
           <SeatWatchButton key={selected.id} seatId={selected.id} label={selected.label} className="mt-3 w-full" />
         </>
       ) : mine ? (

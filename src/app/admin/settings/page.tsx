@@ -46,7 +46,7 @@ const SECTIONS: Section[] = [
         rows: [
           ["extend_minutes", "1회 연장 시간", "분"],
           ["extend_window_min", "연장 가능 시점", "분 전", "종료 전"],
-          ["max_extends", "최대 연장 횟수", "회", "시험기간에는 제한 없음"],
+          ["max_extends", "혼잡할 때 하루 연장 한도", "회", "좌석과 상관없이 합산 · 여유·보통일 때는 제한 없음"],
         ],
       },
     ],
