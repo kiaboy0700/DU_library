@@ -169,7 +169,7 @@ export default function SeatQrPage() {
             </>
           )}
 
-          {wrong && (
+          {wrong && !ctx.priority_until && (
             <div className="rounded-[var(--radius-ctl)] border border-warn/40 bg-warn-tint p-3.5">
               <p className="font-bold text-[#5c3d00]">내 좌석이 아닙니다</p>
               <p className="mt-0.5 text-sm text-[#5c3d00]">
@@ -408,6 +408,34 @@ export default function SeatQrPage() {
             </>
           )}
           {loggedIn && !ctx.is_mine && ctx.state === "away" && <Notice>외출 중인 좌석 · 시간이 지나면 자동 반납됩니다</Notice>}
+          {/* 체크인 대기 중에 신고한 좌석이 반납됨: 정해진 시간 안에 이 좌석으로 바꿀지 고른다 */}
+          {loggedIn && seat.is_active && ctx.priority_until && status?.reservation?.status === "reserved" && !ctx.is_mine && (
+            <>
+              <Notice>
+                <strong className="font-semibold">좌석 바꾸기</strong> · <strong className="tabular">{fmtRemain(new Date(ctx.priority_until).getTime() - now)}</strong> 남음
+              </Notice>
+              <p className="text-sm text-[#3d4744]">
+                <strong className="font-semibold">{status.reservation.seat_label}</strong> → <strong className="font-semibold">{seat.label}</strong> · 체크인 대기 {String(settings?.checkin_minutes ?? 15)}분
+              </p>
+              <Button
+                variant="primary"
+                size="lg"
+                className="w-full"
+                busy={busy === "take"}
+                onClick={() =>
+                  plain("take", async () => {
+                    const r = await rpc<{ from: string; to: string; minutes: number }>("take_priority_seat", { p_token: token });
+                    return `${r.from}에서 ${r.to}(으)로 바꿨습니다. ${r.minutes}분 안에 좌석 QR을 찍어 주세요.`;
+                  })
+                }
+              >
+                {seat.label}(으)로 바꾸기
+              </Button>
+              <Link href="/me" className="flex min-h-11 items-center justify-center rounded-[var(--radius-ctl)] border border-line bg-surface text-sm font-semibold hover:bg-canvas">
+                {status.reservation.seat_label} 그대로
+              </Link>
+            </>
+          )}
           {/* 내가 신고해서 반납된 좌석: 정해진 시간 동안 나만 예약할 수 있다 */}
           {loggedIn && seat.is_active && ctx.priority_until && !ctx.have_other && (
             <>

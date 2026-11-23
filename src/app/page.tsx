@@ -29,11 +29,11 @@ export default function HomePage() {
   const myId = status?.profile.id;
   const hasSeat = !!status?.reservation;
   useEffect(() => {
-    if (!myId || hasSeat) return setPri(null);
+    if (!myId) return setPri(null);
     rpc<typeof pri>("my_priority")
       .then(setPri)
       .catch(() => {});
-  }, [myId, hasSeat, pulse]);
+  }, [myId, hasSeat, pulse, status?.reservation?.seat_id]);
   const { busy, run } = useAction((m) => toast(m, "error"));
   const [ask, setAsk] = useState<"cancel" | "away" | "return" | null>(null);
   const { home, error, reload } = useHome();
@@ -221,7 +221,7 @@ export default function HomePage() {
       {pri && new Date(pri.expires_at).getTime() > now && (
         <Link href={`/s/${pri.token}`} className="flex items-center gap-3 rounded-[var(--radius-panel)] bg-du-deep px-4 py-3 text-white transition-colors duration-150 hover:bg-du-deep-dark">
           <span className="min-w-0 flex-1">
-            <span className="block text-[13px] font-medium text-white/85">우선 예약 · {pri.room_name}</span>
+            <span className="block text-[13px] font-medium text-white/85">{hasSeat ? "좌석 바꾸기" : "우선 예약"} · {pri.room_name}</span>
             <span className="block text-lg font-bold leading-tight">{pri.seat_label}</span>
           </span>
           <span className="tabular shrink-0 rounded-full bg-white/20 px-3 py-1 text-sm font-bold">{fmtRemain(new Date(pri.expires_at).getTime() - now)}</span>

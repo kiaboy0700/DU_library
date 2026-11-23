@@ -259,7 +259,7 @@ export function QrScanner({
             </h3>
             <dl className="mt-3 grid grid-cols-2 gap-2 text-sm">
               <div className="rounded-[var(--radius-ctl)] bg-canvas px-3 py-2">
-                <dt className="text-xs text-muted">찍은 좌석 · {wrong.ctx.seat.is_active ? STATE_LABEL[wrong.ctx.state] : "사용 중지"}</dt>
+                <dt className="text-xs text-muted">찍은 좌석 · {!wrong.ctx.seat.is_active ? "사용 중지" : wrong.ctx.priority_until ? "바꿀 수 있음" : STATE_LABEL[wrong.ctx.state]}</dt>
                 <dd className="text-xl font-bold">{wrong.ctx.seat.label}</dd>
               </div>
               <div className="rounded-[var(--radius-ctl)] bg-du-tint px-3 py-2">
@@ -268,7 +268,7 @@ export function QrScanner({
               </div>
             </dl>
             <div className="mt-4 space-y-2">
-              {wrong.ctx.seat.is_active && wrong.ctx.state === "free" && wrong.ctx.is_open && !wrong.ctx.held_by_other && (
+              {wrong.ctx.seat.is_active && (wrong.ctx.state === "free" || !!wrong.ctx.priority_until) && wrong.ctx.is_open && !wrong.ctx.held_by_other && (
                 <Button variant="primary" size="lg" className="w-full" busy={busy} onClick={switchSeat}>
                   {wrong.ctx.seat.label}(으)로 바꿔 {mine.status === "reserved" ? "체크인" : "복귀"}
                 </Button>
@@ -278,7 +278,7 @@ export function QrScanner({
                   {wrong.ctx.seat.label} 남은 시간 보기 · 자리비움 신고
                 </Button>
               )}
-              <Button variant={wrong.ctx.state === "free" && wrong.ctx.seat.is_active ? "secondary" : "primary"} size="lg" className="w-full" disabled={busy} onClick={again}>
+              <Button variant={(wrong.ctx.state === "free" || !!wrong.ctx.priority_until) && wrong.ctx.seat.is_active ? "secondary" : "primary"} size="lg" className="w-full" disabled={busy} onClick={again}>
                 내 좌석 {mine.seat_label} QR 다시 찍기
               </Button>
             </div>
