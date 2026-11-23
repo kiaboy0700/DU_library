@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { Ban, Check, Clock, Inbox, MapPin, Package, Undo2 } from "lucide-react";
+import { Ban, Check, Clock, Inbox, MapPin, Package, Search, Undo2, X } from "lucide-react";
 import { HelpChat } from "@/components/HelpChat";
 import { useApp } from "@/components/Providers";
 import { ActionRow, Button, Confirm, Empty, FoldPanel, GraceControl, Panel, Skeleton, Tag, inputClass, useAction, useNow } from "@/components/ui";
@@ -56,18 +56,23 @@ interface Appeal {
 }
 interface Item {
   id: number;
+  code: string;
+  items: string[];
+  status: "stored" | "picked" | "disposed";
+  closed_at: string | null;
   memo: string;
   place: string;
   until_at: string;
   created_at: string;
-  name: string;
-  student_id: string;
+  name: string | null;
+  student_id: string | null;
   seat: string | null;
 }
 interface Storage {
   place: string;
   hours: string;
   days: number;
+  count: number;
   items: Item[];
 }
 interface Overview {
@@ -88,7 +93,10 @@ export default function AdminReports() {
   // 보관 중인 짐과 보관 안내(장소·시간·기간)
   const [store, setStore] = useState<Storage | null>(null);
   const [storeForm, setStoreForm] = useState<{ place: string; hours: string; days: number } | null>(null);
-  const [newItem, setNewItem] = useState({ sid: "", memo: "" });
+  const [newItem, setNewItem] = useState({ sid: "", memo: "", where: "" });
+  // 보관 번호·학번·이름으로 찾기, 방금 등록한 묶음의 번호
+  const [itemQ, setItemQ] = useState("");
+  const [lastCode, setLastCode] = useState<{ code: string; count: number } | null>(null);
   const { busy, run } = useAction((m) => toast(m, "error"));
   // 이 화면을 마지막으로 본 시각. 그 뒤에 들어온 건은 '새로 들어옴'으로 표시한다
   const [seenAt] = useState(() => {
@@ -116,9 +124,9 @@ export default function AdminReports() {
     () =>
       Promise.all([
         rpc<Overview>("admin_overview").then(setOv),
-        rpc<Storage>("admin_items").then(setStore),
+        rpc<Storage>("admin_items", { p_q: itemQ.trim() || null }).then(setStore),
       ]).catch(() => {}),
-    [],
+    [itemQ],
   );
   useEffect(() => {
     load();
@@ -147,7 +155,7 @@ export default function AdminReports() {
               ["rep", "자리비움 신고", ov.reports.length],
               ["help", "도움 요청", ov.helps.length],
               ["ap", "이의신청", ov.appeals.length],
-              ["item", "보관 중인 짐", store?.items.length ?? 0],
+              ["item", "짐·분실물", store?.count ?? 0],
             ] as const
           ).map(([key, label, n]) => (
             <button
@@ -244,7 +252,7 @@ export default function AdminReports() {
                       <input
                         className={inputClass}
                         aria-label="보관할 짐"
-                        placeholder="보관할 짐 (있으면)"
+                        placeholder="보관할 짐 · 쉼표로 여러 개"
                         maxLength={200}
                         value={text[`i${r.id}`] ?? ""}
                         onChange={(e) => setText({ ...text, [`i${r.id}`]: e.target.value })}
@@ -258,7 +266,7 @@ export default function AdminReports() {
                             async () => {
                               await rpc("admin_resolve_report", { p_report: r.id, p_decision: "confirm" });
                               const memo = (text[`i${r.id}`] ?? "").trim();
-                              if (memo) await rpc("admin_store_item", { p_memo: memo, p_report: r.id });
+                              if (memo) setLastCode(await rpc<{ code: string; count: number }>("admin_store_item", { p_memo: memo, p_report: r.id }));
                             },
                             (text[`i${r.id}`] ?? "").trim() ? "반납 처리하고 짐 보관을 등록했습니다." : "반납 처리하고 벌점을 부여했습니다.",
                           )
@@ -443,10 +451,29 @@ export default function AdminReports() {
           </div>
         </section>
       )}
+      {/* 방금 등록한 묶음의 번호: 짐에 적어 붙인다 */}
+      {lastCode && (
+        <div role="status" className="rise flex items-center gap-3 rounded-[var(--radius-panel)] bg-du-deep p-4 text-white">
+          <Package size={24} className="shrink-0" aria-hidden />
+          <div className="min-w-0 flex-1">
+            <p className="text-[13px] text-white/85">보관 번호 · 짐에 적어 주세요</p>
+            <p className="font-mono text-[22px] font-bold leading-tight tracking-tight">{lastCode.code}</p>
+            {lastCode.count > 1 && (
+              <p className="tabular text-[13px] text-white/85">
+                짐마다 -1 ~ -{lastCode.count}
+              </p>
+            )}
+          </div>
+          <button type="button" aria-label="닫기" onClick={() => setLastCode(null)} className="grid size-10 shrink-0 place-items-center rounded-lg hover:bg-white/15">
+            <X size={18} aria-hidden />
+          </button>
+        </div>
+      )}
+
       {store && (tab === "item" || (tab === "all" && store.items.length > 0)) && (
         <section aria-labelledby="item-h">
           <h2 id="item-h" className="text-lg font-bold">
-            보관 중인 짐 <span className="tabular text-muted">{store.items.length}</span>
+            짐·분실물 <span className="tabular text-muted">{store.count}</span>
           </h2>
 
           {tab === "item" && (
@@ -490,17 +517,19 @@ export default function AdminReports() {
               </Panel>
               {/* 신고와 상관없이 짐을 보관하게 됐을 때 */}
               <Panel className="p-4">
-                <h3 className="text-[13px] font-bold">짐 등록</h3>
+                <h3 className="text-[13px] font-bold">짐·분실물 등록</h3>
                 <form
                   className="mt-2 grid gap-2"
                   onSubmit={(e) => {
                     e.preventDefault();
-                    act("ni", () => rpc("admin_store_item", { p_memo: newItem.memo, p_student: newItem.sid }), "짐 보관을 등록했습니다.").then(() => setNewItem({ sid: "", memo: "" }));
+                    act("ni", async () => setLastCode(await rpc<{ code: string; count: number }>("admin_store_item", { p_memo: newItem.memo, p_student: newItem.sid || null, p_where: newItem.where || null })), "보관을 등록했습니다.").then(() => setNewItem({ sid: "", memo: "", where: "" }));
                   }}
                 >
+                  <input className={inputClass} aria-label="보관한 물건" placeholder="물건 · 쉼표로 여러 개" required maxLength={200} value={newItem.memo} onChange={(e) => setNewItem({ ...newItem, memo: e.target.value })} />
+                  {/* 주인을 알면 학번, 분실물이면 발견한 곳. 둘 중 하나는 있어야 한다 */}
                   <div className="grid grid-cols-[7.5rem_minmax(0,1fr)] gap-2">
-                    <input className={`${inputClass} tabular`} aria-label="학번" placeholder="학번" required value={newItem.sid} onChange={(e) => setNewItem({ ...newItem, sid: e.target.value })} />
-                    <input className={inputClass} aria-label="보관한 물건" placeholder="보관한 물건" required maxLength={200} value={newItem.memo} onChange={(e) => setNewItem({ ...newItem, memo: e.target.value })} />
+                    <input className={`${inputClass} tabular`} aria-label="학번 (주인을 알 때)" placeholder="학번" value={newItem.sid} onChange={(e) => setNewItem({ ...newItem, sid: e.target.value })} />
+                    <input className={inputClass} aria-label="발견한 곳" placeholder="발견한 곳" maxLength={60} required={!newItem.sid.trim()} value={newItem.where} onChange={(e) => setNewItem({ ...newItem, where: e.target.value })} />
                   </div>
                   <Button type="submit" variant="primary" busy={busy === "ni"}>
                     등록
@@ -510,10 +539,16 @@ export default function AdminReports() {
             </div>
           )}
 
+          {tab === "item" && (
+            <label className="relative mt-2 block">
+              <Search size={18} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" aria-hidden />
+              <input className={`${inputClass} pl-10`} aria-label="보관 번호·학번·이름·물건으로 찾기" placeholder="보관 번호 · 학번 · 이름 · 물건" value={itemQ} onChange={(e) => setItemQ(e.target.value)} />
+            </label>
+          )}
           <div className="mt-2 space-y-2">
             {store.items.length === 0 && tab === "item" && (
               <Panel>
-                <Empty icon={<Package size={36} strokeWidth={1.6} aria-hidden />} title="보관 중인 짐이 없습니다" />
+                <Empty icon={<Package size={36} strokeWidth={1.6} aria-hidden />} title={itemQ.trim() ? "찾는 짐이 없습니다" : "보관 중인 짐이 없습니다"} />
               </Panel>
             )}
             {store.items.map((it, i) => {
@@ -521,33 +556,58 @@ export default function AdminReports() {
               return (
                 <FoldPanel
                   key={it.id}
-                  defaultOpen={i === 0 && tab === "item"}
+                  defaultOpen={(i === 0 && tab === "item") || !!itemQ.trim()}
                   head={
                     <>
-                      <span className="font-bold">{it.memo}</span>
-                      <span className="text-sm text-muted">{it.name}</span>
-                      <Tag tone={over ? "danger" : "warn"}>
-                        <span className="tabular">{over ? "기한 지남" : `${fmtDate(it.until_at)}까지`}</span>
-                      </Tag>
+                      <span className="font-mono text-base font-bold">{it.code}</span>
+                      <span className="text-sm text-muted">
+                        {it.name ?? "분실물"} · {it.items.length}개
+                      </span>
+                      {it.status === "stored" ? (
+                        <Tag tone={over ? "danger" : "warn"}>
+                          <span className="tabular">{over ? "기한 지남" : `${fmtDate(it.until_at)}까지`}</span>
+                        </Tag>
+                      ) : (
+                        <Tag>{it.status === "picked" ? "찾아감" : "처분"}</Tag>
+                      )}
                     </>
                   }
                 >
                   <p className="text-sm text-[#3d4744]">
-                    {it.name} <span className="tabular text-muted">{it.student_id}</span>
+                    {it.name ? (
+                      <>
+                        {it.name} <span className="tabular text-muted">{it.student_id}</span>
+                      </>
+                    ) : (
+                      "주인 모름"
+                    )}
                     {it.seat && ` · ${it.seat}`}
                   </p>
                   <p className="tabular text-[13px] text-muted">
                     {fmtDateTime(it.created_at)} 보관 · {it.place}
+                    {it.closed_at && ` · ${fmtDateTime(it.closed_at)} ${it.status === "picked" ? "찾아감" : "처분"}`}
                   </p>
-                  <ActionRow wide={2} className="mt-3">
-                    <Button variant="primary" busy={busy === `ip${it.id}`} onClick={() => act(`ip${it.id}`, () => rpc("admin_item_done", { p_item: it.id, p_status: "picked" }), "찾아간 것으로 처리했습니다.")}>
-                      <Check size={16} aria-hidden />
-                      찾아감
-                    </Button>
-                    <Button variant="softDanger" busy={busy === `id${it.id}`} disabled={!over} title={over ? undefined : "보관 기한이 지난 뒤에 처분할 수 있습니다"} onClick={() => act(`id${it.id}`, () => rpc("admin_item_done", { p_item: it.id, p_status: "disposed" }), "처분한 것으로 처리했습니다.")}>
-                      처분
-                    </Button>
-                  </ActionRow>
+                  <ol className="mt-2 divide-y divide-line overflow-hidden rounded-[var(--radius-ctl)] border border-line">
+                    {it.items.map((name, n) => (
+                      <li key={n} className="flex items-center gap-3 px-3 py-2 text-sm">
+                        <span className="font-mono text-[13px] font-semibold text-du-deep-dark">
+                          {it.code}-{n + 1}
+                        </span>
+                        <span className="min-w-0 flex-1 font-semibold">{name}</span>
+                      </li>
+                    ))}
+                  </ol>
+                  {it.status === "stored" && (
+                    <ActionRow wide={2} className="mt-3">
+                      <Button variant="primary" busy={busy === `ip${it.id}`} onClick={() => act(`ip${it.id}`, () => rpc("admin_item_done", { p_item: it.id, p_status: "picked" }), "찾아간 것으로 처리했습니다.")}>
+                        <Check size={16} aria-hidden />
+                        찾아감
+                      </Button>
+                      <Button variant="softDanger" busy={busy === `id${it.id}`} disabled={!over} title={over ? undefined : "보관 기한이 지난 뒤에 처분할 수 있습니다"} onClick={() => act(`id${it.id}`, () => rpc("admin_item_done", { p_item: it.id, p_status: "disposed" }), "처분한 것으로 처리했습니다.")}>
+                        처분
+                      </Button>
+                    </ActionRow>
+                  )}
                 </FoldPanel>
               );
             })}

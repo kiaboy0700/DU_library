@@ -56,13 +56,22 @@ export default function MePage() {
       .catch(() => {});
   }, [uid, pulse]);
   // 관리자가 보관하고 있는 내 짐
-  const [items, setItems] = useState<{ id: number; memo: string; place: string; hours: string | null; until_at: string; seat: string | null }[]>([]);
+  const [items, setItems] = useState<{ id: number; code: string; items: string[]; memo: string; place: string; hours: string | null; until_at: string; seat: string | null }[]>([]);
   useEffect(() => {
     if (!uid) return;
     rpc<typeof items>("my_items")
       .then(setItems)
       .catch(() => {});
   }, [uid, pulse]);
+  // 주인을 찾는 분실물 (누구나 볼 수 있다)
+  const [lost, setLost] = useState<{ place: string; hours: string; items: { id: number; code: string; items: string[]; found_at: string | null; created_at: string }[] } | null>(null);
+  useEffect(() => {
+    if (!uid) return;
+    rpc<typeof lost>("lost_items")
+      .then(setLost)
+      .catch(() => {});
+  }, [uid]);
+  const lostFold = useFold(lost?.items ?? [], 3);
   // 허위 신고로 기록된 내 신고와 이의신청
   const [falseReports, setFalseReports] = useState<{ id: number; seat_label: string; room_name: string; created_at: string; appeal: { status: "open" | "approved" | "rejected"; reply: string | null } | null }[]>([]);
   const [falseFor, setFalseFor] = useState<number | null>(null);
@@ -451,14 +460,23 @@ export default function MePage() {
                       <Package size={20} aria-hidden />
                     </span>
                     <div className="min-w-0 flex-1">
-                      <p className="font-bold">{it.memo}</p>
+                      <p className="text-xs text-muted">보관 번호</p>
+                      <p className="font-mono text-xl font-bold leading-tight">{it.code}</p>
                       {it.seat && <p className="text-[13px] text-muted">{it.seat}</p>}
                     </div>
                     <Tag tone={left < 2 * 86400_000 ? "danger" : "warn"}>
                       <span className="tabular">{fmtDate(it.until_at)}까지</span>
                     </Tag>
                   </div>
-                  <dl className="mt-3 grid grid-cols-2 gap-2 text-sm">
+                  <ol className="mt-3 divide-y divide-line overflow-hidden rounded-[var(--radius-ctl)] border border-line">
+                    {it.items.map((name, n) => (
+                      <li key={n} className="flex items-center gap-3 px-3 py-2 text-sm">
+                        <span className="font-mono text-[13px] font-semibold text-du-deep-dark">-{n + 1}</span>
+                        <span className="min-w-0 flex-1 font-semibold">{name}</span>
+                      </li>
+                    ))}
+                  </ol>
+                  <dl className="mt-2 grid grid-cols-2 gap-2 text-sm">
                     <div className="rounded-[var(--radius-ctl)] bg-canvas px-3 py-2">
                       <dt className="text-xs text-muted">찾는 곳</dt>
                       <dd className="font-semibold">{it.place}</dd>
@@ -719,6 +737,33 @@ export default function MePage() {
           )}
         </Panel>
       </section>
+
+      {lost && lost.items.length > 0 && (
+        <section aria-labelledby="lost-h">
+          <div className="flex flex-wrap items-baseline justify-between gap-x-3">
+            <h2 id="lost-h" className="text-[17px] font-bold">
+              분실물 <span className="tabular text-muted">{lost.items.length}</span>
+            </h2>
+            <p className="text-sm text-muted">
+              {lost.place} · {lost.hours}
+            </p>
+          </div>
+          <Panel className="mt-2 overflow-hidden">
+            <ul className="divide-y divide-line">
+              {lostFold.shown.map((it) => (
+                <li key={it.id} className="px-4 py-3">
+                  <p className="font-semibold">{it.items.join(", ")}</p>
+                  <p className="text-[13px] text-muted">
+                    <span className="font-mono font-semibold text-du-deep-dark">{it.code}</span>
+                    {it.found_at && ` · ${it.found_at}`} · <span className="tabular">{fmtDate(it.created_at)}</span>
+                  </p>
+                </li>
+              ))}
+            </ul>
+            {lostFold.toggle}
+          </Panel>
+        </section>
+      )}
 
       <section aria-labelledby="acct-h">
         <h2 id="acct-h" className="text-[17px] font-bold">
