@@ -8,7 +8,7 @@ import { OccupancyMeter } from "@/components/OccupancyMeter";
 import { useApp } from "@/components/Providers";
 import { HelpChat } from "@/components/HelpChat";
 import { QrScanner } from "@/components/QrScanner";
-import { Button, Empty, Field, Notice, Panel, Skeleton, Tag, inputClass, useAction, useFold, useNow } from "@/components/ui";
+import { Button, Confirm, Empty, Field, Notice, Panel, Skeleton, Tag, inputClass, useAction, useFold, useNow } from "@/components/ui";
 import { ruleTexts, useSettings } from "@/lib/hooks";
 import { rpc, supabase } from "@/lib/supabase";
 import { MODE_LABEL, SEAT_TYPE_LABEL, type Penalty, type SeatContext } from "@/lib/types";
@@ -47,14 +47,16 @@ export default function MePage() {
   const [rooms, setRooms] = useState<{ id: number; name: string }[]>([]);
   const [myHelp, setMyHelp] = useState<{ id: number; reason: string; message: string | null; created_at: string; seat_label: string | null; room_name: string | null } | null>(null);
   const helpOpen = !!status?.help_open;
-  // 내가 한 신고 중 관리자가 대화를 연 것
-  const [myReports, setMyReports] = useState<{ id: number; seat_label: string; room_name: string; created_at: string; chat: boolean }[]>([]);
+  // 내가 한 신고 중 처리 중인 것
+  const [myReports, setMyReports] = useState<{ id: number; seat_label: string; room_name: string; created_at: string; stage: "received" | "checking"; chat: boolean }[]>([]);
+  const [cancelRep, setCancelRep] = useState<number | null>(null);
+  const [cancelHelp, setCancelHelp] = useState(false);
   useEffect(() => {
     if (!uid) return;
     rpc<typeof myReports>("my_reports")
-      .then((r) => setMyReports(r.filter((x) => x.chat)))
+      .then(setMyReports)
       .catch(() => {});
-  }, [uid, pulse]);
+  }, [uid, pulse, cancelRep]);
   // 관리자가 보관하고 있는 내 짐
   const [items, setItems] = useState<{ id: number; code: string; items: string[]; memo: string; place: string; hours: string | null; until_at: string; seat: string | null }[]>([]);
   useEffect(() => {
@@ -497,6 +499,38 @@ export default function MePage() {
         </section>
       )}
 
+      {cancelRep !== null && (
+        <Confirm
+          title="신고 취소"
+          confirmLabel="신고 취소"
+          danger
+          busy={busy === "crep"}
+          onClose={() => setCancelRep(null)}
+          onConfirm={() =>
+            act("crep", async () => {
+              await rpc("cancel_report", { p_report: cancelRep });
+              toast("신고를 취소했습니다.", "ok");
+            }).then(() => setCancelRep(null))
+          }
+        />
+      )}
+      {cancelHelp && (
+        <Confirm
+          title="도움 요청 취소"
+          confirmLabel="요청 취소"
+          danger
+          busy={busy === "chelp"}
+          onClose={() => setCancelHelp(false)}
+          onConfirm={() =>
+            act("chelp", async () => {
+              await rpc("cancel_help");
+              toast("도움 요청을 취소했습니다.", "ok");
+            }).then(() => setCancelHelp(false))
+          }
+        >
+          멈춰 있던 자동 취소·반납·벌점이 다시 적용됩니다.
+        </Confirm>
+      )}
       {(myReports.length > 0 || falseReports.length > 0) && (
         <section aria-labelledby="reports-h" id="reports">
           <h2 id="reports-h" className="text-[17px] font-bold">
@@ -505,11 +539,19 @@ export default function MePage() {
           <div className="mt-2 space-y-2">
             {myReports.map((r) => (
               <Panel key={r.id} className="p-4">
-                <p className="font-bold">
-                  {r.room_name} {r.seat_label} <span className="text-sm font-normal text-muted">자리비움 신고</span>
-                </p>
-                <p className="tabular text-[13px] text-muted">{fmtDateTime(r.created_at)} 접수</p>
-                <HelpChat kind="report" helpId={r.id} className="mt-3" />
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="font-bold">
+                      {r.room_name} {r.seat_label}
+                    </p>
+                    <p className="tabular text-[13px] text-muted">{fmtDateTime(r.created_at)} 신고</p>
+                  </div>
+                  <Tag tone={r.stage === "checking" ? "deep" : "warn"}>{r.stage === "checking" ? "관리자 확인 중" : "이용자 응답 대기"}</Tag>
+                </div>
+                {r.chat && <HelpChat kind="report" helpId={r.id} className="mt-3" />}
+                <Button className="mt-3 w-full" onClick={() => setCancelRep(r.id)}>
+                  신고 취소
+                </Button>
               </Panel>
             ))}
             {falseReports.map((r) => (
@@ -588,6 +630,9 @@ export default function MePage() {
               </div>
             </div>
             {myHelp && <HelpChat helpId={myHelp.id} className="mt-3" />}
+            <Button className="mt-3 w-full" onClick={() => setCancelHelp(true)}>
+              요청 취소
+            </Button>
             </>
           ) : open === "help" ? (
             <form

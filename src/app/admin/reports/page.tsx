@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { Ban, Check, Clock, Inbox, MapPin, Package, Search, Undo2, X } from "lucide-react";
+import { Ban, Check, Clock, Eye, Inbox, MapPin, Package, Search, Undo2, X } from "lucide-react";
 import { HelpChat } from "@/components/HelpChat";
 import { useApp } from "@/components/Providers";
 import { ActionRow, Button, Confirm, Empty, FoldPanel, GraceControl, Panel, Skeleton, Tag, inputClass, useAction, useNow } from "@/components/ui";
@@ -20,6 +20,7 @@ interface Report {
   owner_sid: string;
   reporter_name: string;
   reporter_sid: string;
+  stage: "received" | "checking";
   end_at: string;
   checked_in_at: string | null;
   extend_count: number;
@@ -75,10 +76,30 @@ interface Storage {
   count: number;
   items: Item[];
 }
+/** 관리자가 손대기 전에 끝난 건: 어떻게 끝났는지 한동안 보여 준다 */
+interface RecentReport {
+  id: number;
+  resolved_at: string;
+  seat_label: string;
+  room_name: string;
+  owner_name: string;
+  reporter_name: string;
+  how: "cancelled" | "returned" | "auto" | "closed";
+}
+interface RecentHelp {
+  id: number;
+  resolved_at: string;
+  reason: string;
+  name: string;
+  student_id: string;
+}
+const HOW: Record<RecentReport["how"], string> = { cancelled: "신고자가 취소", returned: "이용자가 돌아옴", auto: "자동 반납", closed: "이용자가 반납" };
 interface Overview {
   reports: Report[];
   helps: Help[];
   appeals: Appeal[];
+  recent_reports: RecentReport[];
+  recent_helps: RecentHelp[];
 }
 
 export default function AdminReports() {
@@ -213,9 +234,13 @@ export default function AdminReports() {
                         {r.room_name} {r.seat_label}
                       </span>
                       {fresh(r.created_at)}
-                      <Tag tone={left < 180_000 ? "danger" : "warn"}>
-                        <span className="tabular">{left > 0 ? `자동 반납까지 ${fmtRemain(left)}` : "곧 자동 처리"}</span>
-                      </Tag>
+                      {r.stage === "checking" ? (
+                        <Tag tone="deep">확인 중 · 자동 반납 멈춤</Tag>
+                      ) : (
+                        <Tag tone={left < 180_000 ? "danger" : "warn"}>
+                          <span className="tabular">{left > 0 ? `자동 반납까지 ${fmtRemain(left)}` : "곧 자동 처리"}</span>
+                        </Tag>
+                      )}
                     </>
                   }
                 >
@@ -245,6 +270,13 @@ export default function AdminReports() {
                       </div>
                     </dl>
                     <HelpChat kind="report" helpId={r.id} admin className="mt-3 max-w-xl" />
+                    {/* 확인하러 가기 전에 누른다: 이용자와 신고자에게 알리고, 결론을 낼 때까지 자동 반납을 멈춘다 */}
+                    {r.stage !== "checking" && (
+                      <Button variant="soft" className="mt-3 w-full" busy={busy === `rk${r.id}`} onClick={() => act(`rk${r.id}`, () => rpc("admin_report_check", { p_report: r.id }), "확인 중으로 바꿨습니다. 자동 반납이 멈춥니다.")}>
+                        <Eye size={16} aria-hidden />
+                        확인 시작
+                      </Button>
+                    )}
                     {/* 자리에 짐이 있었으면 적어 둔다: 반납 확정과 함께 보관 기록이 만들어지고 이용자에게 찾는 곳·기한이 간다 */}
                     <label className="mt-3 flex items-center gap-2">
                       <Package size={18} className="shrink-0 text-muted" aria-hidden />
@@ -450,6 +482,41 @@ export default function AdminReports() {
           </div>
         </section>
       )}
+      {/* 관리자가 처리하기 전에 끝난 건: 사라지지 않고 어떻게 끝났는지 한 시간 동안 남는다 */}
+      {(tab === "all" || tab === "rep" || tab === "help") && (tab !== "help" ? ov.recent_reports.length : 0) + (tab !== "rep" ? ov.recent_helps.length : 0) > 0 && (
+        <section aria-labelledby="recent-h">
+          <h2 id="recent-h" className="text-lg font-bold">
+            방금 끝난 건
+          </h2>
+          <Panel className="mt-2 overflow-hidden">
+            <ul className="divide-y divide-line">
+              {tab !== "help" &&
+                ov.recent_reports.map((r) => (
+                  <li key={`r${r.id}`} className="flex flex-wrap items-center gap-x-2 gap-y-1 px-4 py-3">
+                    <span className="font-bold">
+                      {r.room_name} {r.seat_label}
+                    </span>
+                    <Tag tone={r.how === "cancelled" ? "warn" : r.how === "returned" ? "deep" : "neutral"}>{HOW[r.how]}</Tag>
+                    <span className="w-full text-[13px] text-muted">
+                      이용자 {r.owner_name} · 신고자 {r.reporter_name} · <span className="tabular">{fmtTime(r.resolved_at)}</span>
+                    </span>
+                  </li>
+                ))}
+              {tab !== "rep" &&
+                ov.recent_helps.map((h) => (
+                  <li key={`h${h.id}`} className="flex flex-wrap items-center gap-x-2 gap-y-1 px-4 py-3">
+                    <span className="font-bold">{h.reason}</span>
+                    <Tag tone="warn">학생이 취소</Tag>
+                    <span className="w-full text-[13px] text-muted">
+                      {h.name} <span className="tabular">{h.student_id}</span> · <span className="tabular">{fmtTime(h.resolved_at)}</span>
+                    </span>
+                  </li>
+                ))}
+            </ul>
+          </Panel>
+        </section>
+      )}
+
       {/* 방금 등록한 묶음의 번호: 짐에 적어 붙인다 */}
       {lastCode && (
         <div role="status" className="rise flex items-center gap-3 rounded-[var(--radius-panel)] bg-du-deep p-4 text-white">
