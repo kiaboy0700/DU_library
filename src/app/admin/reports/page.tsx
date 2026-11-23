@@ -93,7 +93,6 @@ export default function AdminReports() {
   // 보관 중인 짐과 보관 안내(장소·시간·기간)
   const [store, setStore] = useState<Storage | null>(null);
   const [storeForm, setStoreForm] = useState<{ place: string; hours: string; days: number } | null>(null);
-  const [newItem, setNewItem] = useState({ sid: "", memo: "", where: "" });
   // 보관 번호·학번·이름으로 찾기, 방금 등록한 묶음의 번호
   const [itemQ, setItemQ] = useState("");
   const [lastCode, setLastCode] = useState<{ code: string; count: number } | null>(null);
@@ -155,7 +154,7 @@ export default function AdminReports() {
               ["rep", "자리비움 신고", ov.reports.length],
               ["help", "도움 요청", ov.helps.length],
               ["ap", "이의신청", ov.appeals.length],
-              ["item", "짐·분실물", store?.count ?? 0],
+              ["item", "보관 중인 짐", store?.count ?? 0],
             ] as const
           ).map(([key, label, n]) => (
             <button
@@ -473,11 +472,11 @@ export default function AdminReports() {
       {store && (tab === "item" || (tab === "all" && store.items.length > 0)) && (
         <section aria-labelledby="item-h">
           <h2 id="item-h" className="text-lg font-bold">
-            짐·분실물 <span className="tabular text-muted">{store.count}</span>
+            보관 중인 짐 <span className="tabular text-muted">{store.count}</span>
           </h2>
 
           {tab === "item" && (
-            <div className="mt-2 grid gap-2 lg:grid-cols-2">
+            <div className="mt-2">
               {/* 보관 안내: 신고로 반납될 때 이용자에게 자동으로 가는 내용 */}
               <Panel className="p-4">
                 <h3 className="text-[13px] font-bold">보관 안내</h3>
@@ -515,34 +514,13 @@ export default function AdminReports() {
                   </div>
                 )}
               </Panel>
-              {/* 신고와 상관없이 짐을 보관하게 됐을 때 */}
-              <Panel className="p-4">
-                <h3 className="text-[13px] font-bold">짐·분실물 등록</h3>
-                <form
-                  className="mt-2 grid gap-2"
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    act("ni", async () => setLastCode(await rpc<{ code: string; count: number }>("admin_store_item", { p_memo: newItem.memo, p_student: newItem.sid || null, p_where: newItem.where || null })), "보관을 등록했습니다.").then(() => setNewItem({ sid: "", memo: "", where: "" }));
-                  }}
-                >
-                  <input className={inputClass} aria-label="보관한 물건" placeholder="물건 · 쉼표로 여러 개" required maxLength={200} value={newItem.memo} onChange={(e) => setNewItem({ ...newItem, memo: e.target.value })} />
-                  {/* 주인을 알면 학번, 분실물이면 발견한 곳. 둘 중 하나는 있어야 한다 */}
-                  <div className="grid grid-cols-[7.5rem_minmax(0,1fr)] gap-2">
-                    <input className={`${inputClass} tabular`} aria-label="학번 (주인을 알 때)" placeholder="학번" value={newItem.sid} onChange={(e) => setNewItem({ ...newItem, sid: e.target.value })} />
-                    <input className={inputClass} aria-label="발견한 곳" placeholder="발견한 곳" maxLength={60} required={!newItem.sid.trim()} value={newItem.where} onChange={(e) => setNewItem({ ...newItem, where: e.target.value })} />
-                  </div>
-                  <Button type="submit" variant="primary" busy={busy === "ni"}>
-                    등록
-                  </Button>
-                </form>
-              </Panel>
             </div>
           )}
 
           {tab === "item" && (
             <label className="relative mt-2 block">
               <Search size={18} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" aria-hidden />
-              <input className={`${inputClass} pl-10`} aria-label="보관 번호·학번·이름·물건으로 찾기" placeholder="보관 번호 · 학번 · 이름 · 물건" value={itemQ} onChange={(e) => setItemQ(e.target.value)} />
+              <input className={`${inputClass} pl-10`} aria-label="보관 번호·학번·이름으로 찾기" placeholder="보관 번호 · 학번 · 이름" value={itemQ} onChange={(e) => setItemQ(e.target.value)} />
             </label>
           )}
           <div className="mt-2 space-y-2">
@@ -561,7 +539,7 @@ export default function AdminReports() {
                     <>
                       <span className="font-mono text-base font-bold">{it.code}</span>
                       <span className="text-sm text-muted">
-                        {it.name ?? "분실물"} · {it.items.length}개
+                        {it.name} · {it.items.length}개
                       </span>
                       {it.status === "stored" ? (
                         <Tag tone={over ? "danger" : "warn"}>
@@ -574,13 +552,7 @@ export default function AdminReports() {
                   }
                 >
                   <p className="text-sm text-[#3d4744]">
-                    {it.name ? (
-                      <>
-                        {it.name} <span className="tabular text-muted">{it.student_id}</span>
-                      </>
-                    ) : (
-                      "주인 모름"
-                    )}
+                    {it.name} <span className="tabular text-muted">{it.student_id}</span>
                     {it.seat && ` · ${it.seat}`}
                   </p>
                   <p className="tabular text-[13px] text-muted">

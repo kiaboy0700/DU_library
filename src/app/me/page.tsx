@@ -63,15 +63,6 @@ export default function MePage() {
       .then(setItems)
       .catch(() => {});
   }, [uid, pulse]);
-  // 주인을 찾는 분실물 (누구나 볼 수 있다)
-  const [lost, setLost] = useState<{ place: string; hours: string; items: { id: number; code: string; items: string[]; found_at: string | null; created_at: string }[] } | null>(null);
-  useEffect(() => {
-    if (!uid) return;
-    rpc<typeof lost>("lost_items")
-      .then(setLost)
-      .catch(() => {});
-  }, [uid]);
-  const lostFold = useFold(lost?.items ?? [], 3);
   // 허위 신고로 기록된 내 신고와 이의신청
   const [falseReports, setFalseReports] = useState<{ id: number; seat_label: string; room_name: string; created_at: string; appeal: { status: "open" | "approved" | "rejected"; reply: string | null } | null }[]>([]);
   const [falseFor, setFalseFor] = useState<number | null>(null);
@@ -486,6 +477,7 @@ export default function MePage() {
                       <dd className="font-semibold">{it.hours || "-"}</dd>
                     </div>
                   </dl>
+                  <p className="mt-2 text-[13px] font-semibold text-danger">보관 기간이 지나면 폐기될 수 있습니다</p>
                   <Button
                     className="mt-3 w-full"
                     disabled={status.help_open}
@@ -737,33 +729,6 @@ export default function MePage() {
           )}
         </Panel>
       </section>
-
-      {lost && lost.items.length > 0 && (
-        <section aria-labelledby="lost-h">
-          <div className="flex flex-wrap items-baseline justify-between gap-x-3">
-            <h2 id="lost-h" className="text-[17px] font-bold">
-              분실물 <span className="tabular text-muted">{lost.items.length}</span>
-            </h2>
-            <p className="text-sm text-muted">
-              {lost.place} · {lost.hours}
-            </p>
-          </div>
-          <Panel className="mt-2 overflow-hidden">
-            <ul className="divide-y divide-line">
-              {lostFold.shown.map((it) => (
-                <li key={it.id} className="px-4 py-3">
-                  <p className="font-semibold">{it.items.join(", ")}</p>
-                  <p className="text-[13px] text-muted">
-                    <span className="font-mono font-semibold text-du-deep-dark">{it.code}</span>
-                    {it.found_at && ` · ${it.found_at}`} · <span className="tabular">{fmtDate(it.created_at)}</span>
-                  </p>
-                </li>
-              ))}
-            </ul>
-            {lostFold.toggle}
-          </Panel>
-        </section>
-      )}
 
       <section aria-labelledby="acct-h">
         <h2 id="acct-h" className="text-[17px] font-bold">
