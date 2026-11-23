@@ -176,14 +176,15 @@ export default function AdminReports() {
                       </div>
                     </dl>
                     <HelpChat kind="report" helpId={r.id} admin className="mt-3 max-w-xl" />
+                    {/* 벌점이 따르는 처리는 빨강, 불이익 없는 처리는 초록, 시간만 늦추는 것은 흰색 */}
                     <ActionRow className="mt-3">
                       <Button variant="danger" busy={busy === `rc${r.id}`} onClick={() => act(`rc${r.id}`, () => rpc("admin_resolve_report", { p_report: r.id, p_decision: "confirm" }), "반납 처리하고 벌점을 부여했습니다.")}>
                         반납 확정
                       </Button>
-                      <Button busy={busy === `rt${r.id}`} onClick={() => act(`rt${r.id}`, () => rpc("admin_resolve_report", { p_report: r.id, p_decision: "returned" }), "복귀를 확인했습니다. 벌점은 없습니다.")}>
+                      <Button className="!border-du-deep/40 !bg-du-tint !text-du-deep-dark" busy={busy === `rt${r.id}`} onClick={() => act(`rt${r.id}`, () => rpc("admin_resolve_report", { p_report: r.id, p_decision: "returned" }), "복귀를 확인했습니다. 벌점은 없습니다.")}>
                         돌아옴
                       </Button>
-                      <Button busy={busy === `rd${r.id}`} onClick={() => setFalseId(r.id)}>
+                      <Button variant="danger" busy={busy === `rd${r.id}`} onClick={() => setFalseId(r.id)}>
                         허위 신고
                       </Button>
                       <Button busy={busy === `re${r.id}`} onClick={() => act(`re${r.id}`, () => rpc("admin_resolve_report", { p_report: r.id, p_decision: "extend" }), "자동 반납을 10분 늦췄습니다.")}>
