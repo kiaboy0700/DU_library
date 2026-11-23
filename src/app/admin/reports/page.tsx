@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Inbox, MapPin } from "lucide-react";
 import { HelpChat } from "@/components/HelpChat";
 import { useApp } from "@/components/Providers";
-import { Button, Empty, Panel, Skeleton, Tag, inputClass, useAction, useNow } from "@/components/ui";
+import { Button, Empty, FoldPanel, GraceControl, Panel, Skeleton, Tag, inputClass, useAction, useNow } from "@/components/ui";
 import { rpc } from "@/lib/supabase";
 import { fmtDateTime, fmtRemain, fmtTime } from "@/lib/util";
 
@@ -20,6 +20,9 @@ interface Report {
   owner_sid: string;
   reporter_name: string;
   reporter_sid: string;
+  end_at: string;
+  checked_in_at: string | null;
+  extend_count: number;
 }
 interface Help {
   id: number;
@@ -34,6 +37,8 @@ interface Help {
   room_id: number | null;
   seat_id: number | null;
   res_status: string | null;
+  end_at: string | null;
+  deadline: string | null;
 }
 interface Appeal {
   id: number;
@@ -113,28 +118,50 @@ export default function AdminReports() {
             자리비움 신고 <span className="tabular text-muted">{ov.reports.length}</span>
           </h2>
           <div className="mt-2 space-y-2">
-            {ov.reports.map((r) => {
+            {ov.reports.map((r, i) => {
               const left = new Date(r.respond_deadline).getTime() - now;
               return (
-                <Panel key={r.id} className="p-4">
-                  <div>
-                    <div className="flex flex-wrap items-start justify-between gap-2">
-                      <div>
-                        <p className="flex flex-wrap items-center gap-2 text-base font-bold">
-                          {r.room_name} {r.seat_label}
-                          {fresh(r.created_at)}
-                        </p>
-                        <p className="text-sm text-[#3d4744]">
-                          이용자 {r.owner_name} <span className="tabular text-muted">{r.owner_sid}</span> · 신고자 {r.reporter_name} <span className="tabular text-muted">{r.reporter_sid}</span>
-                        </p>
-                        <p className="tabular text-[13px] text-muted">
-                          {fmtTime(r.created_at)} 접수 · 당시 이용률 {r.occupancy_pct}%
-                        </p>
-                      </div>
+                <FoldPanel
+                  key={r.id}
+                  defaultOpen={i === 0}
+                  head={
+                    <>
+                      <span className="text-base font-bold">
+                        {r.room_name} {r.seat_label}
+                      </span>
+                      {fresh(r.created_at)}
                       <Tag tone={left < 180_000 ? "danger" : "warn"}>
                         <span className="tabular">{left > 0 ? `자동 반납까지 ${fmtRemain(left)}` : "곧 자동 처리"}</span>
                       </Tag>
-                    </div>
+                    </>
+                  }
+                >
+                  <div>
+                    {/* 누가 쓰던 자리이고 누가 신고했는지 */}
+                    <dl className="grid grid-cols-2 gap-2">
+                      <div className="rounded-[var(--radius-ctl)] bg-canvas px-3 py-2">
+                        <dt className="text-xs font-bold text-muted">이용자</dt>
+                        <dd className="font-bold">{r.owner_name}</dd>
+                        <dd className="tabular text-[13px] text-muted">{r.owner_sid}</dd>
+                        <dd className="tabular mt-1.5 border-t border-line pt-1.5 text-[13px]">
+                          {r.checked_in_at && <span className="block">{fmtTime(r.checked_in_at)} 체크인</span>}
+                          <span className="block">
+                            {r.end_at ? fmtTime(r.end_at) : "-"} 종료 · <b>{r.end_at ? fmtRemain(new Date(r.end_at).getTime() - now) : "-"}</b> 남음
+                          </span>
+                          <span className="block">연장 {r.extend_count}회</span>
+                        </dd>
+                      </div>
+                      <div className="rounded-[var(--radius-ctl)] bg-warn-tint px-3 py-2">
+                        <dt className="text-xs font-bold text-[#5c3d00]">신고자</dt>
+                        <dd className="font-bold">{r.reporter_name}</dd>
+                        <dd className="tabular text-[13px] text-[#5c3d00]">{r.reporter_sid}</dd>
+                        <dd className="tabular mt-1.5 border-t border-warn/30 pt-1.5 text-[13px] text-[#5c3d00]">
+                          <span className="block">{fmtTime(r.created_at)} 신고</span>
+                          <span className="block">당시 이용률 {r.occupancy_pct}%</span>
+                        </dd>
+                      </div>
+                    </dl>
+                    <HelpChat kind="report" helpId={r.id} admin className="mt-3 max-w-xl" />
                     <div className="mt-3 flex flex-wrap gap-2">
                       <Button variant="danger" busy={busy === `rc${r.id}`} onClick={() => act(`rc${r.id}`, () => rpc("admin_resolve_report", { p_report: r.id, p_decision: "confirm" }), "반납 처리하고 벌점을 부여했습니다. 좌석은 빈자리가 되었습니다.")}>
                         비어 있음 확정
@@ -156,7 +183,7 @@ export default function AdminReports() {
                       </Button>
                     </div>
                   </div>
-                </Panel>
+                </FoldPanel>
               );
             })}
           </div>
@@ -169,17 +196,34 @@ export default function AdminReports() {
             도움 요청 <span className="tabular text-muted">{ov.helps.length}</span>
           </h2>
           <div className="mt-2 space-y-2">
-            {ov.helps.map((h) => (
-              <Panel key={h.id} className="p-4">
-                <div>
-                  <p className="flex flex-wrap items-center gap-2 text-base font-bold">
-                    {h.reason}
+            {ov.helps.map((h, i) => (
+              <FoldPanel
+                key={h.id}
+                defaultOpen={i === 0}
+                head={
+                  <>
+                    <span className="text-base font-bold">{h.reason}</span>
                     {fresh(h.created_at)}
-                  </p>
+                    <span className="text-sm text-muted">
+                      {h.name}
+                      {h.seat_label && ` · ${h.seat_label}`}
+                    </span>
+                  </>
+                }
+              >
+                <div>
                   <p className="text-sm text-[#3d4744]">
                     {h.name} <span className="tabular text-muted">{h.student_id}</span>
                     {h.res_status && ` · ${h.res_status === "reserved" ? "체크인 대기" : h.res_status === "away" ? "외출" : h.res_status === "in_use" ? "이용 중" : "좌석 없음"}`}
+                    {h.deadline && (h.res_status === "reserved" || h.res_status === "away") && (
+                      <b className={new Date(h.deadline).getTime() - now < 3 * 60_000 ? "tabular ml-1.5 text-danger" : "tabular ml-1.5 text-du-deep-dark"}>{fmtRemain(new Date(h.deadline).getTime() - now)} 남음</b>
+                    )}
                   </p>
+                  {h.end_at && (h.res_status === "in_use" || h.res_status === "away") && (
+                    <p className="tabular text-[13px] text-[#3d4744]">
+                      {fmtTime(h.end_at)} 이용 종료 · <b>{fmtRemain(new Date(h.end_at).getTime() - now)}</b> 남음
+                    </p>
+                  )}
                   {/* 어느 좌석인지: 누르면 관제 지도에서 그 좌석을 바로 보여 준다 */}
                   <p className="mt-1.5">
                     {h.seat_id ? (
@@ -198,17 +242,16 @@ export default function AdminReports() {
                   <p className="tabular mt-1 text-[13px] text-muted">{fmtDateTime(h.created_at)} 접수</p>
                   <HelpChat helpId={h.id} admin className="mt-3 max-w-xl" />
                   <div className="mt-3 flex flex-wrap items-center gap-2">
-                    {h.reservation_id && ["reserved", "in_use", "away"].includes(h.res_status ?? "") && (
-                      <Button
+                    {h.reservation_id && (h.res_status === "reserved" || h.res_status === "away") && (
+                      <GraceControl
+                        className="w-full sm:w-auto"
+                        label={h.res_status === "reserved" ? "체크인 대기" : "외출 시간"}
                         busy={busy === `hg${h.id}`}
-                        onClick={() => act(`hg${h.id}`, () => rpc("admin_res_action", { p_res: h.reservation_id, p_action: "grace", p_reason: h.reason, p_arg: 15 }), "마감을 15분 늘렸습니다.")}
-                      >
-                        시간 15분 더 주기
-                      </Button>
+                        onGive={(m) => act(`hg${h.id}`, () => rpc("admin_res_action", { p_res: h.reservation_id, p_action: "grace", p_reason: h.reason, p_arg: m }), `${m}분 연장했습니다.`)}
+                      />
                     )}
                     {h.reservation_id && h.res_status === "reserved" && (
                       <Button
-                        variant="primary"
                         busy={busy === `hc${h.id}`}
                         onClick={() =>
                           act(
@@ -224,19 +267,25 @@ export default function AdminReports() {
                         대리 체크인하고 완료
                       </Button>
                     )}
-                    <input
-                      className={`${inputClass} !min-h-11 max-w-xs flex-1`}
-                      aria-label="처리 결과"
-                      placeholder="처리 결과 (선택)"
-                      value={text[`h${h.id}`] ?? ""}
-                      onChange={(e) => setText({ ...text, [`h${h.id}`]: e.target.value })}
-                    />
-                    <Button busy={busy === `hr${h.id}`} onClick={() => act(`hr${h.id}`, () => rpc("admin_resolve_help", { p_help: h.id, p_resolution: text[`h${h.id}`] || null }), "도움 요청을 완료 처리했습니다.")}>
-                      완료
-                    </Button>
+                  </div>
+                  {/* 요청 마무리: 대화 보내기와 헷갈리지 않게 따로 */}
+                  <div className="mt-4 rounded-[var(--radius-ctl)] border border-line bg-[#f8faf9] p-3">
+                    <p className="mb-2 text-[13px] font-bold">요청 마무리</p>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <input
+                        className={`${inputClass} !min-h-11 min-w-0 flex-1 basis-40`}
+                        aria-label="처리 결과"
+                        placeholder="처리 결과 (선택)"
+                        value={text[`h${h.id}`] ?? ""}
+                        onChange={(e) => setText({ ...text, [`h${h.id}`]: e.target.value })}
+                      />
+                      <Button variant="primary" busy={busy === `hr${h.id}`} onClick={() => act(`hr${h.id}`, () => rpc("admin_resolve_help", { p_help: h.id, p_resolution: text[`h${h.id}`] || null }), "도움 요청을 완료 처리했습니다.")}>
+                        도움 요청 완료
+                      </Button>
+                    </div>
                   </div>
                 </div>
-              </Panel>
+              </FoldPanel>
             ))}
           </div>
         </section>
@@ -248,13 +297,22 @@ export default function AdminReports() {
             벌점 이의신청 <span className="tabular text-muted">{ov.appeals.length}</span>
           </h2>
           <div className="mt-2 space-y-2">
-            {ov.appeals.map((a) => (
-              <Panel key={a.id} className="p-4">
-                <div>
-                  <p className="flex flex-wrap items-center gap-2 font-bold">
-                    {a.name} <span className="tabular font-normal text-muted">{a.student_id}</span>
+            {ov.appeals.map((a, i) => (
+              <FoldPanel
+                key={a.id}
+                defaultOpen={i === 0}
+                head={
+                  <>
+                    <span className="font-bold">{a.name}</span>
+                    <span className="tabular text-sm text-muted">{a.student_id}</span>
                     {fresh(a.created_at)}
-                  </p>
+                    <Tag>
+                      <span className="tabular">벌점 {a.points}점</span>
+                    </Tag>
+                  </>
+                }
+              >
+                <div>
                   <p className="text-sm text-[#3d4744]">
                     대상 벌점: <span className="tabular">{a.points}점</span> · {a.note} <span className="tabular text-muted">({fmtDateTime(a.penalty_at)})</span>
                   </p>
@@ -275,7 +333,7 @@ export default function AdminReports() {
                     </Button>
                   </div>
                 </div>
-              </Panel>
+              </FoldPanel>
             ))}
           </div>
         </section>

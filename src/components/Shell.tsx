@@ -91,7 +91,8 @@ function AdminAlerts({ items, hidden }: { items: PendingItem[]; hidden: boolean 
     });
   const open = items.filter((i) => !closed.has(i.key));
   if (hidden || open.length === 0) return null;
-  const shown = open.slice(0, 3);
+  // 여러 건이 와도 화면을 덮지 않게 가장 최근 한 건만 펼치고, 나머지는 건수로 알린다
+  const shown = open.slice(-1);
 
   return (
     <div role="region" aria-label="새 처리 대기 알림" aria-live="assertive" className="no-print fixed inset-x-3 bottom-[calc(72px+env(safe-area-inset-bottom))] z-50 flex flex-col gap-2 sm:inset-x-auto sm:bottom-5 sm:right-5 sm:w-[360px]">
@@ -102,11 +103,14 @@ function AdminAlerts({ items, hidden }: { items: PendingItem[]; hidden: boolean 
               <BellRing size={16} aria-hidden />
             </span>
             <div className="min-w-0 flex-1">
-              <p className="text-xs font-bold text-danger">새 {i.kind}</p>
+              <p className="text-xs font-bold text-danger">
+                새 {i.kind}
+                {open.length > 1 && <span className="tabular"> · 외 {open.length - 1}건</span>}
+              </p>
               <p className="font-bold leading-snug">{i.title}</p>
               <p className="tabular truncate text-[13px] text-muted">{i.sub}</p>
             </div>
-            <button type="button" aria-label="알림 닫기" onClick={() => close([i.key])} className="-m-1.5 grid size-9 shrink-0 place-items-center rounded-lg text-muted hover:bg-canvas">
+            <button type="button" aria-label="알림 모두 닫기" onClick={() => close(open.map((x) => x.key))} className="-m-1.5 grid size-9 shrink-0 place-items-center rounded-lg text-muted hover:bg-canvas">
               <X size={16} aria-hidden />
             </button>
           </div>
@@ -119,11 +123,6 @@ function AdminAlerts({ items, hidden }: { items: PendingItem[]; hidden: boolean 
           </Link>
         </div>
       ))}
-      {open.length > shown.length && (
-        <Link href="/admin/reports" onClick={() => close(open.map((x) => x.key))} className="rounded-[var(--radius-ctl)] bg-du-black px-3 py-2 text-center text-sm font-semibold text-white">
-          외 {open.length - shown.length}건 더 보기
-        </Link>
-      )}
     </div>
   );
 }

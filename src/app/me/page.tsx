@@ -35,6 +35,7 @@ export default function MePage() {
   const [appeals, setAppeals] = useState<Appeal[]>([]);
   const [appealFor, setAppealFor] = useState<number | null>(null);
   const [appealText, setAppealText] = useState("");
+  const uid = status?.profile.id;
   const [helpReason, setHelpReason] = useState(HELP_REASONS[0]);
   const [helpText, setHelpText] = useState("");
   // 도움 요청이 어느 좌석 이야기인지: 내 좌석 / QR로 찍은 좌석 / 번호로 적은 좌석 / 좌석과 무관
@@ -46,6 +47,14 @@ export default function MePage() {
   const [rooms, setRooms] = useState<{ id: number; name: string }[]>([]);
   const [myHelp, setMyHelp] = useState<{ id: number; reason: string; message: string | null; created_at: string; seat_label: string | null; room_name: string | null } | null>(null);
   const helpOpen = !!status?.help_open;
+  // 내가 한 신고 중 관리자가 대화를 연 것
+  const [myReports, setMyReports] = useState<{ id: number; seat_label: string; room_name: string; created_at: string; chat: boolean }[]>([]);
+  useEffect(() => {
+    if (!uid) return;
+    rpc<typeof myReports>("my_reports")
+      .then((r) => setMyReports(r.filter((x) => x.chat)))
+      .catch(() => {});
+  }, [uid, pulse]);
   useEffect(() => {
     supabase
       .from("rooms")
@@ -59,7 +68,6 @@ export default function MePage() {
       .then(setMyHelp)
       .catch(() => {});
   }, [helpOpen]);
-  const uid = status?.profile.id;
 
   const load = useCallback(async () => {
     if (!uid) return;
@@ -407,6 +415,25 @@ export default function MePage() {
       </section>
 
 
+      {myReports.length > 0 && (
+        <section aria-labelledby="reports-h" id="reports">
+          <h2 id="reports-h" className="text-[17px] font-bold">
+            내 신고
+          </h2>
+          <div className="mt-2 space-y-2">
+            {myReports.map((r) => (
+              <Panel key={r.id} className="p-4">
+                <p className="font-bold">
+                  {r.room_name} {r.seat_label} <span className="text-sm font-normal text-muted">자리비움 신고</span>
+                </p>
+                <p className="tabular text-[13px] text-muted">{fmtDateTime(r.created_at)} 접수</p>
+                <HelpChat kind="report" helpId={r.id} className="mt-3" />
+              </Panel>
+            ))}
+          </div>
+        </section>
+      )}
+
       <section aria-labelledby="help-h">
         <h2 id="help-h" className="text-[17px] font-bold">
           도움 요청
@@ -560,6 +587,7 @@ export default function MePage() {
           )}
           {helpScan && (
             <QrScanner
+              plain
               onToken={async (t) => {
                 setHelpScan(false);
                 try {

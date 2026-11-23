@@ -209,3 +209,63 @@ export function useFold<T>(items: T[], limit = 3) {
     ) : null;
   return { shown, toggle };
 }
+
+/** 시간 연장: 분은 관리자가 정한다. left 를 주면 지금 남은 시간을 함께 보여 준다 */
+export function GraceControl({
+  label,
+  busy,
+  onGive,
+  className,
+  initial = 15,
+  max = 180,
+  left,
+}: {
+  label: string;
+  busy?: boolean;
+  onGive: (minutes: number) => void;
+  className?: string;
+  initial?: number;
+  max?: number;
+  /** 지금 남은 시간(밀리초) */
+  left?: number;
+}) {
+  const [m, setM] = useState(initial);
+  return (
+    <div className={className}>
+      {left !== undefined && (
+        <p className="mb-1 text-[13px]">
+          {label} <b className={cx("tabular", left < 3 * 60_000 && "text-danger")}>{left > 0 ? `${fmtLeft(left)} 남음` : "지남"}</b>
+        </p>
+      )}
+      <div className="flex items-center gap-1.5">
+        <input
+          type="number"
+          min={1}
+          max={max}
+          inputMode="numeric"
+          aria-label={`${label} 연장할 시간(분)`}
+          value={m}
+          onChange={(e) => setM(Math.max(1, Math.min(max, Number(e.target.value) || 1)))}
+          className="tabular h-11 w-16 shrink-0 rounded-[var(--radius-ctl)] border border-[#c3cfcb] bg-surface px-2 text-right text-[15px]"
+        />
+        <Button className="min-w-0 flex-1" busy={busy} onClick={() => onGive(m)}>
+          {label} {m}분 연장
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+/** 접히는 카드: 여러 건이 쌓여도 한 줄씩만 보이고, 누른 것만 펼쳐진다 */
+export function FoldPanel({ head, children, defaultOpen = false }: { head: React.ReactNode; children: React.ReactNode; defaultOpen?: boolean }) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <Panel className="overflow-hidden">
+      <button type="button" aria-expanded={open} onClick={() => setOpen(!open)} className="flex min-h-[52px] w-full items-center gap-2 px-4 py-2.5 text-left transition-colors duration-150 hover:bg-canvas">
+        <span className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1">{head}</span>
+        <ChevronDown size={18} aria-hidden className={cx("shrink-0 text-muted transition-transform duration-150", open && "rotate-180")} />
+      </button>
+      {open && <div className="border-t border-line p-4">{children}</div>}
+    </Panel>
+  );
+}

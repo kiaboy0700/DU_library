@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { RotateCcw, Search, UserRound } from "lucide-react";
+import { Pencil, RotateCcw, Search, Trash2, UserRound } from "lucide-react";
 import { useApp } from "@/components/Providers";
 import { Button, Confirm, Empty, Field, Panel, Skeleton, Tag, inputClass, useAction, useFold, useNow } from "@/components/ui";
 import { rpc } from "@/lib/supabase";
@@ -55,6 +55,8 @@ export default function AdminUsers() {
 
   const d = detail;
   const [wipe, setWipe] = useState(false);
+  const [edit, setEdit] = useState<{ name: string; dept: string } | null>(null);
+  const [del, setDel] = useState(false);
   const penFold = useFold(d?.penalties ?? [], 3);
   const resFold = useFold(d?.reservations ?? [], 5);
   const banned = d?.profile.banned_until && new Date(d.profile.banned_until).getTime() > now;
@@ -271,10 +273,65 @@ export default function AdminUsers() {
             </Panel>
 
             {d.profile.role === "student" && (
-              <Button variant="danger" className="w-full sm:w-auto" disabled={!!busy} onClick={() => setWipe(true)}>
-                <RotateCcw size={16} aria-hidden />
-                이 학생 초기화
-              </Button>
+              <div className="grid grid-cols-3 gap-2 sm:flex">
+                <Button disabled={!!busy} aria-expanded={!!edit} onClick={() => setEdit(edit ? null : { name: d.profile.name, dept: d.profile.department ?? "" })}>
+                  <Pencil size={16} aria-hidden />
+                  수정
+                </Button>
+                <Button variant="danger" disabled={!!busy} onClick={() => setWipe(true)}>
+                  <RotateCcw size={16} aria-hidden />
+                  초기화
+                </Button>
+                <Button variant="danger" disabled={!!busy} onClick={() => setDel(true)}>
+                  <Trash2 size={16} aria-hidden />
+                  삭제
+                </Button>
+              </div>
+            )}
+            {edit && (
+              <form
+                className="rise grid grid-cols-2 gap-3 rounded-[var(--radius-panel)] border border-line bg-surface p-4"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  act("edit", () => rpc("admin_update_account", { p_user: d.profile.id, p_name: edit.name, p_department: edit.dept }), "학생 정보를 수정했습니다.").then(() => setEdit(null));
+                }}
+              >
+                <Field label="이름">
+                  <input className={inputClass} required value={edit.name} onChange={(e) => setEdit({ ...edit, name: e.target.value })} />
+                </Field>
+                <Field label="학과">
+                  <input className={inputClass} value={edit.dept} onChange={(e) => setEdit({ ...edit, dept: e.target.value })} />
+                </Field>
+                <div className="col-span-2 grid grid-cols-2 gap-2 sm:flex sm:justify-end">
+                  <Button onClick={() => setEdit(null)}>취소</Button>
+                  <Button type="submit" variant="primary" busy={busy === "edit"}>
+                    저장
+                  </Button>
+                </div>
+              </form>
+            )}
+            {del && (
+              <Confirm
+                title={`${d.profile.name} 계정 삭제`}
+                confirmLabel="삭제"
+                danger
+                busy={busy === "del"}
+                onClose={() => setDel(false)}
+                onConfirm={() =>
+                  run("del", async () => {
+                    await rpc("admin_delete_account", { p_user: d.profile.id });
+                    toast(`${d.profile.name} 계정을 삭제했습니다.`, "ok");
+                    setDel(false);
+                    setDetail(null);
+                    await search(q);
+                  })
+                }
+              >
+                <p>
+                  <b className="tabular">{d.profile.student_id}</b> 계정과 예약·벌점·알림 기록이 모두 지워집니다.
+                </p>
+                <p className="mt-2 font-semibold text-danger">되돌릴 수 없습니다.</p>
+              </Confirm>
             )}
             {wipe && (
               <Confirm

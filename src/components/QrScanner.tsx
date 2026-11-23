@@ -3,8 +3,11 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { CameraOff, ChevronLeft, X } from "lucide-react";
+import { useApp } from "./Providers";
 import { Button, useNow } from "./ui";
-import { fmtRemain } from "@/lib/util";
+import { rpc } from "@/lib/supabase";
+import { STATE_LABEL, type SeatContext } from "@/lib/types";
+import { errMsg, fmtRemain, getPosition } from "@/lib/util";
 
 interface Detector {
   detect: (source: HTMLVideoElement) => Promise<{ rawValue: string }[]>;
@@ -22,6 +25,7 @@ export function QrScanner({
   onClose,
   seat,
   deadline,
+  plain,
 }: {
   onToken: (token: string) => void;
   onClose: () => void;
@@ -29,6 +33,8 @@ export function QrScanner({
   seat?: { label: string; room: string };
   /** 남은 시간 표시 (예: 체크인 마감) */
   deadline?: { label: string; at: string };
+  /** 찍은 값만 넘겨받는다: 내 좌석인지 확인하지 않는다 (도움 요청에서 좌석을 지정할 때) */
+  plain?: boolean;
 }) {
   const now = useNow();
   const video = useRef<HTMLVideoElement>(null);
@@ -39,6 +45,45 @@ export function QrScanner({
   useEffect(() => {
     cb.current = onToken;
   }, [onToken]);
+
+  // 체크인 대기·외출 중에 내 좌석이 아닌 QR을 찍으면, 넘어가지 않고 이 화면에서 어떻게 할지 묻는다
+  const { status, toast, refresh } = useApp();
+  const mine = !plain && status?.reservation && status.reservation.status !== "in_use" ? status.reservation : null;
+  const [wrong, setWrong] = useState<{ token: string; ctx: SeatContext } | null>(null);
+  const [busy, setBusy] = useState(false);
+  const paused = useRef(false);
+  const handle = useRef<(token: string) => void>(() => {});
+  useEffect(() => {
+    handle.current = async (token) => {
+      if (!mine) return cb.current(token);
+      try {
+        const c = await rpc<SeatContext | null>("seat_context_v2", { p_token: token });
+        if (!c || c.is_mine) return cb.current(token);
+        setWrong({ token, ctx: c });
+      } catch {
+        cb.current(token);
+      }
+    };
+  }, [mine]);
+  const again = () => {
+    setWrong(null);
+    paused.current = false;
+  };
+  async function switchSeat() {
+    if (!wrong || busy) return;
+    setBusy(true);
+    try {
+      const pos = wrong.ctx.gps_required ? await getPosition() : null;
+      const r = await rpc<{ from: string; to: string }>("switch_seat", { p_token: wrong.token, p_lat: pos?.lat ?? null, p_lng: pos?.lng ?? null });
+      await refresh();
+      toast(`${r.from}에서 ${r.to}(으)로 바꿨습니다.`, "ok");
+      cb.current(wrong.token);
+    } catch (e) {
+      toast(errMsg(e), "error");
+    } finally {
+      setBusy(false);
+    }
+  }
 
   useEffect(() => {
     let stream: MediaStream | null = null;
@@ -84,20 +129,25 @@ export function QrScanner({
       const found = (text: string | undefined) => {
         const m = text?.match(TOKEN);
         if (!m) return false;
-        stop = true;
+        // 찍힌 뒤에는 읽기를 멈춘다. '다시 찍기'를 누르면 이어서 읽는다
+        paused.current = true;
         navigator.vibrate?.(60);
-        cb.current(m[1]);
+        handle.current(m[1]);
         return true;
       };
 
       const loop = async () => {
         if (stop || !video.current) return;
+        if (paused.current) {
+          timer = setTimeout(loop, 250);
+          return;
+        }
         const v = video.current;
         if (v.readyState >= 2 && v.videoWidth > 0) {
           try {
             if (detector) {
               const codes = await detector.detect(v);
-              if (codes.some((c) => found(c.rawValue))) return;
+              codes.some((c) => found(c.rawValue));
             } else if (jsQR && ctx) {
               // 가운데 정사각형만 읽어 빠르게 해석
               const side = Math.min(v.videoWidth, v.videoHeight);
@@ -105,7 +155,7 @@ export function QrScanner({
               canvas.width = canvas.height = size;
               ctx.drawImage(v, (v.videoWidth - side) / 2, (v.videoHeight - side) / 2, side, side, 0, 0, size, size);
               const img = ctx.getImageData(0, 0, size, size);
-              if (found(jsQR(img.data, size, size, { inversionAttempts: "dontInvert" })?.data)) return;
+              found(jsQR(img.data, size, size, { inversionAttempts: "dontInvert" })?.data);
             }
           } catch {}
         }
@@ -197,6 +247,41 @@ export function QrScanner({
             <button type="button" aria-label="스캔 닫기" onClick={onClose} className="grid size-14 place-items-center rounded-full bg-white/30 text-white backdrop-blur-sm transition-colors duration-150 hover:bg-white/40">
               <X size={28} aria-hidden />
             </button>
+          </div>
+        </div>
+      )}
+
+      {wrong && mine && (
+        <div className="absolute inset-0 z-10 flex items-end justify-center bg-black/60 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:items-center">
+          <div role="alertdialog" aria-modal="true" aria-labelledby="wrong-h" className="pop w-full max-w-sm rounded-2xl bg-surface p-5 text-du-black">
+            <h3 id="wrong-h" className="text-lg font-bold">
+              내 좌석이 아닙니다
+            </h3>
+            <dl className="mt-3 grid grid-cols-2 gap-2 text-sm">
+              <div className="rounded-[var(--radius-ctl)] bg-canvas px-3 py-2">
+                <dt className="text-xs text-muted">찍은 좌석 · {wrong.ctx.seat.is_active ? STATE_LABEL[wrong.ctx.state] : "사용 중지"}</dt>
+                <dd className="text-xl font-bold">{wrong.ctx.seat.label}</dd>
+              </div>
+              <div className="rounded-[var(--radius-ctl)] bg-du-tint px-3 py-2">
+                <dt className="text-xs text-du-deep-dark">내 좌석 · {mine.status === "reserved" ? "체크인 대기" : "외출 중"}</dt>
+                <dd className="text-xl font-bold">{mine.seat_label}</dd>
+              </div>
+            </dl>
+            <div className="mt-4 space-y-2">
+              {wrong.ctx.seat.is_active && wrong.ctx.state === "free" && wrong.ctx.is_open && !wrong.ctx.held_by_other && (
+                <Button variant="primary" size="lg" className="w-full" busy={busy} onClick={switchSeat}>
+                  {wrong.ctx.seat.label}(으)로 바꿔 {mine.status === "reserved" ? "체크인" : "복귀"}
+                </Button>
+              )}
+              {wrong.ctx.state === "in_use" && (
+                <Button className="w-full" disabled={busy} onClick={() => cb.current(wrong.token)}>
+                  {wrong.ctx.seat.label} 남은 시간 보기 · 자리비움 신고
+                </Button>
+              )}
+              <Button variant={wrong.ctx.state === "free" && wrong.ctx.seat.is_active ? "secondary" : "primary"} size="lg" className="w-full" disabled={busy} onClick={again}>
+                내 좌석 {mine.seat_label} QR 다시 찍기
+              </Button>
+            </div>
           </div>
         </div>
       )}

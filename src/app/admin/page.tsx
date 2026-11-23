@@ -6,7 +6,7 @@ import { ChevronRight, MousePointerClick, PenLine } from "lucide-react";
 import { OccupancyMeter } from "@/components/OccupancyMeter";
 import { useApp } from "@/components/Providers";
 import { LEGEND, LegendSwatch, SeatMap, type SeatVisual } from "@/components/SeatMap";
-import { Button, Empty, Field, Panel, Skeleton, Tag, inputClass, useAction, useNow } from "@/components/ui";
+import { Button, Empty, Field, GraceControl, Panel, Skeleton, Tag, inputClass, useAction, useNow } from "@/components/ui";
 import { useAdminMap, useRooms, type AdminSeat } from "@/lib/admin";
 import { useHome } from "@/lib/hooks";
 import { rpc } from "@/lib/supabase";
@@ -332,12 +332,17 @@ function SeatPanel(p: {
                 외출 처리
               </Button>
             )}
-            <Button busy={p.busy === "ex"} className={r.status === "in_use" ? undefined : "col-span-2"} onClick={() => p.onAct("ex", "extend", "이용 시간을 2시간 연장했습니다.")}>
-              2시간 연장
-            </Button>
-            <Button busy={p.busy === "gr"} className="col-span-2" onClick={() => p.onAct("gr", "grace", "지금 걸린 마감을 15분 늘렸습니다.", 15)}>
-              {r.status === "reserved" ? "체크인 마감" : r.status === "away" ? "복귀 마감" : "마감"} 15분 더 주기
-            </Button>
+            <GraceControl className="col-span-2" label="이용 시간" initial={120} max={480} busy={p.busy === "ex"} onGive={(m) => p.onAct("ex", "extend", `이용 시간을 ${m}분 연장했습니다.`, m)} />
+            {/* 마감이 걸려 있는 상황(체크인 대기·외출·자리 확인 요청)에서만 */}
+            {(r.status !== "in_use" || r.report) && (
+              <GraceControl
+                className="col-span-2"
+                label={r.status === "reserved" ? "체크인 대기" : r.status === "away" ? "외출 시간" : "자리 확인 시간"}
+                left={r.status === "reserved" ? new Date(r.checkin_deadline).getTime() - now : r.status === "away" && r.away_deadline ? new Date(r.away_deadline).getTime() - now : undefined}
+                busy={p.busy === "gr"}
+                onGive={(m) => p.onAct("gr", "grace", `${m}분 연장했습니다.`, m)}
+              />
+            )}
           </div>
 
           <div className="mt-4 space-y-2 border-t border-line pt-3">

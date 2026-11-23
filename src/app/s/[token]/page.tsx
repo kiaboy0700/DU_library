@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { CircleCheck, CircleSlash, MapPin, QrCode } from "lucide-react";
 import { OccupancyMeter } from "@/components/OccupancyMeter";
 import { useApp } from "@/components/Providers";
+import { QrScanner } from "@/components/QrScanner";
 import { Button, Empty, Notice, Panel, Skeleton, Tag, TimeLeft, useAction, useNow } from "@/components/ui";
 import { ruleTexts, useSettings } from "@/lib/hooks";
 import { rpc, supabase } from "@/lib/supabase";
@@ -24,6 +25,7 @@ export default function SeatQrPage() {
   const [info, setInfo] = useState<SeatInfo | null>(null);
   const [hours, setHours] = useState<number | null>(null);
   const [confirm, setConfirm] = useState<"report" | "return" | "away" | null>(null);
+  const [rescan, setRescan] = useState(false);
   const { busy, run } = useAction((m) => toast(m, "error"));
 
   const load = useCallback(async () => {
@@ -63,6 +65,13 @@ export default function SeatQrPage() {
   // QR을 찍고 들어오면 버튼을 한 번 더 누르지 않아도 되게, 할 일이 하나뿐인 경우는 바로 처리한다
   // (체크인 대기 → 체크인, 외출 중 → 복귀, 자리 확인 요청 → 자리에 있음 확인)
   const auto = useRef(false);
+  // 이 화면에서 다른 QR을 다시 찍으면 처음부터
+  useEffect(() => {
+    auto.current = false;
+    setDone(null);
+    setConfirm(null);
+    setCtx(undefined);
+  }, [token]);
   useEffect(() => {
     // 이동하려고 맡아 둔 좌석의 QR을 찍었으면 바로 이동
     if (!auto.current && ctx?.held_by_me && status?.reservation?.status === "in_use") {
@@ -107,6 +116,10 @@ export default function SeatQrPage() {
   const loggedIn = !!status && !isAdmin;
   const endLeft = r ? new Date(r.end_at).getTime() - now : 0;
   const canExtend = !!r && r.status === "in_use" && endLeft <= ctx.extend_window_min * 60_000;
+  // 내 좌석이 따로 있는데 다른 좌석의 QR을 찍은 경우: QR을 찍어야 풀리는 상태(체크인 대기·외출)면 먼저 알려 준다
+  const mine = loggedIn && !ctx.is_mine ? (status?.reservation ?? null) : null;
+  const wrong = mine && mine.status !== "in_use" ? mine : null;
+  const wrongUntil = wrong ? (wrong.status === "reserved" ? wrong.checkin_deadline : (wrong.away_deadline ?? wrong.end_at)) : null;
 
   return (
     <div className="space-y-4">
@@ -153,6 +166,20 @@ export default function SeatQrPage() {
                 로그인
               </Button>
             </>
+          )}
+
+          {wrong && (
+            <div className="rounded-[var(--radius-ctl)] border border-warn/40 bg-warn-tint p-3.5">
+              <p className="font-bold text-[#5c3d00]">내 좌석이 아닙니다</p>
+              <p className="mt-0.5 text-sm text-[#5c3d00]">
+                내 좌석 <strong className="font-semibold">{wrong.room_name} {wrong.seat_label}</strong> · {wrong.status === "reserved" ? "체크인 마감까지" : "복귀 마감까지"}{" "}
+                <strong className="tabular">{wrongUntil ? fmtRemain(new Date(wrongUntil).getTime() - now) : "-"}</strong>
+              </p>
+              <Button variant={ctx.state === "free" && seat.is_active ? "secondary" : "primary"} className="mt-3 w-full" onClick={() => setRescan(true)}>
+                <QrCode size={16} aria-hidden />
+                내 좌석 QR 찍기
+              </Button>
+            </div>
           )}
 
           {loggedIn && !seat.is_active && <Notice tone="warn">사용이 중지된 좌석입니다</Notice>}
@@ -218,11 +245,28 @@ export default function SeatQrPage() {
               </Button>
             </>
           )}
-          {loggedIn && ctx.state === "free" && ctx.have_other && !ctx.held_by_other && status?.reservation?.status !== "in_use" && (
-            <Notice tone="warn">
-              {status?.reservation?.seat_label} {status?.reservation?.status === "away" ? "외출 중" : "체크인 대기 중"} · 체크인 후 옮길 수 있습니다
-            </Notice>
-          )}
+          {/* 체크인 대기·외출 중에 다른 빈 좌석을 찍음: 이 좌석으로 바꿀 수 있다 */}
+          {wrong && seat.is_active && ctx.state === "free" && !ctx.held_by_other &&
+            (ctx.is_open ? (
+              <>
+                <p className="text-sm text-[#3d4744]">
+                  <strong className="font-semibold">{wrong.seat_label}</strong> → <strong className="font-semibold">{seat.label}</strong> · 남은 시간 그대로
+                </p>
+                <Button
+                  variant="primary"
+                  size="lg"
+                  className="w-full"
+                  busy={busy === "sw"}
+                  onClick={() =>
+                    scan("sw", "switch_seat", (x) => `${(x as { from: string; to: string }).from}에서 ${(x as { from: string; to: string }).to}(으)로 바꿔 ${wrong.status === "reserved" ? "체크인했습니다" : "복귀했습니다"}.`)
+                  }
+                >
+                  이 좌석으로 바꿔 {wrong.status === "reserved" ? "체크인" : "복귀"}
+                </Button>
+              </>
+            ) : (
+              <Notice tone="warn">{ctx.reason}</Notice>
+            ))}
           {loggedIn && ctx.state === "free" && ctx.held_by_other && <Notice tone="warn">다른 학생이 이동하려고 맡아 둔 좌석입니다.</Notice>}
 
           {/* 내 좌석 */}
@@ -367,6 +411,18 @@ export default function SeatQrPage() {
           )}
         </div>
       </Panel>
+
+      {rescan && (
+        <QrScanner
+          onToken={(t) => {
+            setRescan(false);
+            router.replace(`/s/${t}`);
+          }}
+          onClose={() => setRescan(false)}
+          seat={wrong ? { label: wrong.seat_label, room: wrong.room_name } : undefined}
+          deadline={wrong && wrongUntil ? { label: wrong.status === "reserved" ? "체크인 마감까지" : "복귀 마감까지", at: wrongUntil } : undefined}
+        />
+      )}
 
       <div className="flex gap-2">
         <Link href={isAdmin ? "/admin" : "/me"} className="inline-flex min-h-11 flex-1 items-center justify-center rounded-[var(--radius-ctl)] border border-line bg-surface text-sm font-semibold hover:bg-canvas">
