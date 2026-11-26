@@ -66,12 +66,12 @@
   nav.toc ol { list-style: none; margin: 0 auto; padding: 0; max-width: 928px; display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; touch-action: pan-x; }
   @media (min-width: 720px) { nav.toc ol { flex-wrap: wrap; justify-content: center; overflow: visible; max-width: 1160px; } }
   nav.toc ol::-webkit-scrollbar { display: none; }
-  nav.toc a { display: block; white-space: nowrap; text-decoration: none; font-weight: 700; font-size: 14px; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 8px 14px; }
-  nav.toc a:hover, nav.toc a:focus-visible { border-color: var(--deep); color: var(--deep-ink); outline: none; }
-  nav.toc a[aria-current="true"] { background: var(--deep); border-color: var(--deep); color: #fff; }
+  nav.toc ol a { display: block; white-space: nowrap; text-decoration: none; font-weight: 700; font-size: 14px; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 8px 14px; }
+  nav.toc ol a:hover, nav.toc ol a:focus-visible { border-color: var(--deep); color: var(--deep-ink); outline: none; }
+  nav.toc ol a[aria-current="true"] { background: var(--deep); border-color: var(--deep); color: #fff; }
 
   main { min-width: 0; display: grid; gap: 56px; }
-  section { scroll-margin-top: calc(env(safe-area-inset-top, 0px) + 72px); }
+  section { scroll-margin-top: calc(env(safe-area-inset-top, 0px) + 124px); }
   section > header { margin-bottom: 18px; }
   .role { display: inline-block; font-size: 13px; font-weight: 700; border-radius: 999px; padding: 3px 10px; margin-bottom: 8px; }
   .role.user { background: var(--tint); color: var(--deep-ink); }
@@ -320,6 +320,33 @@
   figure.shot.shotpc .shotbox img { border-radius: 9px; }
   .shotpc figcaption { position: sticky; left: 0; }
 
+  /* 목차 오른쪽의 더보기 */
+  nav.toc { display: flex; align-items: center; justify-content: center; gap: 8px; }
+  nav.toc ol { flex: 1 1 auto; min-width: 0; margin: 0; }
+  @media (min-width: 720px) { nav.toc ol { flex: 0 1 auto; } }
+  .dev-mini { flex: none; display: inline-flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--surface); }
+  .dev-mini button { min-height: 38px; padding: 0 10px; border: 0; background: transparent; color: var(--muted); font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
+  .dev-mini button + button { border-left: 1px solid var(--line); }
+  .dev-mini button[aria-pressed="true"] { background: var(--warn-tint); color: var(--warn); }
+  .dev-mini button:focus-visible { outline: 2px solid var(--deep); outline-offset: -2px; }
+  @media (max-width: 719px) {
+    nav.toc { flex-wrap: wrap; row-gap: 8px; }
+    nav.toc ol { flex: 1 0 100%; }
+    .dev-mini { margin-right: auto; }
+    .dev-mini::before { content: "기기"; align-self: center; padding: 0 8px 0 10px; font-size: 13px; font-weight: 700; color: var(--muted); }
+    .dev-mini button, .tools-btn { min-height: 34px; }
+  }
+  .tools { position: relative; flex: none; }
+  .tools-btn { min-height: 38px; padding: 0 12px 0 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+  .tools-btn::after { content: ""; width: 7px; height: 7px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(45deg) translateY(-2px); }
+  .tools-btn[aria-expanded="true"] { border-color: var(--deep); color: var(--deep-ink); }
+  .tools-menu { position: absolute; right: 0; top: calc(100% + 8px); width: 240px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18); padding: 6px; z-index: 30; }
+  .tools-menu a, .tools-menu button { display: block; width: 100%; text-align: left; padding: 10px 12px; border: 0; border-radius: 10px; background: transparent; color: var(--ink); font: inherit; text-decoration: none; cursor: pointer; }
+  .tools-menu a:hover, .tools-menu button:hover, .tools-menu a:focus-visible, .tools-menu button:focus-visible { background: var(--tint); outline: none; }
+  .tools-menu b { display: block; font-size: 15px; }
+  .tools-menu span { font-size: 13px; color: var(--muted); }
+  .tools-menu b span { font-size: inherit; color: inherit; }
+
   /* 그 화면 바로 열기 */
   a.openapp { display: inline-flex; align-items: center; min-height: 28px; margin: 8px 0 0 4px; padding: 0 10px; border-radius: 999px; background: var(--deep); color: #fff; font-size: 13px; font-weight: 700; text-decoration: none; white-space: nowrap; vertical-align: top; }
   a.openapp::after { content: " ↗"; white-space: pre; }
@@ -369,7 +396,7 @@
       <span class="dd-how">학생과 관리자는 로그아웃하고 다시 로그인하며 바꿉니다. 화면이 바뀌는 순간은 볼 수 없습니다.</span>
     </button>
   </div>
-  <p class="dd-foot">위쪽 목차 끝의 "기기" 버튼으로 언제든 바꿀 수 있습니다.</p>
+  <p class="dd-foot">위쪽의 <b>1대 · 2대</b> 버튼으로 언제든 바로 바꿀 수 있습니다.</p>
   <button type="button" class="dd-close" data-dev-close hidden>닫기</button>
 </dialog>
   <nav class="toc" aria-label="목차">
@@ -381,10 +408,20 @@
       <li><a href="#admin">관리자 따라 하기</a></li>
       <li><a href="#together">함께 해 보기</a></li>
       <li><a href="#rules">규칙 한 장</a></li>
-      <li class="ext"><a href="#accounts-all">전체 계정</a></li>
-      <li class="ext"><a href="#seat-qr">좌석 QR (가이드)</a></li>
-      <li class="ext dev-chip"><button type="button" data-dev-open>기기 <span data-dev-label>두 대</span></button></li>
+      <li><a href="#tools">기타</a></li>
     </ol>
+    <div class="dev-mini" role="group" aria-label="기기 수">
+      <button type="button" data-pick="one" aria-pressed="false">1대</button>
+      <button type="button" data-pick="two" aria-pressed="true">2대</button>
+    </div>
+    <div class="tools">
+      <button type="button" class="tools-btn" aria-expanded="false" aria-controls="tools-menu">더보기</button>
+      <div class="tools-menu" id="tools-menu" hidden>
+        <a href="#accounts-all"><b>전체 계정</b><span>팀원과 가상 학생의 학번</span></a>
+        <a href="#seat-qr"><b>좌석 QR</b><span>가이드에서 QR 띄우기</span></a>
+        <button type="button" data-dev-open><b>기기 수 설명 보기</b><span>한 대와 두 대의 차이</span></button>
+      </div>
+    </div>
   </nav>
 <div class="hero">
   <div class="hero-in">
@@ -1143,7 +1180,7 @@
       <header>
         <span class="role both">6단계 · 이용자 + 관리자</span>
         <h2>함께 해 보기</h2>
-        <p>관리자와 학생이 서로 주고받는 기능입니다. 처음에 고른 기기 수에 맞는 순서로 나옵니다.</p>
+        <p>학생과 관리자가 서로 주고받는 기능을 직접 두 역할을 오가며 해 봅니다. 시연 도구는 쓰지 않습니다. 처음에 고른 기기 수에 맞는 순서로 나옵니다.</p>
         <p style="margin-top:10px"><button type="button" class="dev-open on-light" data-dev-open>기기 <span data-dev-label>두 대</span> · 바꾸기</button></p>
         <div class="devices">
           <div class="dev-two"><b>기기 두 대</b><span>휴대폰은 학생(내 학번), PC는 관리자(a + 내 학번)로 로그인해 두는 것이 가장 쉽습니다. 휴대폰 두 대도 됩니다. 상대 화면이 바로 바뀌는 것을 볼 수 있습니다. 좌석 QR은 한쪽 화면에 띄우고 다른 쪽으로 찍습니다.</span></div>
@@ -1153,26 +1190,25 @@
       <div class="stack">
         <div class="scn card">
           <h3>1. 자리비움 신고부터 반납까지</h3>
-          <p class="lead">이 서비스의 핵심 흐름입니다. 자리를 비운 이용자 A는 가상 학생으로 만들고, 내가 신고자 B와 관리자를 맡습니다.</p>
+          <p class="lead">이 서비스의 핵심 흐름입니다. 내가 신고하는 학생과 처리하는 관리자를 차례로 맡습니다. 자리를 비운 이용자는 지금 좌석을 쓰고 있는 가상 학생입니다.</p>
           <div class="play">
-            <div class="turn"><span class="who a">관리자</span><p><b>시연 → 학생 시나리오</b>에서 가상 학생을 고르고 <b>이용 중</b>을 누릅니다. 상태 줄에 나온 좌석 번호를 기억합니다. 이 학생이 A입니다.</p></div>
-            <div class="turn dev-one"><span class="who s">전환</span><p>로그아웃 → 학생(내 학번)으로 로그인</p></div>
-            <div class="turn"><span class="who u">신고자 B</span><p>내 좌석이 있으면 먼저 반납합니다. <a class="go" href="#seat-qr">가이드의 좌석 QR</a>에서 A의 좌석을 <span class="dev-two">띄워 찍고</span><span class="dev-one">골라 "이 기기에서 좌석 열기"를 누르고</span> <b>자리비움 신고</b>를 누릅니다.</p></div>
-            <div class="turn"><span class="who s">자동</span><p>A에게 "자리 확인 요청 · 15분 안에 응답" 알림이 갑니다. <span class="dev-two">관리자 화면에 신고 팝업이 바로 뜹니다.</span><span class="dev-one">관리자로 들어가면 처리 대기에 빨간 숫자가 붙어 있습니다.</span></p></div>
+            <div class="turn"><span class="who u">학생</span><p>앱의 좌석 지도에서 회색 <b>사용 중</b> 좌석 하나를 고릅니다. 내 좌석이 있으면 먼저 반납합니다.</p></div>
+            <div class="turn"><span class="who u">학생</span><p><a class="go" href="#seat-qr">가이드의 좌석 QR</a>에서 그 좌석을 <span class="dev-two">띄워 앱으로 찍고</span><span class="dev-one">골라 "이 기기에서 좌석 열기"를 누르고</span> <b>자리비움 신고</b> → <b>신고하기</b>를 누릅니다.</p></div>
+            <div class="turn"><span class="who s">자동</span><p>그 좌석 이용자에게 "자리 확인 요청" 알림이 갑니다. <span class="dev-two">관리자 화면에 신고 팝업이 바로 뜹니다.</span><span class="dev-one">관리자로 들어가면 처리 대기에 빨간 숫자가 붙어 있습니다.</span></p></div>
             <div class="turn dev-one"><span class="who s">전환</span><p>로그아웃 → 관리자(a + 내 학번)로 로그인</p></div>
-            <div class="turn"><span class="who a">관리자</span><p>처리 대기에서 <b>확인 시작</b>을 누릅니다. A와 B에게 "관리자 확인 중" 알림이 가고 자동 반납이 멈춥니다.</p></div>
-            <div class="turn"><span class="who a">관리자</span><p>필요하면 대화에 메시지를 보냅니다. 관리자가 먼저 보내야 B가 답할 수 있습니다.</p></div>
-            <div class="turn"><span class="who a">관리자</span><p>자리가 비어 있으면 짐을 적고 <b>반납 확정</b>.</p></div>
-            <div class="turn"><span class="who s">자동</span><p>A는 벌점과 짐 보관 안내를 받습니다. B는 "5분 동안 먼저 예약할 수 있습니다" 알림을 받습니다.</p></div>
+            <div class="turn"><span class="who a">관리자</span><p>처리 대기에서 <b>확인 시작</b>을 누릅니다. 내가 맡은 것으로 표시되고 자동 반납이 멈춥니다.</p></div>
+            <div class="turn"><span class="who a">관리자</span><p>신고자와 대화에 메시지를 하나 보냅니다. 신고자가 나 자신이라 <span class="dev-two">휴대폰에서 바로 답할 수 있습니다.</span><span class="dev-one">학생으로 돌아가면 그 메시지가 와 있습니다.</span></p></div>
+            <div class="turn"><span class="who a">관리자</span><p>남은 짐을 적고 <b>반납 확정</b>을 누릅니다.</p></div>
+            <div class="turn"><span class="who s">자동</span><p>이용자는 벌점과 짐 보관 안내를 받습니다. 신고한 나에게는 "5분 동안 먼저 예약할 수 있습니다" 알림이 옵니다.</p></div>
             <div class="turn dev-one"><span class="who s">전환</span><p>로그아웃 → 학생(내 학번)으로 로그인</p></div>
-            <div class="turn"><span class="who u">신고자 B</span><p>알림을 눌러 그 좌석을 예약합니다. 그 5분 동안 다른 학생은 예약할 수 없습니다.</p></div>
+            <div class="turn"><span class="who u">학생</span><p>알림을 눌러 그 좌석을 예약합니다. 그 5분 동안 다른 학생은 예약할 수 없습니다.</p></div>
           </div>
             <figure class="pushmock">
               <div class="pm-phone pm-stack" aria-hidden="true">
                 <div class="pm-card">
                   <span class="pm-icon">DU</span>
                   <div class="pm-txt">
-                    <div class="pm-top"><b>DU-library</b><span>이용자 A에게</span></div>
+                    <div class="pm-top"><b>DU-library</b><span>그 좌석 이용자에게</span></div>
                     <div class="pm-title">A-054 자리 확인 요청 · 15분 안에 응답</div>
                     <div class="pm-body">자리가 비어 있다는 신고가 들어왔습니다. 좌석 QR을 찍으면 끝납니다.</div>
                   </div>
@@ -1180,7 +1216,7 @@
                 <div class="pm-card">
                   <span class="pm-icon">DU</span>
                   <div class="pm-txt">
-                    <div class="pm-top"><b>DU-library</b><span>신고자 B에게</span></div>
+                    <div class="pm-top"><b>DU-library</b><span>신고한 나에게</span></div>
                     <div class="pm-title">A-054 좌석이 반납되었습니다</div>
                     <div class="pm-body">5분 동안 먼저 예약할 수 있습니다.</div>
                   </div>
@@ -1188,7 +1224,8 @@
               </div>
               <figcaption>이 흐름에서 휴대폰에 뜨는 알림 (예시 그림)</figcaption>
             </figure>
-          <p class="note"><span class="dev-one">우선 예약 5분 안에 다시 로그인해야 합니다. </span>다르게 끝나는 경우도 있습니다. A가 돌아와 자기 좌석 QR을 찍으면 신고는 끝나고 관리자에게 "확인하러 가지 않아도 됩니다"가 갑니다. 관리자가 아무것도 하지 않으면 기한이 지나 자동 반납됩니다.</p>
+          <p class="note"><span class="dev-one">우선 예약 5분 안에 다시 로그인해야 합니다. </span>"방금 체크인한 좌석입니다"가 뜨면 다른 사용 중 좌석을 고릅니다. 관리자가 아무것도 하지 않으면 기한이 지나 자동 반납됩니다.</p>
+          <p class="note">신고당하는 쪽도 해 보려면: 내 학번으로 좌석을 잡고 10분 뒤, <a href="#accounts-all">전체 계정</a>의 가상 학생 하나로 로그인해 내 좌석을 신고합니다. 내 계정으로 돌아오면 "자리 확인 요청"이 와 있고, 내 좌석 QR을 <span class="dev-two">찍으면</span><span class="dev-one">열면</span> 신고가 끝납니다.</p>
         </div>
 
         <div class="scn card">
@@ -1220,13 +1257,18 @@
 
         <div class="scn card">
           <h3>3. 벌점, 예약 정지, 이의신청</h3>
+          <p class="lead">관리자가 벌점을 주고, 학생이 이의신청을 하고, 관리자가 승인하는 흐름입니다.</p>
           <div class="play">
-            <div class="turn"><span class="who a">관리자</span><p>시연 탭의 학생 시나리오에서 내 학생 계정을 고르고 <b>벌점 3점 → 예약 정지</b>를 누릅니다.</p></div>
-            <div class="turn"><span class="who s">자동</span><p>3일간 예약이 정지되고, 이용 중이던 좌석도 바로 반납됩니다.</p></div>
-            <div class="turn dev-one"><span class="who s">전환</span><p>로그아웃 → 학생(내 학번)으로 로그인</p></div>
-            <div class="turn"><span class="who u">이용자</span><p>내 좌석의 벌점 내역에서 <b>이의신청</b>을 누르고 사유를 적습니다.</p></div>
+            <div class="turn"><span class="who u">학생</span><p>좌석 하나를 예약하고 체크인해 둡니다.</p></div>
             <div class="turn dev-one"><span class="who s">전환</span><p>로그아웃 → 관리자(a + 내 학번)로 로그인</p></div>
-            <div class="turn"><span class="who a">관리자</span><p>처리 대기의 이의신청에서 <b>승인</b>. 벌점이 취소되고 정지도 풀립니다.</p></div>
+            <div class="turn"><span class="who a">관리자</span><p><b>학생·제재</b>에서 내 학번을 검색해 엽니다. 벌점 <b>3점</b>과 사유를 넣고 <b>벌점 부여</b>를 누릅니다.</p></div>
+            <div class="turn"><span class="who s">자동</span><p>3점이 되어 3일간 예약이 정지되고, 이용 중이던 좌석도 바로 반납됩니다. 학생에게 알림이 갑니다.</p></div>
+            <div class="turn dev-one"><span class="who s">전환</span><p>로그아웃 → 학생(내 학번)으로 로그인</p></div>
+            <div class="turn"><span class="who u">학생</span><p>내 좌석에서 좌석이 사라지고 벌점 3점과 예약 정지가 보입니다. 벌점 내역의 <b>이의신청</b>을 누르고 사유를 적습니다.</p></div>
+            <div class="turn dev-one"><span class="who s">전환</span><p>로그아웃 → 관리자(a + 내 학번)로 로그인</p></div>
+            <div class="turn"><span class="who a">관리자</span><p>처리 대기의 이의신청에서 <b>내가 맡기</b> → 답변을 적고 <b>승인</b>. 벌점이 취소되고 정지도 풀립니다.</p></div>
+            <div class="turn dev-one"><span class="who s">전환</span><p>로그아웃 → 학생(내 학번)으로 로그인</p></div>
+            <div class="turn"><span class="who u">학생</span><p>승인 알림이 와 있고 다시 예약할 수 있습니다.</p></div>
           </div>
         </div>
 
@@ -1259,80 +1301,11 @@
             </div>
         </div>
 
-        <div class="step has-shot card">
-          <div>
-            <span class="where a adm">앱에서 합니다 · 관리자</span>
-            <h3 style="display:block">5. 혼잡도를 바꿔 규칙이 달라지는 것 보기</h3>
-            <span class="path">관리자 → 시연</span> <a class="openapp" href="https://du-library-ruddy.vercel.app/admin/demo" target="_blank" rel="noopener">이 화면 열기</a>
-            <div class="seg adm-seg" role="group" aria-label="관리자 화면 보기">
-              <button type="button" data-adm="pc" aria-pressed="true">PC 화면</button>
-              <button type="button" data-adm="m" aria-pressed="false">모바일 화면</button>
-            </div>
-            <div class="viz dual">
-              <figure class="shot adm-m"><div class="shotbox"><img src="{{IMG:demo}}" alt="시연 탭의 학생 시나리오. 가상 학생과 열람실 선택, 현재 상태 줄, 예약·체크인과 이용 묶음의 상황 버튼들"><i class="hl" style="left:8.00%;top:21.43%;width:80.53%;height:5.91%"><b>1</b></i><i class="hl" style="left:4.27%;top:29.31%;width:88.53%;height:5.42%"><b>2</b></i><i class="hl" style="left:8.00%;top:39.90%;width:80.53%;height:19.21%"><b>3</b></i></div><figcaption>시연 · 학생 시나리오</figcaption></figure>
-              <figure class="shot shotpc adm-pc"><div class="shotbox"><img src="{{IMG:pcdemo}}" alt="PC의 학생 시나리오. 학생과 열람실 선택, 상태 줄, 예약·체크인과 이용, 외출, 자리비움 신고 묶음의 버튼들"><i class="hl" style="left:3.00%;top:23.19%;width:92.64%;height:6.11%"><b>1</b></i><i class="hl" style="left:3.00%;top:31.67%;width:92.64%;height:6.11%"><b>2</b></i><i class="hl" style="left:3.00%;top:43.89%;width:92.64%;height:6.67%"><b>3</b></i></div><figcaption>시연 · 학생 시나리오 · PC</figcaption></figure>
-              <div class="viz-side">
-              <ol class="legend">
-                <li><span>학생과 열람실을 고릅니다</span></li>
-                <li><span>그 학생의 지금 상태</span></li>
-                <li><span>누르면 그 학생이 바로 그 상황이 됩니다</span></li>
-              </ol>
-            <p class="note bad">전체 초기화는 모든 예약, 벌점, 신고, 알림을 지웁니다. 되돌릴 수 없습니다.</p>
-                      <details class="more-d">
-              <summary>자세히</summary>
-            <ul>
-              <li>층별 혼잡도를 여유 30%, 보통 65%, 혼잡 90%로 맞출 수 있습니다. 가상 학생으로 채웁니다. 자동 이용이 켜져 있으면 잠기므로 먼저 끕니다.</li>
-              <li>혼잡으로 바꾼 뒤 이용자 화면에서 외출을 누르면 60분이던 안내가 20분으로 바뀝니다. 연장도 2회로 제한됩니다.</li>
-              <li><b>학생 시나리오</b>의 버튼을 누르면 고른 학생이 바로 그 상황이 됩니다. 체크인 마감 1분 전, 외출 초과, 신고 접수 같은 것을 기다리지 않고 볼 수 있습니다.</li>
-              <li><b>자동 시연</b>은 상황을 순서대로 담아 두고 몇 초 간격으로 실행합니다. 발표 때 손을 떼고 보여 줄 수 있습니다.</li>
-            </ul>
-            </details>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="step has-shot card" id="auto">
-          <div>
-            <span class="where a adm">앱에서 합니다 · 관리자</span>
-            <h3 style="display:block">6. 가상 학생 자동 이용을 켜 두고 테스트하기</h3>
-            <span class="path">관리자 → 시연 → 가상 학생 자동 이용</span> <a class="openapp" href="https://du-library-ruddy.vercel.app/admin/demo" target="_blank" rel="noopener">이 화면 열기</a>
-            <div class="seg adm-seg" role="group" aria-label="관리자 화면 보기">
-              <button type="button" data-adm="pc" aria-pressed="true">PC 화면</button>
-              <button type="button" data-adm="m" aria-pressed="false">모바일 화면</button>
-            </div>
-            <div class="viz dual">
-              <figure class="shot adm-m"><div class="shotbox"><img src="{{IMG:auto}}" alt="시연 탭 맨 위. 가상 학생 자동 이용 스위치가 켜져 있고, 아래 층별 혼잡도의 여유·보통·혼잡 버튼과 전체 초기화가 흐리게 잠겨 있다"><i class="hl" style="left:4.27%;top:29.06%;width:87.47%;height:10.84%"><b>1</b></i><i class="hl" style="left:59.73%;top:19.46%;width:32.53%;height:5.67%"><b>2</b></i><i class="hl" style="left:8.53%;top:70.69%;width:78.93%;height:13.30%"><b>3</b></i></div><figcaption>시연 · 자동 이용 켜짐</figcaption></figure>
-              <figure class="shot shotpc adm-pc"><div class="shotbox"><img src="{{IMG:pcauto}}" alt="PC의 시연 탭. 가상 학생 자동 이용 스위치가 켜져 있고 전체 초기화와 층별 혼잡도 버튼이 흐리게 잠겨 있다"><i class="hl" style="left:1.45%;top:30.83%;width:95.64%;height:11.67%"><b>1</b></i><i class="hl" style="left:86.36%;top:20.14%;width:10.82%;height:6.11%"><b>2</b></i><i class="hl" style="left:3.00%;top:77.92%;width:44.27%;height:13.89%"><b>3</b></i></div><figcaption>시연 · 자동 이용 켜짐 · PC</figcaption></figure>
-              <div class="viz-side">
-              <ol class="legend">
-                <li><span>스위치로 켜고 끕니다</span></li>
-                <li><span>켜져 있으면 전체 초기화가 잠깁니다</span></li>
-                <li><span>혼잡도 조정도 잠깁니다</span></li>
-              </ol>
-            <p style="margin-top:14px">가상 학생이 보낸 신고나 도움 요청에 대화를 보내면 <b>[가상 학생 자동 답장]</b>으로 시작하는 답이 바로 옵니다. 상대가 없어도 대화 기능을 끝까지 확인할 수 있습니다.</p>
-            <p class="note">켜져 있는 동안 층별 혼잡도 조정과 전체 초기화는 잠깁니다. 끄면 좌석은 그 상태로 남고 다시 쓸 수 있습니다.</p>
-                      <details class="more-d">
-              <summary>자세히</summary>
-            <ul>
-              <li>켜 두면 가상 학생 440명이 매일 운영 시간에 스스로 예약, 체크인, 외출, 복귀, 연장, 자리 이동, 반납을 합니다. 실제 학생과 똑같은 규칙을 거치므로 미체크인 벌점이나 예약 정지도 생깁니다.</li>
-              <li>오전에 차오르고 오후 3~5시에 가장 붐볐다가 저녁에 빠집니다. 5층은 혼잡(80% 이상)까지 올라가고 2층은 보통에 머뭅니다.</li>
-              <li><b>학생으로 테스트</b>: 좌석 지도가 계속 바뀌고, 그때의 혼잡도에 따라 외출 시간과 연장 제한이 달라지는 것을 그대로 겪습니다.</li>
-              <li><b>관리자로 테스트</b>: 자리비움 신고(한 번에 2건까지)와 도움 요청(1건)이 가끔 들어옵니다. 처리 대기에서 실제처럼 처리해 봅니다. 도움 요청은 7분 안에 받지 않으면 학생이 취소합니다.</li>
-              <li>팀원과 관리자 계정은 자동으로 움직이지 않습니다. 가상 학생으로 직접 로그인하면 그 학생은 3시간 동안 자동에서 빠집니다.</li>
-              <li>관리자가 관제나 학생 시나리오로 손댄 좌석과 학생은 자동에서 빠집니다. 서로 덮어쓰지 않습니다.</li>
-            </ul>
-            </details>
-              </div>
-            </div>
-          </div>
-        </div>
-
         <div class="scn card">
-          <h3>7. 관리자 두 명이 같은 건을 볼 때</h3>
-          <p class="lead">팀원 두 명이 각자 자기 관리자 계정으로 들어가서 합니다. 자동 이용이 켜져 있으면 신고와 도움 요청이 가끔 들어오니 그것으로 해 봅니다.</p>
+          <h3>5. 관리자 두 명이 같은 건을 볼 때</h3>
+          <p class="lead">팀원 두 명이 각자 자기 관리자 계정으로 들어가서 합니다. 먼저 한 명이 자기 학생 계정으로 도움 요청을 하나 보내 둡니다.</p>
           <div class="play">
-            <div class="turn"><span class="who a">관리자 1</span><p>처리 대기의 도움 요청에서 <b>내가 맡기</b>를 누르고 대화를 하나 보냅니다. 가상 학생이면 자동 답장이 옵니다.</p></div>
+            <div class="turn"><span class="who a">관리자 1</span><p>처리 대기의 그 도움 요청에서 <b>내가 맡기</b>를 누릅니다.</p></div>
             <div class="turn"><span class="who a">관리자 2</span><p>같은 카드에 "관리자 1 처리 중"이 보이고 버튼이 잠겨 있습니다.</p></div>
             <div class="turn"><span class="who a">관리자 2</span><p><b>넘겨받기</b>를 누릅니다.</p></div>
             <div class="turn"><span class="who a">관리자 1</span><p>"관리자 2님이 넘겨받았습니다" 알림을 받습니다. 이제 이쪽 버튼이 잠깁니다.</p></div>
@@ -1386,6 +1359,148 @@
               <tr><th>예약 정지</th><td>최근 30일 3점이면 3일, 6점이면 14일. 정지되면 이용 중인 좌석도 반납</td></tr>
             </tbody>
           </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="tools" class="admin-sec">
+      <header>
+        <span class="role both">기타</span>
+        <h2>기타</h2>
+        <p>앞의 단계에서 다루지 않은 것들입니다. 발표나 빠른 확인에 쓰는 시연 도구, 테스트할 때 쓰는 설정, 되돌리기, 그리고 소개하지 않은 나머지 기능입니다.</p>
+      </header>
+      <div class="stack">
+        <div class="step has-shot card">
+          <div>
+            <span class="where a adm">앱에서 합니다 · 관리자</span>
+            <h3 style="display:block">혼잡도를 맞추고 학생을 원하는 상황으로 만들기</h3>
+            <span class="path">관리자 → 시연</span> <a class="openapp" href="https://du-library-ruddy.vercel.app/admin/demo" target="_blank" rel="noopener">이 화면 열기</a>
+            <div class="seg adm-seg" role="group" aria-label="관리자 화면 보기">
+              <button type="button" data-adm="pc" aria-pressed="true">PC 화면</button>
+              <button type="button" data-adm="m" aria-pressed="false">모바일 화면</button>
+            </div>
+            <div class="viz dual">
+              <figure class="shot adm-m"><div class="shotbox"><img src="{{IMG:demo}}" alt="시연 탭의 학생 시나리오. 가상 학생과 열람실 선택, 현재 상태 줄, 예약·체크인과 이용 묶음의 상황 버튼들"><i class="hl" style="left:8.00%;top:21.43%;width:80.53%;height:5.91%"><b>1</b></i><i class="hl" style="left:4.27%;top:29.31%;width:88.53%;height:5.42%"><b>2</b></i><i class="hl" style="left:8.00%;top:39.90%;width:80.53%;height:19.21%"><b>3</b></i></div><figcaption>시연 · 학생 시나리오</figcaption></figure>
+              <figure class="shot shotpc adm-pc"><div class="shotbox"><img src="{{IMG:pcdemo}}" alt="PC의 학생 시나리오. 학생과 열람실 선택, 상태 줄, 예약·체크인과 이용, 외출, 자리비움 신고 묶음의 버튼들"><i class="hl" style="left:3.00%;top:23.19%;width:92.64%;height:6.11%"><b>1</b></i><i class="hl" style="left:3.00%;top:31.67%;width:92.64%;height:6.11%"><b>2</b></i><i class="hl" style="left:3.00%;top:43.89%;width:92.64%;height:6.67%"><b>3</b></i></div><figcaption>시연 · 학생 시나리오 · PC</figcaption></figure>
+              <div class="viz-side">
+              <ol class="legend">
+                <li><span>학생과 열람실을 고릅니다</span></li>
+                <li><span>그 학생의 지금 상태</span></li>
+                <li><span>누르면 그 학생이 바로 그 상황이 됩니다</span></li>
+              </ol>
+            <p class="note bad">전체 초기화는 모든 예약, 벌점, 신고, 알림을 지웁니다. 되돌릴 수 없습니다.</p>
+                      <details class="more-d">
+              <summary>자세히</summary>
+            <ul>
+              <li>층별 혼잡도를 여유 30%, 보통 65%, 혼잡 90%로 맞출 수 있습니다. 가상 학생으로 채웁니다. 자동 이용이 켜져 있으면 잠기므로 먼저 끕니다.</li>
+              <li>혼잡으로 바꾼 뒤 이용자 화면에서 외출을 누르면 60분이던 안내가 20분으로 바뀝니다. 연장도 2회로 제한됩니다.</li>
+              <li><b>학생 시나리오</b>의 버튼을 누르면 고른 학생이 바로 그 상황이 됩니다. 체크인 마감 1분 전, 외출 초과, 신고 접수 같은 것을 기다리지 않고 볼 수 있습니다.</li>
+              <li><b>자동 시연</b>은 상황을 순서대로 담아 두고 몇 초 간격으로 실행합니다. 발표 때 손을 떼고 보여 줄 수 있습니다.</li>
+            </ul>
+            </details>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step has-shot card" id="auto">
+          <div>
+            <span class="where a adm">앱에서 합니다 · 관리자</span>
+            <h3 style="display:block">가상 학생 자동 이용</h3>
+            <span class="path">관리자 → 시연 → 가상 학생 자동 이용</span> <a class="openapp" href="https://du-library-ruddy.vercel.app/admin/demo" target="_blank" rel="noopener">이 화면 열기</a>
+            <div class="seg adm-seg" role="group" aria-label="관리자 화면 보기">
+              <button type="button" data-adm="pc" aria-pressed="true">PC 화면</button>
+              <button type="button" data-adm="m" aria-pressed="false">모바일 화면</button>
+            </div>
+            <div class="viz dual">
+              <figure class="shot adm-m"><div class="shotbox"><img src="{{IMG:auto}}" alt="시연 탭 맨 위. 가상 학생 자동 이용 스위치가 켜져 있고, 아래 층별 혼잡도의 여유·보통·혼잡 버튼과 전체 초기화가 흐리게 잠겨 있다"><i class="hl" style="left:4.27%;top:29.06%;width:87.47%;height:10.84%"><b>1</b></i><i class="hl" style="left:59.73%;top:19.46%;width:32.53%;height:5.67%"><b>2</b></i><i class="hl" style="left:8.53%;top:70.69%;width:78.93%;height:13.30%"><b>3</b></i></div><figcaption>시연 · 자동 이용 켜짐</figcaption></figure>
+              <figure class="shot shotpc adm-pc"><div class="shotbox"><img src="{{IMG:pcauto}}" alt="PC의 시연 탭. 가상 학생 자동 이용 스위치가 켜져 있고 전체 초기화와 층별 혼잡도 버튼이 흐리게 잠겨 있다"><i class="hl" style="left:1.45%;top:30.83%;width:95.64%;height:11.67%"><b>1</b></i><i class="hl" style="left:86.36%;top:20.14%;width:10.82%;height:6.11%"><b>2</b></i><i class="hl" style="left:3.00%;top:77.92%;width:44.27%;height:13.89%"><b>3</b></i></div><figcaption>시연 · 자동 이용 켜짐 · PC</figcaption></figure>
+              <div class="viz-side">
+              <ol class="legend">
+                <li><span>스위치로 켜고 끕니다</span></li>
+                <li><span>켜져 있으면 전체 초기화가 잠깁니다</span></li>
+                <li><span>혼잡도 조정도 잠깁니다</span></li>
+              </ol>
+            <p style="margin-top:14px">가상 학생이 보낸 신고나 도움 요청에 대화를 보내면 <b>[가상 학생 자동 답장]</b>으로 시작하는 답이 바로 옵니다. 상대가 없어도 대화 기능을 끝까지 확인할 수 있습니다.</p>
+            <p class="note">켜져 있는 동안 층별 혼잡도 조정과 전체 초기화는 잠깁니다. 끄면 좌석은 그 상태로 남고 다시 쓸 수 있습니다.</p>
+                      <details class="more-d">
+              <summary>자세히</summary>
+            <ul>
+              <li>켜 두면 가상 학생 440명이 매일 운영 시간에 스스로 예약, 체크인, 외출, 복귀, 연장, 자리 이동, 반납을 합니다. 실제 학생과 똑같은 규칙을 거치므로 미체크인 벌점이나 예약 정지도 생깁니다.</li>
+              <li>오전에 차오르고 오후 3~5시에 가장 붐볐다가 저녁에 빠집니다. 5층은 혼잡(80% 이상)까지 올라가고 2층은 보통에 머뭅니다.</li>
+              <li><b>학생으로 테스트</b>: 좌석 지도가 계속 바뀌고, 그때의 혼잡도에 따라 외출 시간과 연장 제한이 달라지는 것을 그대로 겪습니다.</li>
+              <li><b>관리자로 테스트</b>: 자리비움 신고(한 번에 2건까지)와 도움 요청(1건)이 가끔 들어옵니다. 처리 대기에서 실제처럼 처리해 봅니다. 도움 요청은 7분 안에 받지 않으면 학생이 취소합니다.</li>
+              <li>팀원과 관리자 계정은 자동으로 움직이지 않습니다. 가상 학생으로 직접 로그인하면 그 학생은 3시간 동안 자동에서 빠집니다.</li>
+              <li>관리자가 관제나 학생 시나리오로 손댄 좌석과 학생은 자동에서 빠집니다. 서로 덮어쓰지 않습니다.</li>
+            </ul>
+            </details>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step card">
+          <span class="where a adm">앱에서 합니다 · 관리자</span>
+          <h3>테스트할 때 쓰는 설정</h3>
+          <span class="path">관리자 → 시연 → 운영 상황</span> <a class="openapp" href="https://du-library-ruddy.vercel.app/admin/demo" target="_blank" rel="noopener">이 화면 열기</a>
+          <div class="tablebox" style="margin-top:12px">
+            <table>
+              <thead><tr><th>설정</th><th>켜면</th></tr></thead>
+              <tbody>
+                <tr><th>운영시간 무시</th><td>밤, 주말, 휴관일에도 예약됩니다. 끝나면 다시 끕니다.</td></tr>
+                <tr><th>위치 확인 끔</th><td>어디서든 QR이 처리됩니다. 지금 켜져 있습니다. 끄면 도서관 반경 200m 안에서만 됩니다.</td></tr>
+                <tr><th>장애 모드</th><td>자동 취소, 자동 반납, 벌점이 모두 멈춥니다. 학생 화면 위에 안내가 뜹니다.</td></tr>
+                <tr><th>운영 기간</th><td>오늘만 학기 중, 방학, 시험기간으로 바꿔 봅니다. "일정대로"를 누르면 원래대로 돌아갑니다.</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="note">같은 스위치가 운영 설정의 테스트 설정에도 있습니다.</p>
+        </div>
+
+        <div class="step card">
+          <span class="where a adm">앱에서 합니다 · 관리자</span>
+          <h3>되돌리기</h3>
+          <div class="tablebox" style="margin-top:12px">
+            <table>
+              <thead><tr><th>무엇을</th><th>어디서</th><th>지워지는 것</th></tr></thead>
+              <tbody>
+                <tr><th>학생 한 명</th><td>학생·제재 → 학생 선택 → 초기화</td><td>그 학생의 좌석, 벌점, 예약 정지, 알림</td></tr>
+                <tr><th>전체</th><td>시연 → 오른쪽 위 전체 초기화</td><td>모든 예약, 벌점, 신고, 도움 요청, 알림. 닫아 둔 좌석도 다시 열립니다</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="note bad">전체 초기화는 되돌릴 수 없습니다. 가상 학생 자동 이용이 켜져 있으면 잠기므로 먼저 꺼야 합니다.</p>
+        </div>
+
+        <div class="step card">
+          <h3>앞에서 다루지 않은 기능</h3>
+          <div class="tablebox" style="margin-top:12px">
+            <table>
+              <thead><tr><th>학생</th><th>어디서</th><th>무엇</th></tr></thead>
+              <tbody>
+                <tr><th>열람실 빈자리 알림</th><td>홈·열람실 카드의 종</td><td>자리가 없을 때 켜 두면 빈자리가 생길 때 알려 줍니다</td></tr>
+                <tr><th>자리 이동</th><td>내 좌석 → 자리 이동</td><td>옮길 좌석의 QR을 찍으면 남은 시간 그대로 옮겨집니다. 원래 좌석은 10분 동안 다시 예약할 수 없습니다</td></tr>
+                <tr><th>우선 예약으로 바꾸기</th><td>알림</td><td>체크인 대기 중인데 내가 신고한 좌석이 반납되면, 1분 안에 그 좌석으로 바꿀지 고릅니다</td></tr>
+                <tr><th>보관 중인 짐</th><td>내 좌석</td><td>신고로 반납된 좌석에 짐이 있었으면 보관 번호, 찾는 곳, 기한이 나옵니다</td></tr>
+                <tr><th>허위 신고 이의신청</th><td>내 좌석 → 내 신고</td><td>내 신고가 허위로 기록됐을 때 사유를 적어 신청합니다</td></tr>
+                <tr><th>공지</th><td>홈의 공지 줄</td><td>새 공지가 있으면 빨간 점이 붙습니다</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="tablebox" style="margin-top:12px">
+            <table>
+              <thead><tr><th>관리자</th><th>어디서</th><th>무엇</th></tr></thead>
+              <tbody>
+                <tr><th>보관 중인 짐</th><td>처리 대기 → 보관 중인 짐</td><td>보관 번호·학번·이름으로 찾고, 찾아감이나 처분으로 끝냅니다. 보관 장소와 기간도 여기서 바꿉니다</td></tr>
+                <tr><th>대신 배정</th><td>관제 → 빈 좌석</td><td>학번을 적어 좌석을 대신 잡아 줍니다. 휴대폰이 없는 학생용입니다</td></tr>
+                <tr><th>구역·열람실 닫기</th><td>좌석·열람실</td><td>구역 전체 선택으로 한꺼번에 닫고 엽니다. 열람실 임시 폐쇄도 여기 있습니다</td></tr>
+                <tr><th>좌석 QR</th><td>좌석 QR</td><td>좌석별 QR 보기와 인쇄, 유출됐을 때 재발급</td></tr>
+                <tr><th>계정</th><td>학생·제재</td><td>계정 만들기, 이름·전공 수정, 삭제, 비밀번호 초기화, 좌석 이동 기록</td></tr>
+                <tr><th>운영 설정</th><td>운영 설정</td><td>시간과 벌점 기준, 운영 기간, 휴관일</td></tr>
+                <tr><th>통계·기록</th><td>통계·기록</td><td>일별 예약·노쇼·자동 회수, 관리자가 한 일의 기록</td></tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </section>
@@ -1549,7 +1664,7 @@
   (function () {
     var root = document.getElementById("view-guide");
     var dlg = document.getElementById("dev-dlg");
-    var picks = Array.prototype.slice.call(dlg.querySelectorAll("[data-pick]"));
+    var picks = Array.prototype.slice.call(document.querySelectorAll("[data-pick]"));
     var labels = Array.prototype.slice.call(document.querySelectorAll("[data-dev-label]"));
     var closeBtn = dlg.querySelector("[data-dev-close]");
     var chosen = null;
@@ -1591,6 +1706,18 @@
     Array.prototype.forEach.call(document.querySelectorAll("[data-dev-open]"), function (t) { t.addEventListener("click", open); });
     if (chosen) apply(chosen);
     else if (!root.hidden) open();
+  })();
+
+  // 더보기 메뉴
+  (function () {
+    var btn = document.querySelector(".tools-btn");
+    var menu = document.getElementById("tools-menu");
+    if (!btn || !menu) return;
+    function set(open) { menu.hidden = !open; btn.setAttribute("aria-expanded", open ? "true" : "false"); }
+    btn.addEventListener("click", function (e) { e.stopPropagation(); set(menu.hidden); });
+    menu.addEventListener("click", function () { set(false); });
+    document.addEventListener("click", function (e) { if (!menu.hidden && !menu.contains(e.target)) set(false); });
+    document.addEventListener("keydown", function (e) { if (e.key === "Escape") set(false); });
   })();
 
   // 관리자 화면 사진: PC / 모바일. 처음에는 가이드를 보는 화면 크기에 맞추고, 고르면 기억한다
