@@ -61,9 +61,10 @@
 
   .wrap { max-width: 960px; margin: 0 auto; padding-block: 24px 64px; padding-left: max(20px, env(safe-area-inset-left, 0px)); padding-right: max(20px, env(safe-area-inset-right, 0px)); display: grid; gap: 28px; }
 
-  nav.toc { min-width: 0; position: sticky; top: env(safe-area-inset-top, 0px); z-index: 15; background: var(--bg); padding-block: 10px; margin-block: -10px; border-bottom: 1px solid var(--line); }
+  nav.toc { position: sticky; top: 0; z-index: 15; background: var(--bg); border-bottom: 1px solid var(--line); padding: calc(env(safe-area-inset-top, 0px) + 10px) max(16px, env(safe-area-inset-right, 0px)) 10px max(16px, env(safe-area-inset-left, 0px)); }
   body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
-  nav.toc ol { list-style: none; margin: 0; padding: 0; display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; }
+  nav.toc ol { list-style: none; margin: 0 auto; padding: 0; max-width: 928px; display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; touch-action: pan-x; }
+  @media (min-width: 720px) { nav.toc ol { flex-wrap: wrap; justify-content: center; overflow: visible; max-width: 1160px; } }
   nav.toc ol::-webkit-scrollbar { display: none; }
   nav.toc a { display: block; white-space: nowrap; text-decoration: none; font-weight: 700; font-size: 14px; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 8px 14px; }
   nav.toc a:hover, nav.toc a:focus-visible { border-color: var(--deep); color: var(--deep-ink); outline: none; }
@@ -274,6 +275,19 @@
 </style>
 
 <div id="view-guide">
+  <nav class="toc" aria-label="목차">
+    <ol>
+      <li><a href="#install">앱으로 설치</a></li>
+      <li><a href="#start">로그인</a></li>
+      <li><a href="#test">테스트라 다른 점</a></li>
+      <li><a href="#user">이용자 따라 하기</a></li>
+      <li><a href="#admin">관리자 따라 하기</a></li>
+      <li><a href="#together">함께 해 보기</a></li>
+      <li><a href="#rules">규칙 한 장</a></li>
+      <li class="ext"><a href="#accounts-all">전체 계정</a></li>
+      <li class="ext"><a href="#seat-qr">좌석 QR</a></li>
+    </ol>
+  </nav>
 <div class="hero">
   <div class="hero-in">
     <p class="eyebrow">대구대학교 창파도서관 · 열람실 좌석 예약</p>
@@ -288,20 +302,6 @@
 </div>
 
 <div class="wrap">
-  <nav class="toc" aria-label="목차">
-    <ol>
-      <li><a href="#install">앱으로 설치</a></li>
-      <li><a href="#start">로그인</a></li>
-      <li><a href="#test">테스트라 다른 점</a></li>
-      <li><a href="#user">이용자 따라 하기</a></li>
-      <li><a href="#admin">관리자 따라 하기</a></li>
-      <li><a href="#together">함께 해 보기</a></li>
-      <li><a href="#rules">규칙 한 장</a></li>
-      <li class="ext"><a href="#accounts-all">전체 계정</a></li>
-      <li class="ext"><a href="#seat-qr">좌석 QR</a></li>
-    </ol>
-  </nav>
-
   <main>
     <section id="install">
       <header>
