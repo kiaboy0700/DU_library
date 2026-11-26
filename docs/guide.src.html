@@ -208,7 +208,12 @@
   .next a:hover, .next a:focus-visible { filter: brightness(1.08); outline: 2px solid var(--deep); outline-offset: 2px; }
   /* 기기 두 대 / 한 대 */
   #together .seg { max-width: 420px; }
-  #together[data-dev="two"] .dev-one, #together[data-dev="one"] .dev-two { display: none; }
+  #view-guide[data-dev="two"] .dev-one, #view-guide[data-dev="one"] .dev-two { display: none !important; }
+  .dev-pick { margin-top: 18px; border: 1px solid rgba(255, 255, 255, 0.28); border-radius: 16px; padding: 14px 16px; background: rgba(255, 255, 255, 0.08); }
+  .dev-pick > b { display: block; font-size: 17px; }
+  .dev-pick .seg { max-width: 420px; margin-top: 10px; }
+  .dev-pick p { margin-top: 10px; font-size: 15px; color: rgba(255, 255, 255, 0.9); max-width: none; }
+  nav.toc li.dev-chip button { display: block; white-space: nowrap; font: inherit; font-weight: 700; font-size: 14px; color: var(--warn); background: var(--warn-tint); border: 1px solid currentColor; border-radius: 999px; padding: 8px 14px; cursor: pointer; }
   #together .devices { grid-template-columns: 1fr; }
   .turn.dev-one p { color: var(--muted); font-weight: 700; }
 
@@ -277,6 +282,17 @@
   .scanmock figcaption { text-align: center; font-size: 13px; color: var(--muted); margin-top: 8px; }
   .pm-stack { display: grid; gap: 8px; padding: 14px 12px; max-width: 380px; }
 
+  /* 이 단계를 어디서 하는지: 앱 / 가이드 */
+  .where { display: inline-flex; align-items: center; font-size: 13px; font-weight: 800; border-radius: 8px; padding: 3px 10px; margin: 0 4px 8px 0; }
+  .where.a { background: var(--deep); color: #fff; }
+  .where.a.adm { background: #3b4a8f; }
+  .where.g { background: var(--warn-tint); color: var(--warn); box-shadow: inset 0 0 0 1.5px currentColor; }
+  .where-note { margin-top: 8px; }
+  a.gobtn { display: flex; align-items: center; justify-content: center; min-height: 52px; margin-top: 12px; padding: 0 18px; border-radius: 14px; background: var(--warn-tint); color: var(--warn); box-shadow: inset 0 0 0 2px currentColor; font-size: 17px; font-weight: 800; text-decoration: none; }
+  a.gobtn::after { content: " →"; white-space: pre; }
+  a.gobtn:hover, a.gobtn:focus-visible { filter: brightness(0.96); outline: 2px solid currentColor; outline-offset: 2px; }
+  @media (min-width: 720px) { a.gobtn { display: inline-flex; min-width: 280px; } }
+
   /* 그 화면 바로 열기 */
   a.openapp { display: inline-flex; align-items: center; min-height: 28px; margin: 8px 0 0 4px; padding: 0 10px; border-radius: 999px; background: var(--deep); color: #fff; font-size: 13px; font-weight: 700; text-decoration: none; white-space: nowrap; vertical-align: top; }
   a.openapp::after { content: " ↗"; white-space: pre; }
@@ -308,7 +324,7 @@
   footer { color: var(--muted); font-size: 14px; }
 </style>
 
-<div id="view-guide">
+<div id="view-guide" data-dev="two">
   <nav class="toc" aria-label="목차">
     <ol>
       <li><a href="#install">앱으로 설치</a></li>
@@ -319,7 +335,8 @@
       <li><a href="#together">함께 해 보기</a></li>
       <li><a href="#rules">규칙 한 장</a></li>
       <li class="ext"><a href="#accounts-all">전체 계정</a></li>
-      <li class="ext"><a href="#seat-qr">좌석 QR</a></li>
+      <li class="ext"><a href="#seat-qr">좌석 QR (가이드)</a></li>
+      <li class="ext dev-chip"><button type="button" data-dev-toggle>기기 <span data-dev-label>두 대</span></button></li>
     </ol>
   </nav>
 <div class="hero">
@@ -332,6 +349,16 @@
       <div><dt>이용자 로그인</dt><dd>학번 + 비밀번호 <span class="num" style="white-space:nowrap">eorneo1234!</span></dd></div>
       <div><dt>관리자 로그인</dt><dd>학번 칸에 a + 내 학번, 같은 비밀번호</dd></div>
     </dl>
+    <div class="dev-pick">
+      <b>먼저 고르세요 · 기기를 몇 대 쓰나요?</b>
+      <div class="seg dev-seg" role="group" aria-label="기기 수">
+        <button type="button" data-dev="two" aria-pressed="true">두 대 (권장)</button>
+        <button type="button" data-dev="one" aria-pressed="false">한 대</button>
+      </div>
+      <p class="dev-two">휴대폰은 학생 앱, PC(또는 다른 휴대폰)는 가이드와 관리자 화면으로 씁니다. 좌석 QR을 실제로 카메라로 찍고, 상대 화면이 바뀌는 것을 바로 봅니다.</p>
+      <p class="dev-one">휴대폰 하나로 앱과 가이드를 번갈아 엽니다. QR은 찍는 대신 가이드의 "이 기기에서 좌석 열기"로 엽니다. 학생과 관리자는 로그아웃하고 다시 로그인하며 바꿉니다.</p>
+      <p style="font-size:13px;opacity:0.8">고른 방식에 맞는 설명만 나옵니다. 위쪽 목차 끝의 "기기" 버튼으로 언제든 바꿀 수 있습니다.</p>
+    </div>
   </div>
 </div>
 
@@ -393,7 +420,10 @@
               </ol>
 {{TEAM}}
             <p class="note">관리자 계정은 자기 것만 씁니다. 여러 명이 같은 관리자 계정으로 동시에 들어가면 서로 불편해서 한 사람에 하나씩 나눴습니다.</p>
-            <div class="devices" style="margin-top:14px">
+            <div class="devices dev-one" style="margin-top:14px;grid-template-columns:1fr">
+              <div><b>한 대로 할 때</b><span>학생 계정과 관리자 계정을 로그아웃하고 다시 로그인하며 바꿉니다. 가이드도 같은 휴대폰에서 엽니다.</span></div>
+            </div>
+            <div class="devices dev-two" style="margin-top:14px">
               <div><b>학생은 휴대폰으로</b><span>QR 찍기와 푸시 알림이 휴대폰 기준이라 학생 화면은 휴대폰에서 써 주세요.</span></div>
               <div><b>관리자는 PC나 휴대폰</b><span>둘 다 됩니다. 좌석 지도와 처리 대기를 넓게 볼 수 있어서 PC가 더 쉽습니다.</span></div>
             </div>
@@ -405,7 +435,7 @@
               <li>로그인하기 전에도 2층·5층에 남은 좌석 수가 보입니다.</li>
               <li>비밀번호 <code>eorneo1234!</code>는 한글 자판으로 "대구대1234!"를 친 것과 같습니다.</li>
               <li>학번 칸에 아래 값을 넣습니다. 관리자 계정은 내 학번 앞에 <code>a</code>를 붙인 것입니다.</li>
-              <li>학생 계정은 휴대폰으로, 관리자 계정은 PC로 쓰는 것을 권합니다.</li>
+              <li class="dev-two">학생 계정은 휴대폰으로, 관리자 계정은 PC로 쓰는 것을 권합니다.</li>
             </ul>
             </details>
               </div>
@@ -502,7 +532,7 @@
             <thead><tr><th>항목</th><th>실제 운영</th><th>지금</th></tr></thead>
             <tbody>
               <tr><th>위치 확인</th><td data-l="실제 운영">도서관 반경 200m 안에서 찍은 QR만 처리됩니다. 체크인, 외출 복귀, 자리 이동, 신고 모두 해당합니다. 휴대폰 위치 권한을 허용해야 하고, 밖에서 찍으면 거절됩니다.</td><td data-l="지금">꺼 두었습니다. 집에서 찍어도 됩니다.</td></tr>
-              <tr><th>좌석 QR</th><td data-l="실제 운영">책상마다 붙어 있습니다.</td><td data-l="지금"><a class="go" href="#seat-qr">좌석 QR 보기</a>에서 좌석을 골라 다른 기기로 찍거나, 같은 기기에서 바로 엽니다.</td></tr>
+              <tr><th>좌석 QR</th><td data-l="실제 운영">책상마다 붙어 있습니다.</td><td data-l="지금"><a class="go" href="#seat-qr">가이드의 좌석 QR</a>에서 좌석을 골라 <span class="dev-two">다른 기기로 찍습니다.</span><span class="dev-one">"이 기기에서 좌석 열기"로 엽니다.</span></td></tr>
               <tr><th>계정</th><td data-l="실제 운영">학생마다 자기 계정.</td><td data-l="지금">팀원 계정과 가상 학생 계정. 비밀번호가 모두 같습니다.</td></tr>
               <tr><th>다른 이용자</th><td data-l="실제 운영">실제 학생들.</td><td data-l="지금">가상 학생 440명이 운영 시간에 스스로 이용합니다. <a href="#auto">자동 이용</a></td></tr>
               <tr><th>통계</th><td data-l="실제 운영">실제 이용 기록.</td><td data-l="지금">가상 학생 기록이 섞여 있습니다. 발표 때 실제 수치처럼 말하지 않습니다.</td></tr>
@@ -547,11 +577,12 @@
       <header>
         <span class="role user">4단계 · 이용자</span>
         <h2>이용자 따라 하기</h2>
-        <p>휴대폰에서 내 학번으로 로그인해 1번부터 차례로 합니다. 앞 단계에서 잡은 좌석으로 다음 단계를 이어 가도록 짜여 있어서, 끝까지 가면 이용자 기능을 모두 써 보게 됩니다. 찍을 QR은 <a class="go" href="#seat-qr">좌석 QR 보기</a>에서 좌석을 골라 다른 화면에 띄워 놓고 찍으면 됩니다.</p>
+        <p>휴대폰에서 내 학번으로 로그인해 1번부터 차례로 합니다. 앞 단계에서 잡은 좌석으로 다음 단계를 이어 가도록 짜여 있어서, 끝까지 가면 이용자 기능을 모두 써 보게 됩니다. 단계마다 <b>앱에서</b> 하는 일인지 <b>가이드에서</b> 하는 일인지 표시해 두었습니다.</p>
       </header>
       <div class="stack">
         <div class="step has-shot card">
           <div>
+            <span class="where a">앱에서 합니다 · 휴대폰</span>
             <h3><span class="n">1</span>좌석을 예약합니다</h3>
             <span class="path">홈 → 좌석 고르기</span> <a class="openapp" href="https://du-library-ruddy.vercel.app/rooms" target="_blank" rel="noopener">이 화면 열기</a>
             <div class="viz">
@@ -579,6 +610,7 @@
 
         <div class="step has-shot card">
           <div>
+            <span class="where a">앱에서 합니다 · 휴대폰</span>
             <h3><span class="n">2</span>QR을 찍어 체크인합니다</h3>
             <span class="path">홈 → 내 자리 칸 누르기</span> <a class="openapp" href="https://du-library-ruddy.vercel.app/" target="_blank" rel="noopener">이 화면 열기</a>
             <div class="viz">
@@ -594,7 +626,7 @@
               <summary>자세히</summary>
             <ul>
               <li>홈 위쪽의 초록색 내 자리 칸에 좌석 번호와 남은 시간이 나옵니다. 누르면 카메라가 켜집니다.</li>
-              <li>내 좌석 QR을 찍으면 버튼을 더 누르지 않아도 바로 체크인됩니다. QR은 <a class="go" href="#seat-qr">좌석 QR 보기</a>에 있습니다.</li>
+              <li>내 좌석 QR을 찍으면 버튼을 더 누르지 않아도 바로 체크인됩니다. 찍을 QR은 앱이 아니라 가이드에 있습니다. 다음 장에서 이어집니다.</li>
               <li>다른 좌석을 찍으면 "내 좌석이 아닙니다" 창이 뜹니다. 빈자리면 그 좌석으로 바꿔 체크인할 수 있습니다.</li>
               <li>마음이 바뀌면 <b>예약 취소</b>. 취소한 좌석은 10분 동안 다시 예약할 수 없습니다.</li>
             </ul>
@@ -606,8 +638,10 @@
 
         <div class="step has-shot card">
           <div>
-            <h3>찍을 좌석 QR을 다른 화면에 띄웁니다</h3>
-            <span class="path">가이드 → 좌석 QR</span> <a class="openapp" href="#seat-qr">좌석 QR 보기</a>
+            <span class="where g">가이드에서 합니다</span>
+            <h3>찍을 좌석 QR을 가이드에서 띄웁니다</h3>
+            <p class="where-note">좌석 QR은 앱(du-library-ruddy.vercel.app)이 아니라 <b>지금 보고 있는 이 가이드</b>에 있습니다. <span class="dev-two">가이드를 PC나 다른 휴대폰에서 열고 아래 버튼을 누르세요.</span><span class="dev-one">같은 휴대폰에서 가이드와 앱을 번갈아 엽니다. 아래 버튼을 누르세요.</span></p>
+            <a class="gobtn" href="#seat-qr">가이드의 좌석 QR 열기</a>
             <div class="viz">
               <figure class="shot"><div class="shotbox"><img src="{{IMG:gqr1}}" alt="가이드의 좌석 QR 화면. 2층 열람실과 5층 열람실 버튼, 좌석 번호 검색칸에 W-00을 넣었고 아래에 W-001부터 좌석 번호 버튼이 나열되어 있다"><i class="hl" style="left:4.27%;top:19.83%;width:91.47%;height:5.42%"><b>1</b></i><i class="hl out-r" style="left:4.27%;top:26.48%;width:91.47%;height:5.42%"><b>2</b></i><i class="hl" style="left:65.33%;top:39.41%;width:27.20%;height:5.42%"><b>3</b></i></div><figcaption>가이드의 좌석 QR 화면</figcaption></figure>
               <div class="viz-side">
@@ -616,7 +650,7 @@
                 <li><span>좌석 번호로 찾습니다</span></li>
                 <li><span>내가 예약한 좌석 번호를 누릅니다</span></li>
               </ol>
-            <p class="note">실제 운영에서는 책상에 QR이 붙어 있습니다. 지금은 붙일 수 없어서 이 화면이 책상의 QR을 대신합니다. PC나 다른 휴대폰에 띄워 두세요.</p>
+            <p class="note">실제 운영에서는 책상에 QR이 붙어 있습니다. 지금은 붙일 수 없어서 이 화면이 책상의 QR을 대신합니다.<span class="dev-two"> PC나 다른 휴대폰에 띄워 두세요.</span><span class="dev-one"></span></p>
               </div>
             </div>
           </div>
@@ -624,13 +658,14 @@
 
         <div class="step has-shot card">
           <div>
-            <h3>QR이 크게 뜹니다</h3>
+            <span class="where g">가이드에서 합니다</span>
+            <h3>가이드에 QR이 크게 뜹니다</h3>
             <div class="viz">
-              <figure class="shot"><div class="shotbox"><img src="{{IMG:gqr2}}" alt="W-003 좌석의 QR이 크게 뜬 창. 아래에 이전 좌석, 이 기기에서 좌석 열기, 다음 좌석 버튼과 닫기 버튼"><i class="hl" style="left:10.40%;top:28.94%;width:79.20%;height:36.58%"><b>1</b></i><i class="hl" style="left:25.33%;top:67.24%;width:49.33%;height:5.91%"><b>2</b></i></div><figcaption>좌석 QR</figcaption></figure>
+              <figure class="shot"><div class="shotbox"><img src="{{IMG:gqr2}}" alt="W-003 좌석의 QR이 크게 뜬 창. 아래에 이전 좌석, 이 기기에서 좌석 열기, 다음 좌석 버튼과 닫기 버튼"><i class="hl dev-two" style="left:10.40%;top:28.94%;width:79.20%;height:36.58%"><b>1</b></i><i class="hl dev-one" style="left:25.33%;top:67.24%;width:49.33%;height:5.91%"><b>1</b></i></div><figcaption>좌석 QR</figcaption></figure>
               <div class="viz-side">
               <ol class="legend">
-                <li><span>이 QR을 휴대폰 카메라로 찍습니다</span></li>
-                <li><span>기기가 한 대뿐이면 찍을 수 없으니 <b>이 기기에서 좌석 열기</b>를 누릅니다. 찍은 것과 똑같이 처리됩니다</span></li>
+                <li class="dev-two"><span>이 QR을 휴대폰 카메라로 찍습니다</span></li>
+                <li class="dev-one"><span><b>이 기기에서 좌석 열기</b>를 누릅니다. 앱이 열리고 QR을 찍은 것과 똑같이 처리됩니다</span></li>
               </ol>
               </div>
             </div>
@@ -639,9 +674,10 @@
 
         <div class="step has-shot card">
           <div>
-            <h3>휴대폰 카메라로 QR을 찍습니다</h3>
-            <span class="path">홈 → 내 자리 칸 · 위쪽 QR 스캔 버튼</span>
-            <div class="viz">
+            <span class="where a dev-two">앱에서 합니다 · 휴대폰</span><span class="where g dev-one">가이드에서 누르면</span> <span class="where a dev-one">앱이 열립니다</span>
+            <h3><span class="dev-two">앱의 카메라로 그 QR을 찍습니다</span><span class="dev-one">한 대로는 찍지 않고 바로 엽니다</span></h3>
+            <span class="path dev-two">홈 → 내 자리 칸 · 위쪽 QR 스캔 버튼</span>
+            <div class="viz dev-two">
               <figure class="scanmock">
                 <div class="pm-phone" aria-hidden="true">
                   <div class="sm-top">좌석 QR 스캔</div>
@@ -662,17 +698,26 @@
             <p class="note">외출 복귀, 자리 이동, 남의 좌석 신고도 모두 이 방법으로 QR을 찍습니다.</p>
               </div>
             </div>
+            <div class="dev-one">
+              <ol class="plain-steps">
+                <li><b>가이드</b>의 QR 창에서 <b>이 기기에서 좌석 열기</b>를 누릅니다.</li>
+                <li><b>앱</b>이 열리면서 그 좌석 화면으로 갑니다. QR을 찍은 것과 똑같이 처리됩니다.</li>
+                <li>아이폰은 사파리로 열립니다. 사파리에 로그인이 안 되어 있으면 한 번 로그인합니다.</li>
+              </ol>
+              <p class="note">외출 복귀, 자리 이동, 남의 좌석 신고도 모두 같은 방법으로 엽니다.</p>
+            </div>
           </div>
         </div>
 
         <div class="step has-shot card">
           <div>
+            <span class="where a">앱에서 합니다 · 휴대폰</span>
             <h3>체크인됩니다</h3>
             <div class="viz">
               <figure class="shot"><div class="shotbox"><img src="{{IMG:checkin}}" alt="W-003 좌석 화면. 내 좌석 사용 중 표시, 체크인했습니다 열공하세요 라는 초록색 안내, 14시 16분까지 남은 시간 3시간 59분, 외출 연장 반납 버튼"><i class="hl" style="left:8.53%;top:21.92%;width:83.20%;height:5.67%"><b>1</b></i><i class="hl out-l" style="left:67.20%;top:11.70%;width:25.60%;height:3.20%"><b>2</b></i><i class="hl" style="left:8.53%;top:32.76%;width:83.20%;height:6.16%"><b>3</b></i></div><figcaption>체크인 완료</figcaption></figure>
               <div class="viz-side">
               <ol class="legend">
-                <li><span>내 좌석 QR을 찍자마자 체크인됩니다</span></li>
+                <li><span>내 좌석 QR을 <span class="dev-two">찍자마자</span><span class="dev-one">열자마자</span> 체크인됩니다</span></li>
                 <li><span>상태가 <b>사용 중</b>으로 바뀝니다</span></li>
                 <li><span>이 화면에서 바로 외출·연장·반납을 할 수 있습니다</span></li>
               </ol>
@@ -684,6 +729,7 @@
 
         <div class="step has-shot card">
           <div>
+            <span class="where a">앱에서 합니다 · 휴대폰</span>
             <h3><span class="n">3</span>이용 중에 할 수 있는 일</h3>
             <span class="path">내 좌석</span> <a class="openapp" href="https://du-library-ruddy.vercel.app/me" target="_blank" rel="noopener">이 화면 열기</a>
             <div class="viz">
@@ -713,9 +759,10 @@
 
         <div class="step has-shot card">
           <div>
-            <h3><span class="n">4</span>사람이 없는 좌석의 QR을 찍습니다</h3>
-            <span class="path">위쪽 QR 스캔 버튼</span> <a class="openapp" href="#seat-qr">좌석 QR 보기</a>
-            <div class="viz">
+            <span class="where g">가이드</span> <span class="where a">앱 · 휴대폰</span>
+            <h3><span class="n">4</span><span class="dev-two">사람이 없는 좌석의 QR을 찍습니다</span><span class="dev-one">사람이 없는 좌석을 엽니다</span></h3>
+            <a class="gobtn" href="#seat-qr">가이드의 좌석 QR 열기</a>
+            <div class="viz dev-two">
               <figure class="scanmock">
                 <div class="pm-phone" aria-hidden="true">
                   <div class="sm-top">좌석 QR 스캔</div>
@@ -729,21 +776,29 @@
               </figure>
               <div class="viz-side">
               <ol class="plain-steps" style="margin-top:0">
-                <li>좌석 지도에서 <b>사용 중</b>인 다른 좌석을 하나 고릅니다. 실제로는 사람이 없는 그 책상입니다.</li>
-                <li>가이드의 <b>좌석 QR 보기</b>에서 그 좌석 번호를 눌러 QR을 띄웁니다.</li>
-                <li>앱 위쪽의 <b>QR 스캔</b> 버튼을 누르고 그 QR을 찍습니다.</li>
-                <li>그 좌석의 화면으로 넘어갑니다.</li>
+                <li><b>앱</b>의 좌석 지도에서 <b>사용 중</b>인 다른 좌석 번호를 하나 봐 둡니다. 실제로는 사람이 없는 그 책상입니다.</li>
+                <li><b>가이드</b>의 좌석 QR에서 그 좌석 번호를 눌러 QR을 띄웁니다.</li>
+                <li><b>앱</b> 위쪽의 <b>QR 스캔</b> 버튼을 누르고 그 QR을 찍습니다.</li>
+                <li><b>앱</b>이 그 좌석의 화면으로 넘어갑니다.</li>
               </ol>
             <p class="note">지금은 화면만 확인합니다. 실제 신고는 <a href="#together">함께 해 보기</a>에서 합니다.</p>
               </div>
+            </div>
+            <div class="dev-one">
+              <ol class="plain-steps">
+                <li><b>앱</b>의 좌석 지도에서 <b>사용 중</b>인 다른 좌석 번호를 하나 봐 둡니다. 실제로는 사람이 없는 그 책상입니다.</li>
+                <li><b>가이드</b>의 좌석 QR에서 그 좌석 번호를 누르고 <b>이 기기에서 좌석 열기</b>를 누릅니다.</li>
+                <li><b>앱</b>이 그 좌석의 화면으로 넘어갑니다.</li>
+              </ol>
+              <p class="note">지금은 화면만 확인합니다. 실제 신고는 <a href="#together">함께 해 보기</a>에서 합니다.</p>
             </div>
           </div>
         </div>
 
         <div class="step has-shot card">
           <div>
-            <h3>찍으면 그 좌석의 상태와 신고 버튼이 나옵니다</h3>
-            <span class="path">그 좌석의 QR 찍기</span> <a class="openapp" href="#seat-qr">좌석 QR 보기</a>
+            <span class="where a">앱에서 합니다 · 휴대폰</span>
+            <h3>찍으면 앱에 그 좌석의 상태와 신고 버튼이 나옵니다</h3>
             <div class="viz">
               <figure class="shot"><div class="shotbox"><img src="{{IMG:report}}" alt="사용 중인 A-054 좌석 화면. 남은 시간 3시간 36분, 이 좌석 빈자리 알림 버튼과 자리비움 신고 버튼"><i class="hl out-l" style="left:8.53%;top:22.17%;width:83.20%;height:6.90%"><b>1</b></i><i class="hl" style="left:8.53%;top:30.79%;width:83.20%;height:5.17%"><b>2</b></i><i class="hl" style="left:8.53%;top:37.44%;width:83.20%;height:6.16%"><b>3</b></i></div><figcaption>남의 좌석 QR을 찍었을 때</figcaption></figure>
               <div class="viz-side">
@@ -803,6 +858,7 @@
 
         <div class="step has-shot card">
           <div>
+            <span class="where a">앱에서 합니다 · 휴대폰</span>
             <h3><span class="n">5</span>언제 가면 한산한지 봅니다</h3>
             <span class="path">혼잡도</span> <a class="openapp" href="https://du-library-ruddy.vercel.app/stats" target="_blank" rel="noopener">이 화면 열기</a>
             <div class="viz">
@@ -829,6 +885,7 @@
 
         <div class="step has-shot card">
           <div>
+            <span class="where a">앱에서 합니다 · 휴대폰</span>
             <h3><span class="n">6</span>문제가 생기면 도움 요청을 보냅니다</h3>
             <span class="path">내 좌석 → 도움 요청</span> <a class="openapp" href="https://du-library-ruddy.vercel.app/me" target="_blank" rel="noopener">이 화면 열기</a>
             <div class="viz">
@@ -847,6 +904,7 @@
 
         <div class="step has-shot card">
           <div>
+            <span class="where a">앱에서 합니다 · 휴대폰</span>
             <h3><span class="n">7</span>벌점과 이의신청, 내 신고</h3>
             <span class="path">내 좌석 → 벌점</span> <a class="openapp" href="https://du-library-ruddy.vercel.app/me" target="_blank" rel="noopener">이 화면 열기</a>
             <div class="viz">
@@ -871,11 +929,12 @@
       <header>
         <span class="role admin">5단계 · 관리자</span>
         <h2>관리자 따라 하기</h2>
-        <p>이제 관리자 계정(a + 내 학번)으로 들어갑니다. PC와 휴대폰 모두 되지만 PC가 더 쉽습니다. 기기가 한 대면 로그아웃하고 다시 로그인합니다. 방금 학생으로 잡아 둔 내 좌석과 보내 둔 도움 요청이 그대로 보입니다.</p>
+        <p>이제 관리자 계정(a + 내 학번)으로 들어갑니다. <span class="dev-two">PC와 휴대폰 모두 되지만 PC가 더 쉽습니다.</span><span class="dev-one">학생 계정에서 로그아웃하고 관리자 계정으로 다시 로그인합니다.</span> 방금 학생으로 잡아 둔 내 좌석과 보내 둔 도움 요청이 그대로 보입니다.</p>
       </header>
       <div class="stack">
         <div class="step has-shot card">
           <div>
+            <span class="where a adm">앱에서 합니다 · 관리자</span>
             <h3><span class="n">1</span>관제에서 전체를 봅니다</h3>
             <span class="path">관제</span> <a class="openapp" href="https://du-library-ruddy.vercel.app/admin" target="_blank" rel="noopener">이 화면 열기</a>
             <div class="viz">
@@ -904,6 +963,7 @@
 
         <div class="step has-shot card">
           <div>
+            <span class="where a adm">앱에서 합니다 · 관리자</span>
             <h3><span class="n">2</span>처리 대기를 비웁니다</h3>
             <span class="path">처리 대기</span> <a class="openapp" href="https://du-library-ruddy.vercel.app/admin/reports" target="_blank" rel="noopener">이 화면 열기</a>
             <div class="viz">
@@ -933,6 +993,7 @@
 
         <div class="step has-shot card">
           <div>
+            <span class="where a adm">앱에서 합니다 · 관리자</span>
             <h3><span class="n">3</span>신고에 결론을 냅니다</h3>
             <span class="path">처리 대기 → 신고 카드</span> <a class="openapp" href="https://du-library-ruddy.vercel.app/admin/reports" target="_blank" rel="noopener">이 화면 열기</a>
             <div class="viz">
@@ -1014,12 +1075,12 @@
       <p class="next"><a href="#together">다음 · 함께 해 보기 →</a></p>
     </section>
 
-    <section id="together" data-dev="two">
+    <section id="together">
       <header>
         <span class="role both">6단계 · 이용자 + 관리자</span>
         <h2>함께 해 보기</h2>
-        <p>관리자와 학생이 서로 주고받는 기능입니다. 기기가 몇 대인지 고르면 그에 맞는 순서로 바뀝니다.</p>
-        <div class="seg" role="group" aria-label="기기 수" id="dev-seg">
+        <p>관리자와 학생이 서로 주고받는 기능입니다. 처음에 고른 기기 수에 맞는 순서로 나옵니다. 여기서도 바꿀 수 있습니다.</p>
+        <div class="seg dev-seg" role="group" aria-label="기기 수" id="dev-seg">
           <button type="button" data-dev="two" aria-pressed="true">기기 두 대 (권장)</button>
           <button type="button" data-dev="one" aria-pressed="false">기기 한 대</button>
         </div>
@@ -1035,7 +1096,7 @@
           <div class="play">
             <div class="turn"><span class="who a">관리자</span><p><b>시연 → 학생 시나리오</b>에서 가상 학생을 고르고 <b>이용 중</b>을 누릅니다. 상태 줄에 나온 좌석 번호를 기억합니다. 이 학생이 A입니다.</p></div>
             <div class="turn dev-one"><span class="who s">전환</span><p>로그아웃 → 학생(내 학번)으로 로그인</p></div>
-            <div class="turn"><span class="who u">신고자 B</span><p>내 좌석이 있으면 먼저 반납합니다. <a class="go" href="#seat-qr">좌석 QR 보기</a>에서 A의 좌석을 <span class="dev-two">띄워 찍고</span><span class="dev-one">골라 "이 기기에서 좌석 열기"를 누르고</span> <b>자리비움 신고</b>를 누릅니다.</p></div>
+            <div class="turn"><span class="who u">신고자 B</span><p>내 좌석이 있으면 먼저 반납합니다. <a class="go" href="#seat-qr">가이드의 좌석 QR</a>에서 A의 좌석을 <span class="dev-two">띄워 찍고</span><span class="dev-one">골라 "이 기기에서 좌석 열기"를 누르고</span> <b>자리비움 신고</b>를 누릅니다.</p></div>
             <div class="turn"><span class="who s">자동</span><p>A에게 "자리 확인 요청 · 15분 안에 응답" 알림이 갑니다. <span class="dev-two">관리자 화면에 신고 팝업이 바로 뜹니다.</span><span class="dev-one">관리자로 들어가면 처리 대기에 빨간 숫자가 붙어 있습니다.</span></p></div>
             <div class="turn dev-one"><span class="who s">전환</span><p>로그아웃 → 관리자(a + 내 학번)로 로그인</p></div>
             <div class="turn"><span class="who a">관리자</span><p>처리 대기에서 <b>확인 시작</b>을 누릅니다. A와 B에게 "관리자 확인 중" 알림이 가고 자동 반납이 멈춥니다.</p></div>
@@ -1066,7 +1127,7 @@
               </div>
               <figcaption>이 흐름에서 휴대폰에 뜨는 알림 (예시 그림)</figcaption>
             </figure>
-          <p class="note">한 대로 할 때는 우선 예약 5분 안에 다시 로그인해야 합니다. 다르게 끝나는 경우도 있습니다. A가 돌아와 자기 좌석 QR을 찍으면 신고는 끝나고 관리자에게 "확인하러 가지 않아도 됩니다"가 갑니다. 관리자가 아무것도 하지 않으면 기한이 지나 자동 반납됩니다.</p>
+          <p class="note"><span class="dev-one">우선 예약 5분 안에 다시 로그인해야 합니다. </span>다르게 끝나는 경우도 있습니다. A가 돌아와 자기 좌석 QR을 찍으면 신고는 끝나고 관리자에게 "확인하러 가지 않아도 됩니다"가 갑니다. 관리자가 아무것도 하지 않으면 기한이 지나 자동 반납됩니다.</p>
         </div>
 
         <div class="scn card">
@@ -1134,6 +1195,7 @@
 
         <div class="step has-shot card">
           <div>
+            <span class="where a adm">앱에서 합니다 · 관리자</span>
             <h3 style="display:block">5. 혼잡도를 바꿔 규칙이 달라지는 것 보기</h3>
             <span class="path">관리자 → 시연</span> <a class="openapp" href="https://du-library-ruddy.vercel.app/admin/demo" target="_blank" rel="noopener">이 화면 열기</a>
             <div class="viz">
@@ -1161,6 +1223,7 @@
 
         <div class="step has-shot card" id="auto">
           <div>
+            <span class="where a adm">앱에서 합니다 · 관리자</span>
             <h3 style="display:block">6. 가상 학생 자동 이용을 켜 두고 테스트하기</h3>
             <span class="path">관리자 → 시연 → 가상 학생 자동 이용</span> <a class="openapp" href="https://du-library-ruddy.vercel.app/admin/demo" target="_blank" rel="noopener">이 화면 열기</a>
             <div class="viz">
@@ -1406,17 +1469,20 @@
     });
   })();
 
-  // 함께 해 보기: 기기 두 대 / 한 대
+  // 기기 두 대 / 한 대: 한 번 고르면 가이드 전체가 그 방식의 설명만 보여 준다
   (function () {
-    var sec = document.getElementById("together");
-    var seg = document.getElementById("dev-seg");
-    if (!sec || !seg) return;
+    var root = document.getElementById("view-guide");
+    var btns = Array.prototype.slice.call(document.querySelectorAll(".dev-seg button"));
+    var labels = Array.prototype.slice.call(document.querySelectorAll("[data-dev-label]"));
+    var toggles = Array.prototype.slice.call(document.querySelectorAll("[data-dev-toggle]"));
     function set(v) {
-      sec.setAttribute("data-dev", v);
-      Array.prototype.forEach.call(seg.children, function (b) { b.setAttribute("aria-pressed", b.getAttribute("data-dev") === v ? "true" : "false"); });
+      root.setAttribute("data-dev", v);
+      btns.forEach(function (b) { b.setAttribute("aria-pressed", b.getAttribute("data-dev") === v ? "true" : "false"); });
+      labels.forEach(function (l) { l.textContent = v === "one" ? "한 대" : "두 대"; });
       try { localStorage.setItem("du-guide-dev", v); } catch (e) {}
     }
-    Array.prototype.forEach.call(seg.children, function (b) { b.addEventListener("click", function () { set(b.getAttribute("data-dev")); }); });
+    btns.forEach(function (b) { b.addEventListener("click", function () { set(b.getAttribute("data-dev")); }); });
+    toggles.forEach(function (t) { t.addEventListener("click", function () { set(root.getAttribute("data-dev") === "one" ? "two" : "one"); }); });
     try { if (localStorage.getItem("du-guide-dev") === "one") set("one"); } catch (e) {}
   })();
 
