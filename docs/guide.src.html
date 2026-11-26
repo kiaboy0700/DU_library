@@ -198,8 +198,8 @@
   dialog.qr .code svg { display: block; width: 100%; height: auto; }
   dialog.qr .row { display: grid; grid-template-columns: 48px 1fr 48px; gap: 8px; margin-top: 14px; }
   dialog.qr .row + .row, dialog.qr .qr-hint ~ .row { grid-template-columns: 1fr; margin-top: 8px; }
-  dialog.qr button, dialog.qr a.open { min-height: 48px; display: inline-flex; align-items: center; justify-content: center; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: inherit; font-weight: 700; text-decoration: none; cursor: pointer; }
-  dialog.qr a.open { background: var(--deep); border-color: var(--deep); color: #fff; }
+  dialog.qr button, dialog.qr .open { min-height: 48px; display: inline-flex; align-items: center; justify-content: center; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: inherit; font-weight: 700; text-decoration: none; cursor: pointer; }
+  dialog.qr .open { background: var(--deep); border-color: var(--deep); color: #fff; }
   dialog.qr.ask { width: min(320px, calc(100vw - 48px)); }
   dialog.qr.ask h2 { font-size: 21px; }
   dialog.qr .ask-txt { margin-top: 8px; color: var(--muted); font-size: 15px; }
@@ -1827,8 +1827,8 @@
       dlg.querySelector("h2").textContent = s[0];
       dlg.querySelector(".where").textContent = data.rooms[room].name;
       dlg.querySelector(".code").innerHTML = svg(s[2], s[3]);
-      var link = dlg.querySelector("a.open");
-      link.href = data.origin + "/s/" + s[1];
+      var link = dlg.querySelector(".open");
+      link.setAttribute("data-url", data.origin + "/s/" + s[1]);
       disarm();
       dlg.querySelector("[data-prev]").disabled = i === 0;
       dlg.querySelector("[data-next]").disabled = i === list.length - 1;
@@ -1880,10 +1880,11 @@
     // 여는 버튼은 확인 창을 한 번 거친다 (누르는 순간 체크인 같은 처리가 되므로)
     var ask = document.getElementById("qr-ask");
     function disarm() { if (ask.open) ask.close(); }
-    dlg.querySelector("a.open").addEventListener("click", function (e) {
+    dlg.querySelector(".open").addEventListener("click", function (e) {
       e.preventDefault();
+      e.stopPropagation();
       ask.querySelector("h2").textContent = list[at][0] + " 좌석을 열까요?";
-      ask.querySelector("[data-yes]").href = this.href;
+      ask.querySelector("[data-yes]").href = this.getAttribute("data-url");
       ask.showModal();
     });
     ask.querySelector("[data-no]").addEventListener("click", function () { ask.close(); });
