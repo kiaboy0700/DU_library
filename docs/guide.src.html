@@ -146,6 +146,22 @@
   .os-alt { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); font-size: 15px; color: var(--muted); }
   .os-alt b { color: var(--ink); }
 
+  /* 계정 목록 */
+  .acct h3 { font-size: 18px; font-weight: 700; }
+  .acct h4 { font-size: 14px; font-weight: 700; color: var(--muted); margin: 18px 0 8px; }
+  .acct td:first-child, .acct tbody th { font-variant-numeric: tabular-nums; font-family: ui-monospace, Menlo, Consolas, monospace; font-weight: 700; white-space: nowrap; }
+  details.fold { border: 1px solid var(--line); border-radius: 14px; background: var(--surface); margin-top: 18px; }
+  details.fold > summary { list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 14px; font-weight: 700; }
+  details.fold > summary::-webkit-details-marker { display: none; }
+  details.fold > summary::after { content: ""; flex: none; width: 9px; height: 9px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted); transform: rotate(45deg) translateY(-3px); transition: transform 0.15s; }
+  details.fold[open] > summary::after { transform: rotate(-135deg) translateY(-3px); }
+  details.fold .in { border-top: 1px solid var(--line); padding: 12px 14px 14px; }
+  .search { width: 100%; height: 44px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--ink); padding: 0 12px; font: inherit; font-size: 16px; }
+  .search:focus-visible { outline: 2px solid var(--deep); outline-offset: 1px; }
+  .scrollbox { max-height: 360px; overflow-y: auto; margin-top: 10px; border: 1px solid var(--line); border-radius: 10px; }
+  .scrollbox table thead th { position: sticky; top: 0; }
+  .count { font-weight: 400; color: var(--muted); font-size: 14px; }
+
   footer { color: var(--muted); font-size: 14px; }
 </style>
 
@@ -165,8 +181,8 @@
 <div class="wrap">
   <nav class="toc" aria-label="목차">
     <ol>
-      <li><a href="#start">시작하기</a></li>
       <li><a href="#install">앱으로 설치</a></li>
+      <li><a href="#start">시작하기</a></li>
       <li><a href="#user">이용자 따라 하기</a></li>
       <li><a href="#admin">관리자 따라 하기</a></li>
       <li><a href="#together">함께 해 보기</a></li>
@@ -176,46 +192,11 @@
   </nav>
 
   <main>
-    <section id="start">
-      <header>
-        <h2>시작하기</h2>
-        <p>가입은 없습니다. 학번과 공통 비밀번호로 들어가면 이용자는 홈으로, 관리자는 관제 화면으로 갑니다.</p>
-      </header>
-      <div class="stack">
-        <div class="step has-shot card">
-          <div>
-            <h3>로그인 화면에서 빈자리부터 보입니다</h3>
-            <ul>
-              <li>로그인하기 전에도 2층·5층에 남은 좌석 수가 보입니다.</li>
-              <li>비밀번호 <code>eorneo1234!</code>는 한글 자판으로 "대구대1234!"를 친 것과 같습니다.</li>
-              <li>휴대폰에서는 먼저 아래 <a href="#install">앱으로 설치</a>부터 해 두세요. 알림을 받으려면 필요합니다.</li>
-            </ul>
-            <p class="note">운영 시간은 학기 중 평일 09:00~22:00, 방학 09:00~17:00이고 주말은 휴관입니다. 시험기간에는 24시간 운영합니다. 운영 시간 밖에는 예약이 거절됩니다.</p>
-          </div>
-          <figure class="shot"><img src="{{IMG:login}}" alt="로그인 화면. 도서관 사진 위에 2층 49석, 5층 47석 남음이 보이고 아래에 학번과 비밀번호 입력칸이 있다"><figcaption>로그인</figcaption></figure>
-        </div>
-
-        <div class="card">
-          <h3 style="font-size:18px;font-weight:700;margin-bottom:12px">좌석 하나가 거치는 상태</h3>
-          <div class="flow">
-            <div class="st"><b>체크인 대기</b><span>예약 후 15분 안에 좌석 QR</span></div>
-            <span class="arrow" aria-hidden="true">→</span>
-            <div class="st"><b>이용 중</b><span>최대 4시간, 2시간씩 연장</span></div>
-            <span class="arrow" aria-hidden="true">⇄</span>
-            <div class="st"><b>외출</b><span>혼잡도에 따라 20~60분</span></div>
-            <span class="arrow" aria-hidden="true">→</span>
-            <div class="st"><b>반납</b><span>직접, 시간 종료, 자동 회수</span></div>
-          </div>
-          <p style="margin-top:12px;color:var(--muted);font-size:15px">체크인, 외출 복귀, 자리 확인은 모두 책상에 붙은 좌석 QR 하나로 합니다. 키오스크는 없습니다.</p>
-        </div>
-      </div>
-    </section>
-
     <section id="install">
       <header>
         <span class="role both">처음 한 번</span>
         <h2>휴대폰에 앱으로 설치하기</h2>
-        <p>갤럭시와 아이폰 모두 홈 화면에 추가하면 앱처럼 열립니다. 주소창 없이 전체 화면으로 쓰고, 푸시 알림을 받고, QR 카메라 권한을 한 번만 허용하면 됩니다. 테스트를 시작하기 전에 팀원 모두 이것부터 해 주세요.</p>
+        <p>갤럭시와 아이폰 모두 홈 화면에 추가하면 앱처럼 열립니다. 주소창 없이 전체 화면으로 쓰고, 푸시 알림을 받고, QR 카메라 권한을 한 번만 허용하면 됩니다. 가장 먼저 팀원 모두 이것부터 해 주세요.</p>
       </header>
       <div class="stack">
         <div class="os-grid">
@@ -275,6 +256,42 @@
               <tr><th>아이콘이 예전 모양</th><td>홈 화면에서 지우고 다시 추가합니다.</td></tr>
             </tbody>
           </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="start">
+      <header>
+        <h2>시작하기</h2>
+        <p>가입은 없습니다. 학번과 공통 비밀번호로 들어가면 이용자는 홈으로, 관리자는 관제 화면으로 갑니다.</p>
+      </header>
+      <div class="stack">
+        <div class="step has-shot card">
+          <div>
+            <h3>로그인 화면에서 빈자리부터 보입니다</h3>
+            <ul>
+              <li>로그인하기 전에도 2층·5층에 남은 좌석 수가 보입니다.</li>
+              <li>비밀번호 <code>eorneo1234!</code>는 한글 자판으로 "대구대1234!"를 친 것과 같습니다.</li>
+              <li>아래 <a href="#accounts">계정 목록</a>에서 쓸 학번을 고르면 됩니다.</li>
+            </ul>
+            <p class="note">운영 시간은 학기 중 평일 09:00~22:00, 방학 09:00~17:00이고 주말은 휴관입니다. 시험기간에는 24시간 운영합니다. 운영 시간 밖에는 예약이 거절됩니다.</p>
+          </div>
+          <figure class="shot"><img src="{{IMG:login}}" alt="로그인 화면. 도서관 사진 위에 2층 49석, 5층 47석 남음이 보이고 아래에 학번과 비밀번호 입력칸이 있다"><figcaption>로그인</figcaption></figure>
+        </div>
+
+{{ACCOUNTS}}
+        <div class="card">
+          <h3 style="font-size:18px;font-weight:700;margin-bottom:12px">좌석 하나가 거치는 상태</h3>
+          <div class="flow">
+            <div class="st"><b>체크인 대기</b><span>예약 후 15분 안에 좌석 QR</span></div>
+            <span class="arrow" aria-hidden="true">→</span>
+            <div class="st"><b>이용 중</b><span>최대 4시간, 2시간씩 연장</span></div>
+            <span class="arrow" aria-hidden="true">⇄</span>
+            <div class="st"><b>외출</b><span>혼잡도에 따라 20~60분</span></div>
+            <span class="arrow" aria-hidden="true">→</span>
+            <div class="st"><b>반납</b><span>직접, 시간 종료, 자동 회수</span></div>
+          </div>
+          <p style="margin-top:12px;color:var(--muted);font-size:15px">체크인, 외출 복귀, 자리 확인은 모두 책상에 붙은 좌석 QR 하나로 합니다. 키오스크는 없습니다.</p>
         </div>
       </div>
     </section>
@@ -620,5 +637,23 @@
     window.addEventListener("scroll", mark, { passive: true });
     window.addEventListener("resize", mark);
     mark();
+  })();
+
+  // 가상 학생 찾기: 학번, 이름, 학과
+  (function () {
+    var box = document.getElementById("acct-q");
+    if (!box) return;
+    var rows = Array.prototype.slice.call(document.querySelectorAll("#acct-virtual tbody tr"));
+    var count = document.getElementById("acct-n");
+    box.addEventListener("input", function () {
+      var q = box.value.trim().toLowerCase();
+      var n = 0;
+      rows.forEach(function (tr) {
+        var hit = !q || tr.textContent.toLowerCase().indexOf(q) !== -1;
+        tr.hidden = !hit;
+        if (hit) n++;
+      });
+      count.textContent = n + "명";
+    });
   })();
 </script>

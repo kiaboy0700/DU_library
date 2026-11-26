@@ -44,3 +44,6 @@ next-env.d.ts
 .claude/skills/
 계정목록.html
 public/_audit.js
+
+# 이름·학번이 들어간 가이드 완성본 (원본 docs/guide.src.html 에는 없음)
+docs/창파도서관-좌석예약-가이드.html
