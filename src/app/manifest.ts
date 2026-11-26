@@ -2,8 +2,8 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "창파도서관 좌석예약",
-    short_name: "창파 좌석예약",
+    name: "DU-library",
+    short_name: "DU-library",
     description: "대구대학교 창파도서관 열람실 좌석 예약",
     start_url: "/",
     display: "standalone",

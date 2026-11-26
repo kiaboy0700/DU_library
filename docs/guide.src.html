@@ -1,4 +1,4 @@
-<title>창파도서관 좌석예약 가이드</title>
+<title>DU-library 가이드</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap">
 <style>
@@ -133,6 +133,12 @@
   .turn p { padding-top: 3px; }
   .scn h3 { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
   .scn .lead { color: var(--muted); margin-bottom: 14px; }
+  .devices { display: grid; gap: 10px; margin-top: 14px; }
+  @media (min-width: 720px) { .devices { grid-template-columns: 1fr 1fr; } }
+  .devices > div { border: 1px solid var(--line); border-radius: 14px; background: var(--surface); padding: 12px 14px; }
+  .devices > div:first-child { border-color: var(--deep); background: var(--tint); }
+  .devices b { display: block; }
+  .devices span { display: block; font-size: 15px; color: var(--muted); margin-top: 2px; }
   .need { font-size: 14px; color: var(--muted); margin-bottom: 14px; }
   .need b { color: var(--ink); }
 
@@ -162,13 +168,55 @@
   .scrollbox table thead th { position: sticky; top: 0; }
   .count { font-weight: 400; color: var(--muted); font-size: 14px; }
 
+  /* 다른 화면으로 가는 링크 */
+  a.go { font-weight: 700; color: var(--deep-ink); text-decoration: underline; text-underline-offset: 3px; white-space: nowrap; }
+  a.go::after { content: " →"; }
+  .more { margin-top: 10px; font-size: 15px; color: var(--muted); }
+  .mini { margin-top: 12px; }
+  .mini td:first-child { font-family: ui-monospace, Menlo, Consolas, monospace; font-weight: 700; white-space: nowrap; }
+  nav.toc li.ext a { border-style: dashed; }
+  @media (min-width: 960px) { nav.toc li.ext:first-of-type { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line); } }
+
+  /* 따로 들어가는 화면 */
+  [hidden] { display: none !important; }
+  .page { max-width: 880px; margin: 0 auto; padding: calc(env(safe-area-inset-top, 0px) + 16px) 16px 72px; }
+  .page h1 { font-size: 28px; font-weight: 800; letter-spacing: -0.01em; margin-top: 14px; }
+  .page .sub { color: var(--muted); margin-top: 6px; }
+  .back { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 14px 0 10px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--ink); font-weight: 700; text-decoration: none; }
+  .back:hover, .back:focus-visible { border-color: var(--deep); color: var(--deep-ink); outline: none; }
+  .page .stack { margin-top: 20px; }
+  .seg { display: flex; gap: 6px; margin-top: 18px; }
+  .seg button { flex: 1; min-height: 44px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); color: var(--ink); font: inherit; font-weight: 700; cursor: pointer; }
+  .seg button[aria-pressed="true"] { background: var(--deep); border-color: var(--deep); color: #fff; }
+  .page .search { margin-top: 10px; background: var(--surface); }
+  details.zone { border: 1px solid var(--line); border-radius: 14px; background: var(--surface); margin-top: 10px; }
+  details.zone > summary { list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 14px; font-weight: 700; }
+  details.zone > summary::-webkit-details-marker { display: none; }
+  details.zone > summary::after { content: ""; flex: none; width: 9px; height: 9px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted); transform: rotate(45deg) translateY(-3px); transition: transform 0.15s; }
+  details.zone[open] > summary::after { transform: rotate(-135deg) translateY(-3px); }
+  .chips { display: grid; grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); gap: 6px; padding: 0 12px 12px; }
+  .chips button { min-height: 44px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--ink); font: inherit; font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; cursor: pointer; }
+  .chips button:hover, .chips button:focus-visible { border-color: var(--deep); color: var(--deep-ink); outline: none; }
+  dialog.qr { border: 0; border-radius: 20px; padding: 20px; width: min(360px, calc(100vw - 32px)); background: var(--surface); color: var(--ink); text-align: center; }
+  dialog.qr::backdrop { background: rgba(0, 0, 0, 0.55); }
+  dialog.qr h2 { font-size: 26px; font-weight: 800; font-variant-numeric: tabular-nums; }
+  dialog.qr .where { color: var(--muted); font-size: 15px; }
+  dialog.qr .code { margin: 14px auto 0; background: #fff; border-radius: 14px; padding: 6px; border: 1px solid var(--line); }
+  dialog.qr .code svg { display: block; width: 100%; height: auto; }
+  dialog.qr .row { display: grid; grid-template-columns: 48px 1fr 48px; gap: 8px; margin-top: 14px; }
+  dialog.qr .row + .row { grid-template-columns: 1fr; margin-top: 8px; }
+  dialog.qr button, dialog.qr a.open { min-height: 48px; display: inline-flex; align-items: center; justify-content: center; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: inherit; font-weight: 700; text-decoration: none; cursor: pointer; }
+  dialog.qr a.open { background: var(--deep); border-color: var(--deep); color: #fff; }
+  dialog.qr button:disabled { opacity: 0.35; cursor: default; }
+
   footer { color: var(--muted); font-size: 14px; }
 </style>
 
+<div id="view-guide">
 <div class="hero">
   <div class="hero-in">
     <p class="eyebrow">대구대학교 창파도서관 · 열람실 좌석 예약</p>
-    <h1>좌석예약 가이드</h1>
+    <h1>DU-library 가이드</h1>
     <p>붐빌수록 규칙이 엄격해지는 좌석 예약 웹입니다. 이용자와 관리자가 각각 무엇을 하는지, 서로의 화면에 무엇이 일어나는지 순서대로 따라 해 볼 수 있게 정리했습니다.</p>
     <dl class="hero-facts">
       <div><dt>주소</dt><dd><a href="https://du-library-ruddy.vercel.app">du-library-ruddy.vercel.app</a></dd></div>
@@ -188,6 +236,8 @@
       <li><a href="#together">함께 해 보기</a></li>
       <li><a href="#rules">규칙 한 장</a></li>
       <li><a href="#test">테스트할 때</a></li>
+      <li class="ext"><a href="#accounts-all">전체 계정</a></li>
+      <li class="ext"><a href="#seat-qr">좌석 QR</a></li>
     </ol>
   </nav>
 
@@ -202,14 +252,14 @@
         <div class="os-grid">
           <div class="card os">
             <h3>갤럭시 (안드로이드)</h3>
-            <p class="os-sub">크롬 기준</p>
+            <p class="os-sub">삼성 인터넷 기준</p>
             <ol>
-              <li>크롬에서 <code>du-library-ruddy.vercel.app</code>을 엽니다.</li>
-              <li>오른쪽 위 <b>⋮</b> 메뉴를 누릅니다.</li>
-              <li><b>홈 화면에 추가</b>(또는 <b>앱 설치</b>)를 누르고 <b>설치</b>를 누릅니다.</li>
-              <li>홈 화면에 생긴 대구대 아이콘으로 엽니다.</li>
+              <li>삼성 인터넷에서 <code>du-library-ruddy.vercel.app</code>을 엽니다.</li>
+              <li>아래쪽 <b>≡</b> 메뉴를 누릅니다.</li>
+              <li><b>현재 페이지 추가</b> → <b>홈 화면</b>을 누르고 <b>추가</b>를 누릅니다.</li>
+              <li>홈 화면에 생긴 <b>DU-library</b> 아이콘으로 엽니다.</li>
             </ol>
-            <p class="os-alt"><b>삼성 인터넷</b>을 쓴다면: 아래쪽 <b>≡</b> 메뉴 → <b>현재 페이지 추가</b> → <b>홈 화면</b>.</p>
+            <p class="os-alt"><b>크롬</b>을 쓴다면: 오른쪽 위 <b>⋮</b> 메뉴 → <b>홈 화면에 추가</b>(또는 <b>앱 설치</b>) → <b>설치</b>.</p>
           </div>
           <div class="card os">
             <h3>아이폰</h3>
@@ -218,7 +268,7 @@
               <li>사파리에서 <code>du-library-ruddy.vercel.app</code>을 엽니다.</li>
               <li>아래쪽 <b>공유</b> 버튼(네모에서 화살표가 올라가는 모양)을 누릅니다.</li>
               <li>목록을 내려 <b>홈 화면에 추가</b>를 누르고 <b>추가</b>를 누릅니다.</li>
-              <li>홈 화면에 생긴 대구대 아이콘으로 엽니다.</li>
+              <li>홈 화면에 생긴 <b>DU-library</b> 아이콘으로 엽니다.</li>
             </ol>
             <p class="os-alt">아이폰은 <b>홈 화면 아이콘으로 열었을 때만</b> 푸시 알림이 됩니다. 사파리 탭에서는 알림 켜기가 되지 않습니다.</p>
           </div>
@@ -250,8 +300,8 @@
             <thead><tr><th>안 될 때</th><th>확인할 것</th></tr></thead>
             <tbody>
               <tr><th>"푸시 알림 켜기"가 안 보임</th><td>아이폰이면 사파리 탭이 아니라 홈 화면 아이콘으로 열었는지, iOS가 16.4 이상인지 확인합니다.</td></tr>
-              <tr><th>허용 창이 안 뜸</th><td>전에 차단한 적이 있는 경우입니다. 갤럭시는 설정 → 애플리케이션 → 크롬(또는 설치된 앱) → 알림에서 허용합니다. 아이폰은 설정 → 알림 → 창파 좌석예약에서 허용합니다.</td></tr>
-              <tr><th>켰는데 알림이 안 옴</th><td>방해 금지 모드와 절전 모드를 끕니다. 갤럭시는 설정 → 배터리에서 크롬이 "절전 예외"인지 확인합니다.</td></tr>
+              <tr><th>허용 창이 안 뜸</th><td>전에 차단한 적이 있는 경우입니다. 갤럭시는 설정 → 애플리케이션 → 삼성 인터넷(또는 크롬) → 알림에서 허용합니다. 아이폰은 설정 → 알림 → DU-library에서 허용합니다.</td></tr>
+              <tr><th>켰는데 알림이 안 옴</th><td>방해 금지 모드와 절전 모드를 끕니다. 갤럭시는 설정 → 배터리에서 삼성 인터넷(또는 크롬)이 "절전 예외"인지 확인합니다.</td></tr>
               <tr><th>QR 카메라가 안 켜짐</th><td>카메라 권한을 허용합니다. 갤럭시는 주소창 옆 자물쇠 → 권한, 아이폰은 설정 → 사파리 → 카메라.</td></tr>
               <tr><th>아이콘이 예전 모양</th><td>홈 화면에서 지우고 다시 추가합니다.</td></tr>
             </tbody>
@@ -272,14 +322,16 @@
             <ul>
               <li>로그인하기 전에도 2층·5층에 남은 좌석 수가 보입니다.</li>
               <li>비밀번호 <code>eorneo1234!</code>는 한글 자판으로 "대구대1234!"를 친 것과 같습니다.</li>
-              <li>아래 <a href="#accounts">계정 목록</a>에서 쓸 학번을 고르면 됩니다.</li>
+              <li>학번 칸에 아래 값을 넣습니다.</li>
             </ul>
+{{TEAM}}
+            <p class="more">관리자와 학생 화면을 같이 보려면 기기 두 대로 나눠 로그인하는 것이 좋습니다. <a href="#together">함께 해 보기</a></p>
+            <p class="more">가상 학생까지 모두 보려면 <a class="go" href="#accounts-all">전체 계정 보기</a></p>
             <p class="note">운영 시간은 학기 중 평일 09:00~22:00, 방학 09:00~17:00이고 주말은 휴관입니다. 시험기간에는 24시간 운영합니다. 운영 시간 밖에는 예약이 거절됩니다.</p>
           </div>
           <figure class="shot"><img src="{{IMG:login}}" alt="로그인 화면. 도서관 사진 위에 2층 49석, 5층 47석 남음이 보이고 아래에 학번과 비밀번호 입력칸이 있다"><figcaption>로그인</figcaption></figure>
         </div>
 
-{{ACCOUNTS}}
         <div class="card">
           <h3 style="font-size:18px;font-weight:700;margin-bottom:12px">좌석 하나가 거치는 상태</h3>
           <div class="flow">
@@ -300,7 +352,7 @@
       <header>
         <span class="role user">이용자</span>
         <h2>이용자 따라 하기</h2>
-        <p>아래 순서대로 한 번 해 보면 이용자 쪽 기능을 모두 지나갑니다. 좌석 QR은 관리자 계정의 <b>좌석 QR</b> 탭에 있는 것을 다른 화면에 띄워 놓고 찍으면 됩니다.</p>
+        <p>아래 순서대로 한 번 해 보면 이용자 쪽 기능을 모두 지나갑니다. 찍을 QR은 <a class="go" href="#seat-qr">좌석 QR 보기</a>에서 좌석을 골라 다른 화면에 띄워 놓고 찍으면 됩니다.</p>
       </header>
       <div class="stack">
         <div class="step has-shot card">
@@ -323,7 +375,7 @@
             <span class="path">홈 → 내 자리 칸 누르기</span>
             <ul>
               <li>홈 위쪽의 초록색 내 자리 칸에 좌석 번호와 남은 시간이 나옵니다. 누르면 카메라가 켜집니다.</li>
-              <li>내 좌석 QR을 찍으면 버튼을 더 누르지 않아도 바로 체크인됩니다.</li>
+              <li>내 좌석 QR을 찍으면 버튼을 더 누르지 않아도 바로 체크인됩니다. QR은 <a class="go" href="#seat-qr">좌석 QR 보기</a>에 있습니다.</li>
               <li>다른 좌석을 찍으면 "내 좌석이 아닙니다" 창이 뜹니다. 빈자리면 그 좌석으로 바꿔 체크인할 수 있습니다.</li>
               <li>마음이 바뀌면 <b>예약 취소</b>. 취소한 좌석은 10분 동안 다시 예약할 수 없습니다.</li>
             </ul>
@@ -469,7 +521,11 @@
       <header>
         <span class="role both">이용자 + 관리자</span>
         <h2>함께 해 보기</h2>
-        <p>기기 두 대(또는 브라우저 창 두 개)로 한쪽은 이용자, 한쪽은 관리자로 로그인해 놓고 따라 하면 서로의 화면이 바뀌는 것을 볼 수 있습니다.</p>
+        <p>관리자와 학생이 서로 주고받는 기능이라, 기기를 나눠서 해야 상대 화면이 바로 바뀌는 것을 볼 수 있습니다.</p>
+        <div class="devices">
+          <div><b>권장 · 기기 두 대</b><span>한 대는 학생, 한 대는 관리자로 로그인해 둡니다. 휴대폰 두 대나 휴대폰 + PC 모두 됩니다.</span></div>
+          <div><b>기기가 한 대뿐이면</b><span>로그아웃하고 다른 계정으로 다시 로그인하면서 번갈아 확인합니다. 화면이 바뀌는 순간은 볼 수 없습니다.</span></div>
+        </div>
       </header>
       <div class="stack">
         <div class="scn card">
@@ -477,7 +533,7 @@
           <p class="lead">이 서비스의 핵심 흐름입니다. 세 사람이 필요합니다.</p>
           <p class="need"><b>준비</b> 이용자 A는 좌석을 이용 중(체크인 후 10분 이상), 신고자 B는 좌석 없음. 혼자 해 볼 때는 시연 탭의 "이용 중"으로 A를 만들면 됩니다.</p>
           <div class="play">
-            <div class="turn"><span class="who u">신고자 B</span><p>A의 좌석 QR을 찍고 <b>자리비움 신고</b>를 누릅니다.</p></div>
+            <div class="turn"><span class="who u">신고자 B</span><p>A의 좌석 QR을 찍고 <b>자리비움 신고</b>를 누릅니다. <a class="go" href="#seat-qr">좌석 QR 보기</a></p></div>
             <div class="turn"><span class="who s">자동</span><p>A에게 "자리 확인 요청 · 15분 안에 응답" 알림이 갑니다. 관리자에게 신고 팝업이 뜹니다.</p></div>
             <div class="turn"><span class="who a">관리자</span><p>처리 대기에서 <b>확인 시작</b>을 누릅니다. A와 B에게 "관리자 확인 중" 알림이 가고 자동 반납이 멈춥니다.</p></div>
             <div class="turn"><span class="who a">관리자</span><p>필요하면 대화에 메시지를 보냅니다. 관리자가 먼저 보내야 B가 답할 수 있습니다.</p></div>
@@ -591,7 +647,7 @@
       <div class="card">
         <div class="step">
           <ul style="margin-top:0">
-            <li><b>좌석 QR</b>: 실제 책상에 붙일 수 없으니 관리자의 좌석 QR 탭에서 좌석을 골라 다른 화면에 띄우고 휴대폰으로 찍습니다.</li>
+            <li><b>좌석 QR</b>: 실제 책상에 붙일 수 없으니 <a class="go" href="#seat-qr">좌석 QR 보기</a>에서 좌석을 골라 다른 화면에 띄우고 휴대폰으로 찍습니다. 관리자의 좌석 QR 탭에도 같은 QR이 있습니다.</li>
             <li><b>밤이나 주말에 테스트</b>: 운영 시간 밖에는 예약이 안 됩니다. 운영 설정의 테스트 설정이나 시연 탭에서 "운영시간 무시"를 켜면 됩니다. 끝나면 다시 끕니다.</li>
             <li><b>위치 확인</b>: 지금은 꺼져 있어서 도서관 밖에서도 QR이 처리됩니다. 켜면 도서관 반경 안에서만 됩니다.</li>
             <li><b>폐관 시각</b>: 22시가 되면 이용 중인 좌석이 모두 자동 반납됩니다. 다음 날 열람실이 비어 보이면 시연 탭에서 혼잡도를 다시 채웁니다.</li>
@@ -605,11 +661,14 @@
     <footer>창의문제해결 과제 · 붐빌수록 더 엄격해지는 스마트 좌석 예약 웹</footer>
   </main>
 </div>
+</div>
+
+{{VIEWS}}
 
 <script>
   // 화면에 보이는 구역을 목차에 표시한다
   (function () {
-    var links = Array.prototype.slice.call(document.querySelectorAll("nav.toc a"));
+    var links = Array.prototype.slice.call(document.querySelectorAll("nav.toc li:not(.ext) a"));
     var list = document.querySelector("nav.toc ol");
     var sections = links.map(function (a) { return document.getElementById(a.getAttribute("href").slice(1)); });
     var current = null;
@@ -655,5 +714,126 @@
       });
       count.textContent = n + "명";
     });
+  })();
+
+  // 가이드 / 전체 계정 / 좌석 QR 화면 전환
+  (function () {
+    var views = { guide: document.getElementById("view-guide"), "accounts-all": document.getElementById("view-accounts"), "seat-qr": document.getElementById("view-qr") };
+    var cur = "guide";
+    var lastY = 0;
+    function show(name, restore) {
+      if (name === cur) return;
+      if (cur === "guide") lastY = window.scrollY;
+      for (var k in views) views[k].hidden = k !== name;
+      cur = name;
+      window.scrollTo(0, name === "guide" && restore ? lastY : 0);
+    }
+    function route() {
+      var h = location.hash.slice(1);
+      if (h !== "guide" && views[h]) return show(h);
+      var was = cur;
+      show("guide", !h);
+      if (was !== "guide" && h) {
+        var t = document.getElementById(h);
+        if (t) t.scrollIntoView();
+      }
+    }
+    Array.prototype.forEach.call(document.querySelectorAll('a[href="#accounts-all"], a[href="#seat-qr"]'), function (a) {
+      a.addEventListener("click", function () { show(a.getAttribute("href").slice(1)); });
+    });
+    Array.prototype.forEach.call(document.querySelectorAll("[data-back]"), function (a) {
+      a.addEventListener("click", function (e) {
+        e.preventDefault();
+        show("guide", true);
+        try { history.replaceState(null, "", location.pathname + location.search); } catch (err) {}
+      });
+    });
+    window.addEventListener("hashchange", route);
+    route();
+  })();
+
+  // 좌석 QR: 좌석을 누르면 크게 띄운다
+  (function () {
+    var raw = document.getElementById("seat-data");
+    if (!raw) return;
+    var data = JSON.parse(raw.textContent);
+    var seg = document.getElementById("qr-rooms");
+    var zonesBox = document.getElementById("qr-zones");
+    var q = document.getElementById("qr-q");
+    var dlg = document.getElementById("qr-dlg");
+    var room = 0;
+    var list = [];
+    var at = 0;
+
+    function svg(n, b64) {
+      var bin = atob(b64);
+      var pad = 3;
+      var d = "";
+      for (var y = 0; y < n; y++) {
+        for (var x = 0; x < n; x++) {
+          var i = y * n + x;
+          if (bin.charCodeAt(i >> 3) & (128 >> (i & 7))) d += "M" + (x + pad) + " " + (y + pad) + "h1v1h-1z";
+        }
+      }
+      var size = n + pad * 2;
+      return '<svg viewBox="0 0 ' + size + " " + size + '" shape-rendering="crispEdges" role="img" aria-label="좌석 QR"><rect width="' + size + '" height="' + size + '" fill="#fff"/><path d="' + d + '" fill="#231f20"/></svg>';
+    }
+    function open(i) {
+      at = i;
+      var s = list[i];
+      dlg.querySelector("h2").textContent = s[0];
+      dlg.querySelector(".where").textContent = data.rooms[room].name;
+      dlg.querySelector(".code").innerHTML = svg(s[2], s[3]);
+      dlg.querySelector("a.open").href = data.origin + "/s/" + s[1];
+      dlg.querySelector("[data-prev]").disabled = i === 0;
+      dlg.querySelector("[data-next]").disabled = i === list.length - 1;
+      if (!dlg.open) dlg.showModal();
+    }
+    function draw() {
+      var word = q.value.trim().toLowerCase().replace(/\s+/g, "");
+      list = [];
+      zonesBox.textContent = "";
+      data.rooms[room].zones.forEach(function (z, zi) {
+        var hits = z.seats.filter(function (s) { return !word || s[0].toLowerCase().replace("-", "").indexOf(word.replace("-", "")) !== -1; });
+        if (!hits.length) return;
+        var det = document.createElement("details");
+        det.className = "zone";
+        det.open = !!word || zi === 0;
+        var sum = document.createElement("summary");
+        sum.innerHTML = "<span>" + z.zone + ' 구역 <span class="count">' + hits.length + "석</span></span>";
+        det.appendChild(sum);
+        var box = document.createElement("div");
+        box.className = "chips";
+        hits.forEach(function (s) {
+          var i = list.push(s) - 1;
+          var b = document.createElement("button");
+          b.type = "button";
+          b.textContent = s[0];
+          b.addEventListener("click", function () { open(i); });
+          box.appendChild(b);
+        });
+        det.appendChild(box);
+        zonesBox.appendChild(det);
+      });
+      if (!list.length) zonesBox.innerHTML = '<p class="sub">맞는 좌석이 없습니다.</p>';
+    }
+    data.rooms.forEach(function (r, i) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.textContent = r.name;
+      b.setAttribute("aria-pressed", i === 0 ? "true" : "false");
+      b.addEventListener("click", function () {
+        room = i;
+        Array.prototype.forEach.call(seg.children, function (c, ci) { c.setAttribute("aria-pressed", ci === i ? "true" : "false"); });
+        draw();
+      });
+      seg.appendChild(b);
+    });
+    q.addEventListener("input", draw);
+    dlg.querySelector("[data-prev]").addEventListener("click", function () { if (at > 0) open(at - 1); });
+    dlg.querySelector("[data-next]").addEventListener("click", function () { if (at < list.length - 1) open(at + 1); });
+    dlg.querySelector("[data-close]").addEventListener("click", function () { dlg.close(); });
+    dlg.addEventListener("click", function (e) { if (e.target === dlg) dlg.close(); });
+    draw();
   })();
 </script>

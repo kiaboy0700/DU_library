@@ -3,7 +3,7 @@ self.addEventListener("install", () => self.skipWaiting());
 self.addEventListener("activate", (e) => e.waitUntil(self.clients.claim()));
 
 self.addEventListener("push", (event) => {
-  let data = { title: "창파도서관 좌석예약", body: "", url: "/me" };
+  let data = { title: "DU-library", body: "", url: "/me" };
   try {
     data = { ...data, ...event.data.json() };
   } catch {}
