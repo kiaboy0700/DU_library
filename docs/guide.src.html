@@ -241,6 +241,9 @@
   details.more-d > summary::after { content: ""; width: 8px; height: 8px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted); transform: rotate(45deg) translateY(-3px); transition: transform 0.15s; }
   details.more-d[open] > summary::after { transform: rotate(-135deg) translateY(-3px); }
 
+  .viz-side { min-width: 0; width: 100%; }
+  .viz-side > .legend + * { margin-top: 16px; }
+
   /* 그 화면 바로 열기 */
   a.openapp { display: inline-flex; align-items: center; min-height: 28px; margin: 8px 0 0 4px; padding: 0 10px; border-radius: 999px; background: var(--deep); color: #fff; font-size: 13px; font-weight: 700; text-decoration: none; white-space: nowrap; vertical-align: top; }
   a.openapp::after { content: " ↗"; white-space: pre; }
@@ -348,12 +351,12 @@
             <h3>로그인 화면에서 빈자리부터 보입니다</h3>
             <div class="viz">
               <figure class="shot"><div class="shotbox"><img src="{{IMG:login}}" alt="로그인 화면. 도서관 사진 위에 2층 92석, 5층 165석 남음이 보이고 아래에 학번과 비밀번호 입력칸, 공통 비밀번호가 있다"><i class="hl" style="left:5.33%;top:28.57%;width:89.60%;height:11.58%"><b>1</b></i><i class="hl" style="left:10.67%;top:51.48%;width:86.93%;height:19.21%"><b>2</b></i><i class="hl" style="left:14.93%;top:80.79%;width:45.87%;height:3.45%"><b>3</b></i></div><figcaption>로그인</figcaption></figure>
+              <div class="viz-side">
               <ol class="legend">
                 <li><span>로그인하기 전에도 층별 남은 좌석이 보입니다</span></li>
                 <li><span>학번과 비밀번호를 넣습니다</span></li>
                 <li><span>비밀번호는 모두 같습니다</span></li>
               </ol>
-            </div>
 {{TEAM}}
             <p class="note">관리자 계정은 자기 것만 씁니다. 여러 명이 같은 관리자 계정으로 동시에 들어가면 서로 불편해서 한 사람에 하나씩 나눴습니다.</p>
             <div class="devices" style="margin-top:14px">
@@ -371,6 +374,8 @@
               <li>학생 계정은 휴대폰으로, 관리자 계정은 PC로 쓰는 것을 권합니다.</li>
             </ul>
             </details>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -490,13 +495,13 @@
             <span class="path">홈 → 좌석 고르기</span> <a class="openapp" href="https://du-library-ruddy.vercel.app/rooms" target="_blank" rel="noopener">이 화면 열기</a>
             <div class="viz">
               <figure class="shot"><div class="shotbox"><img src="{{IMG:seat}}" alt="좌석 지도에서 W-003을 고른 화면. 이용 시간 1~4시간 중 4시간이 선택되어 있고 W-003 예약하기 버튼 아래에 15분 안에 체크인하라는 안내가 있다"><i class="hl" style="left:33.07%;top:56.77%;width:10.13%;height:4.68%"><b>1</b></i><i class="hl" style="left:7.47%;top:73.65%;width:85.33%;height:5.91%"><b>2</b></i><i class="hl" style="left:7.47%;top:80.54%;width:81.07%;height:6.90%"><b>3</b></i><i class="hl" style="left:7.47%;top:38.92%;width:26.13%;height:4.93%"><b>4</b></i></div><figcaption>좌석 고르기</figcaption></figure>
+              <div class="viz-side">
               <ol class="legend">
                 <li><span>초록색 빈자리를 누릅니다</span></li>
                 <li><span>이용 시간을 고릅니다</span></li>
                 <li><span><b>예약하기</b>. 15분 안에 체크인해야 합니다</span></li>
                 <li><span>고르기 귀찮으면 <b>빠른 예약</b></span></li>
               </ol>
-            </div>
             <p class="note">예약하면 15분 안에 그 좌석의 QR을 찍어야 합니다. 늦으면 자동 취소되고 벌점 1점입니다.</p>
                       <details class="more-d">
               <summary>자세히</summary>
@@ -506,6 +511,8 @@
               <li>자리에 이미 와 있다면 빈 좌석의 QR을 바로 찍어도 됩니다. 예약과 체크인이 한 번에 됩니다.</li>
             </ul>
             </details>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -515,12 +522,12 @@
             <span class="path">홈 → 내 자리 칸 누르기</span> <a class="openapp" href="https://du-library-ruddy.vercel.app/" target="_blank" rel="noopener">이 화면 열기</a>
             <div class="viz">
               <figure class="shot"><div class="shotbox"><img src="{{IMG:home}}" alt="홈 화면. 이름과 전공 옆에 체크인 대기 W-003, 14분 51초 남음이 표시된 초록색 칸이 있고 아래에 예약 취소와 내 좌석 버튼, 공지 줄, 열람실 카드가 있다"><i class="hl" style="left:50.13%;top:12.32%;width:36.80%;height:13.05%"><b>1</b></i><i class="hl" style="left:56.53%;top:1.48%;width:9.07%;height:4.19%"><b>2</b></i><i class="hl" style="left:9.87%;top:27.34%;width:35.73%;height:4.68%"><b>3</b></i></div><figcaption>홈 · 체크인 대기</figcaption></figure>
+              <div class="viz-side">
               <ol class="legend">
                 <li><span>내 자리 칸. 누르면 QR 카메라가 켜집니다</span></li>
                 <li><span>여기서도 QR을 찍을 수 있습니다</span></li>
                 <li><span>마음이 바뀌면 <b>예약 취소</b></span></li>
               </ol>
-            </div>
             <p class="note">실제 운영에서는 도서관 안에서 찍은 QR만 처리됩니다. 위치를 확인해 반경 200m 밖이면 거절합니다. 지금은 테스트라 꺼 두었습니다.</p>
                       <details class="more-d">
               <summary>자세히</summary>
@@ -531,6 +538,8 @@
               <li>마음이 바뀌면 <b>예약 취소</b>. 취소한 좌석은 10분 동안 다시 예약할 수 없습니다.</li>
             </ul>
             </details>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -540,6 +549,7 @@
             <span class="path">내 좌석</span> <a class="openapp" href="https://du-library-ruddy.vercel.app/me" target="_blank" rel="noopener">이 화면 열기</a>
             <div class="viz">
               <figure class="shot"><div class="shotbox"><img src="{{IMG:me}}" alt="내 좌석 화면. W-003 이용 중, 남은 이용 시간 3시간 59분, 연장 0회 제한 없음, 아래에 외출, 연장, 자리 이동, 반납 버튼과 벌점 0점"><i class="hl" style="left:7.47%;top:27.83%;width:80.00%;height:8.62%"><b>1</b></i><i class="hl" style="left:8.53%;top:47.78%;width:38.93%;height:5.67%"><b>2</b></i><i class="hl" style="left:49.07%;top:47.78%;width:38.93%;height:5.67%"><b>3</b></i><i class="hl" style="left:8.53%;top:54.19%;width:38.93%;height:5.67%"><b>4</b></i><i class="hl" style="left:49.07%;top:54.19%;width:38.93%;height:5.67%"><b>5</b></i></div><figcaption>내 좌석</figcaption></figure>
+              <div class="viz-side">
               <ol class="legend">
                 <li><span>남은 이용 시간</span></li>
                 <li><span><b>외출</b>: 몇 분 안에 돌아와야 하는지 먼저 알려 줍니다</span></li>
@@ -547,7 +557,6 @@
                 <li><span><b>자리 이동</b>: 옮길 좌석의 QR을 찍습니다</span></li>
                 <li><span><b>반납</b></span></li>
               </ol>
-            </div>
             <p class="note bad">외출 시간을 넘기면 자동 반납되고 벌점 1점입니다. 외출한 뒤에 혼잡도가 바뀌어도 이미 받은 시간은 그대로입니다.</p>
                       <details class="more-d">
               <summary>자세히</summary>
@@ -558,6 +567,8 @@
               <li><b>반납</b>: 반납한 좌석은 10분 동안 다시 예약할 수 없습니다. 지금은 누르지 말고 좌석을 그대로 둡니다. 뒤 단계에서 씁니다.</li>
             </ul>
             </details>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -567,12 +578,12 @@
             <span class="path">그 좌석의 QR 찍기</span> <a class="openapp" href="#seat-qr">좌석 QR 보기</a>
             <div class="viz">
               <figure class="shot"><div class="shotbox"><img src="{{IMG:report}}" alt="사용 중인 A-054 좌석 화면. 남은 시간 3시간 36분, 이 좌석 빈자리 알림 버튼과 자리비움 신고 버튼"><i class="hl" style="left:8.53%;top:22.17%;width:83.20%;height:6.90%"><b>1</b></i><i class="hl" style="left:8.53%;top:30.79%;width:83.20%;height:5.17%"><b>2</b></i><i class="hl" style="left:8.53%;top:37.44%;width:83.20%;height:6.16%"><b>3</b></i></div><figcaption>남의 좌석 QR을 찍었을 때</figcaption></figure>
+              <div class="viz-side">
               <ol class="legend">
                 <li><span>그 좌석의 남은 시간이 보입니다</span></li>
                 <li><span><b>빈자리 알림</b>: 이 좌석이 비면 알려 줍니다</span></li>
                 <li><span><b>자리비움 신고</b>: 사람이 없을 때 누릅니다</span></li>
               </ol>
-            </div>
             <p class="note bad">앉아 있는 좌석을 신고하면 허위 신고입니다. 3회면 7일간 신고할 수 없고 벌점 1점입니다.</p>
                       <details class="more-d">
               <summary>자세히</summary>
@@ -584,6 +595,8 @@
               <li><b>이 좌석 빈자리 알림</b>을 켜면 그 좌석이 비거나 종료 5분 전에 알려 줍니다.</li>
             </ul>
             </details>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -593,13 +606,13 @@
             <span class="path">혼잡도</span> <a class="openapp" href="https://du-library-ruddy.vercel.app/stats" target="_blank" rel="noopener">이 화면 열기</a>
             <div class="viz">
               <figure class="shot"><div class="shotbox"><img src="{{IMG:stats}}" alt="혼잡도 화면. 목요일이 선택되어 있고 지금 31퍼센트 여유, 7시부터 22시까지 시간대별 막대 그래프"><i class="hl" style="left:4.27%;top:15.76%;width:53.33%;height:5.42%"><b>1</b></i><i class="hl" style="left:8.00%;top:24.88%;width:84.27%;height:5.42%"><b>2</b></i><i class="hl" style="left:8.00%;top:32.27%;width:35.20%;height:6.65%"><b>3</b></i><i class="hl" style="left:8.00%;top:42.49%;width:84.27%;height:18.72%"><b>4</b></i></div><figcaption>혼잡도</figcaption></figure>
+              <div class="viz-side">
               <ol class="legend">
                 <li><span>열람실을 고릅니다</span></li>
                 <li><span>요일을 고릅니다</span></li>
                 <li><span>지금 이용률</span></li>
                 <li><span>시간대별 평균. 색이 여유·보통·혼잡입니다</span></li>
               </ol>
-            </div>
                       <details class="more-d">
               <summary>자세히</summary>
             <ul>
@@ -608,6 +621,8 @@
               <li>자리가 없으면 열람실 카드의 종 버튼으로 빈자리 알림을 켜 둘 수 있습니다.</li>
             </ul>
             </details>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -639,13 +654,13 @@
             <span class="path">관제</span> <a class="openapp" href="https://du-library-ruddy.vercel.app/admin" target="_blank" rel="noopener">이 화면 열기</a>
             <div class="viz">
               <figure class="shot"><div class="shotbox"><img src="{{IMG:admin}}" alt="관제 화면. 처리 대기 2건 버튼, 지금 이용 중 169, 오늘 예약 838, 층별 이용률 탭과 좌석 지도"><i class="hl" style="left:4.27%;top:26.35%;width:36.27%;height:5.91%"><b>1</b></i><i class="hl" style="left:4.27%;top:34.24%;width:87.47%;height:25.12%"><b>2</b></i><i class="hl" style="left:4.27%;top:61.08%;width:72.00%;height:5.67%"><b>3</b></i><i class="hl" style="left:4.27%;top:68.47%;width:87.47%;height:23.40%"><b>4</b></i></div><figcaption>관제</figcaption></figure>
+              <div class="viz-side">
               <ol class="legend">
                 <li><span>처리할 일이 있으면 빨간 버튼이 뜹니다</span></li>
                 <li><span>오늘 예약·노쇼·자동 회수·신고 건수</span></li>
                 <li><span>층을 고릅니다</span></li>
                 <li><span>좌석 지도. 좌석을 누르면 이용자와 할 수 있는 일이 나옵니다</span></li>
               </ol>
-            </div>
                       <details class="more-d">
               <summary>자세히</summary>
             <ul>
@@ -656,6 +671,8 @@
               <li>맨 아래에서 그 좌석을 닫습니다. 이용 중이면 "이용이 끝나면 닫기"와 "지금 닫기" 중에 고릅니다.</li>
             </ul>
             </details>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -665,6 +682,7 @@
             <span class="path">처리 대기</span> <a class="openapp" href="https://du-library-ruddy.vercel.app/admin/reports" target="_blank" rel="noopener">이 화면 열기</a>
             <div class="viz">
               <figure class="shot"><div class="shotbox"><img src="{{IMG:areports}}" alt="처리 대기 화면. 위에 전체, 자리비움 신고, 도움 요청 칩. 신고 카드에 자동 반납까지 남은 시간, 이용자와 신고자가 나란히 있다"><i class="hl" style="left:3.73%;top:27.59%;width:93.33%;height:5.67%"><b>1</b></i><i class="hl" style="left:8.00%;top:45.57%;width:31.47%;height:2.96%"><b>2</b></i><i class="hl" style="left:8.53%;top:51.72%;width:38.40%;height:20.69%"><b>3</b></i><i class="hl" style="left:49.07%;top:51.72%;width:38.40%;height:20.69%"><b>4</b></i><i class="hl" style="left:8.53%;top:74.14%;width:80.00%;height:5.67%"><b>5</b></i></div><figcaption>처리 대기 · 신고</figcaption></figure>
+              <div class="viz-side">
               <ol class="legend">
                 <li><span>종류별로 골라 봅니다</span></li>
                 <li><span>자동 반납까지 남은 시간</span></li>
@@ -672,7 +690,6 @@
                 <li><span>신고자: 신고 시각과 당시 이용률</span></li>
                 <li><span>신고자와 대화. 관리자가 먼저 보내야 열립니다</span></li>
               </ol>
-            </div>
                       <details class="more-d">
               <summary>자세히</summary>
             <ul>
@@ -683,6 +700,8 @@
               <li>끝난 건은 아래 "방금 끝난 건"에 한 시간 동안 남습니다. 관리자가 처리했으면 누가 했는지, 아니면 어떻게 끝났는지가 보입니다.</li>
             </ul>
             </details>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -692,6 +711,7 @@
             <span class="path">처리 대기 → 신고 카드</span> <a class="openapp" href="https://du-library-ruddy.vercel.app/admin/reports" target="_blank" rel="noopener">이 화면 열기</a>
             <div class="viz">
               <figure class="shot"><div class="shotbox"><img src="{{IMG:abuttons}}" alt="신고 카드 아래쪽. 확인 시작, 보관할 짐 입력칸, 반납 확정, 돌아옴, 반납 10분 연장, 허위 신고 버튼"><i class="hl" style="left:8.53%;top:40.52%;width:78.93%;height:5.67%"><b>1</b></i><i class="hl" style="left:8.53%;top:47.41%;width:78.93%;height:5.91%"><b>2</b></i><i class="hl" style="left:8.53%;top:54.31%;width:38.93%;height:5.67%"><b>3</b></i><i class="hl" style="left:49.07%;top:54.31%;width:38.93%;height:5.67%"><b>4</b></i><i class="hl" style="left:8.53%;top:60.71%;width:38.93%;height:5.67%"><b>5</b></i><i class="hl" style="left:49.07%;top:60.71%;width:38.93%;height:5.67%"><b>6</b></i></div><figcaption>신고 처리 버튼</figcaption></figure>
+              <div class="viz-side">
               <ol class="legend">
                 <li><span><b>확인 시작</b>: 내가 맡고, 자동 반납을 멈춥니다</span></li>
                 <li><span>남은 짐이 있으면 적습니다</span></li>
@@ -700,7 +720,6 @@
                 <li><span><b>반납 10분 연장</b></span></li>
                 <li><span><b>허위 신고</b></span></li>
               </ol>
-            </div>
             <div class="tablebox" style="margin-top:12px">
               <table>
                 <thead><tr><th>버튼</th><th>결과</th></tr></thead>
@@ -713,7 +732,9 @@
               </table>
             </div>
             <p>자리에 짐이 남아 있으면 "보관할 짐"에 적고 반납 확정을 누릅니다. 보관 번호가 만들어지고 이용자에게 찾는 곳과 기한이 갑니다.</p>
-                    </div>
+                        </div>
+            </div>
+          </div>
         </div>
 
         <div class="step has-shot card" id="claim">
@@ -722,13 +743,13 @@
           <span class="path">처리 대기 → 내가 맡기 · 넘겨받기</span> <a class="openapp" href="https://du-library-ruddy.vercel.app/admin/reports" target="_blank" rel="noopener">이 화면 열기</a>
             <div class="viz">
               <figure class="shot"><div class="shotbox"><img src="{{IMG:claim}}" alt="처리 대기의 도움 요청 카드. 제목 옆에 이동욱 처리 중 표시가 있고, 아래 노란 줄에 이동욱 처리 중 7분째와 넘겨받기 버튼. 그 아래 대화와 버튼은 흐리게 잠겨 있다"><i class="hl" style="left:8.53%;top:25.00%;width:22.93%;height:2.71%"><b>1</b></i><i class="hl" style="left:8.53%;top:45.57%;width:52.27%;height:7.39%"><b>2</b></i><i class="hl" style="left:62.40%;top:46.55%;width:22.93%;height:5.42%"><b>3</b></i><i class="hl" style="left:8.53%;top:54.68%;width:78.93%;height:36.95%"><b>4</b></i></div><figcaption>다른 관리자가 맡은 건</figcaption></figure>
+              <div class="viz-side">
               <ol class="legend">
                 <li><span>카드 제목 옆에 누가 맡았는지 보입니다</span></li>
                 <li><span>맡은 사람과 몇 분째인지</span></li>
                 <li><span><b>넘겨받기</b>: 원래 맡은 사람에게 알림이 갑니다</span></li>
                 <li><span>다른 관리자가 맡은 건은 잠깁니다</span></li>
               </ol>
-            </div>
                       <details class="more-d">
               <summary>자세히</summary>
           <ul>
@@ -741,6 +762,8 @@
             <li>도움 요청을 관리자가 맡으면 학생 화면에도 "관리자 확인 중"이 뜹니다.</li>
           </ul>
             </details>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -846,12 +869,12 @@
             <span class="path">관리자 → 시연</span> <a class="openapp" href="https://du-library-ruddy.vercel.app/admin/demo" target="_blank" rel="noopener">이 화면 열기</a>
             <div class="viz">
               <figure class="shot"><div class="shotbox"><img src="{{IMG:demo}}" alt="시연 탭의 학생 시나리오. 가상 학생과 열람실 선택, 현재 상태 줄, 예약·체크인과 이용 묶음의 상황 버튼들"><i class="hl" style="left:8.00%;top:21.43%;width:80.53%;height:5.91%"><b>1</b></i><i class="hl" style="left:4.27%;top:29.31%;width:88.53%;height:5.42%"><b>2</b></i><i class="hl" style="left:8.00%;top:39.90%;width:80.53%;height:19.21%"><b>3</b></i></div><figcaption>시연 · 학생 시나리오</figcaption></figure>
+              <div class="viz-side">
               <ol class="legend">
                 <li><span>학생과 열람실을 고릅니다</span></li>
                 <li><span>그 학생의 지금 상태</span></li>
                 <li><span>누르면 그 학생이 바로 그 상황이 됩니다</span></li>
               </ol>
-            </div>
             <p class="note bad">전체 초기화는 모든 예약, 벌점, 신고, 알림을 지웁니다. 되돌릴 수 없습니다.</p>
                       <details class="more-d">
               <summary>자세히</summary>
@@ -862,6 +885,8 @@
               <li><b>자동 시연</b>은 상황을 순서대로 담아 두고 몇 초 간격으로 실행합니다. 발표 때 손을 떼고 보여 줄 수 있습니다.</li>
             </ul>
             </details>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -871,12 +896,12 @@
             <span class="path">관리자 → 시연 → 가상 학생 자동 이용</span> <a class="openapp" href="https://du-library-ruddy.vercel.app/admin/demo" target="_blank" rel="noopener">이 화면 열기</a>
             <div class="viz">
               <figure class="shot"><div class="shotbox"><img src="{{IMG:auto}}" alt="시연 탭 맨 위. 가상 학생 자동 이용 스위치가 켜져 있고, 아래 층별 혼잡도의 여유·보통·혼잡 버튼과 전체 초기화가 흐리게 잠겨 있다"><i class="hl" style="left:4.27%;top:29.06%;width:87.47%;height:10.84%"><b>1</b></i><i class="hl" style="left:59.73%;top:19.46%;width:32.53%;height:5.67%"><b>2</b></i><i class="hl" style="left:8.53%;top:70.69%;width:78.93%;height:13.30%"><b>3</b></i></div><figcaption>시연 · 자동 이용 켜짐</figcaption></figure>
+              <div class="viz-side">
               <ol class="legend">
                 <li><span>스위치로 켜고 끕니다</span></li>
                 <li><span>켜져 있으면 전체 초기화가 잠깁니다</span></li>
                 <li><span>혼잡도 조정도 잠깁니다</span></li>
               </ol>
-            </div>
             <p class="note">켜져 있는 동안 층별 혼잡도 조정과 전체 초기화는 잠깁니다. 끄면 좌석은 그 상태로 남고 다시 쓸 수 있습니다.</p>
                       <details class="more-d">
               <summary>자세히</summary>
@@ -889,6 +914,8 @@
               <li>관리자가 관제나 학생 시나리오로 손댄 좌석과 학생은 자동에서 빠집니다. 서로 덮어쓰지 않습니다.</li>
             </ul>
             </details>
+              </div>
+            </div>
           </div>
         </div>
 
