@@ -258,7 +258,7 @@
       <header>
         <span class="role both">1단계 · 처음 한 번</span>
         <h2>휴대폰에 앱으로 설치하기</h2>
-        <p>갤럭시와 아이폰 모두 홈 화면에 추가하면 앱처럼 열립니다. 주소창 없이 전체 화면으로 쓰고, 푸시 알림을 받고, QR 카메라 권한을 한 번만 허용하면 됩니다. 가장 먼저 팀원 모두 이것부터 해 주세요.</p>
+        <p>갤럭시와 아이폰 모두 홈 화면에 추가하면 앱처럼 열립니다. 주소창 없이 전체 화면으로 쓰고, 푸시 알림을 받고, QR 카메라 권한을 한 번만 허용하면 됩니다. 가장 먼저 팀원 모두 이것부터 해 주세요. 알림은 다음 단계에서 로그인한 뒤에 켭니다.</p>
       </header>
       <div class="stack">
         <div class="os-grid">
@@ -286,39 +286,6 @@
           </div>
         </div>
 
-        <div class="card">
-          <h3 style="font-size:18px;font-weight:700">알림 켜기 (두 기종 같음)</h3>
-          <ol class="plain-steps">
-            <li>홈 화면 아이콘으로 앱을 열고 로그인합니다.</li>
-            <li>오른쪽 위 <b>종</b>을 누릅니다.</li>
-            <li><b>푸시 알림 켜기</b>를 누르고, 휴대폰이 묻는 창에서 <b>허용</b>을 누릅니다.</li>
-            <li>버튼이 <b>푸시 켜짐</b>으로 바뀌면 끝입니다.</li>
-          </ol>
-          <p class="note">알림은 최대 1분쯤 늦게 올 수 있습니다. 알림은 계정이 아니라 기기마다 켜야 하므로, 다른 휴대폰에서 로그인하면 거기서도 한 번 켜야 합니다.</p>
-        </div>
-
-        <div class="card">
-          <h3 style="font-size:18px;font-weight:700">알림이 오는지 확인해 보기</h3>
-          <p style="margin-top:6px;color:var(--muted)">알림을 켠 휴대폰은 앱을 닫아 두고, 다른 기기에서 관리자로 로그인해 아래를 해 봅니다.</p>
-          <div class="play" style="margin-top:12px">
-            <div class="turn"><span class="who a">관리자</span><p><b>시연</b> 탭에서 알림을 켠 학생을 고르고 <b>종료 9분 전 · 연장 가능</b>을 누릅니다.</p></div>
-            <div class="turn"><span class="who u">휴대폰</span><p>1분 안에 "⏰ ○○ 이용 종료 10분 전" 알림이 뜹니다. 누르면 내 좌석이 열립니다.</p></div>
-            <div class="turn"><span class="who a">관리자</span><p>공지에서 "알림도 보내기"를 켜고 글을 올려도 됩니다. 학생 모두에게 "📢 공지" 알림이 갑니다.</p></div>
-          </div>
-        </div>
-
-        <div class="tablebox">
-          <table>
-            <thead><tr><th>안 될 때</th><th>확인할 것</th></tr></thead>
-            <tbody>
-              <tr><th>"푸시 알림 켜기"가 안 보임</th><td>아이폰이면 사파리 탭이 아니라 홈 화면 아이콘으로 열었는지, iOS가 16.4 이상인지 확인합니다.</td></tr>
-              <tr><th>허용 창이 안 뜸</th><td>전에 차단한 적이 있는 경우입니다. 갤럭시는 설정 → 애플리케이션 → 삼성 인터넷(또는 크롬) → 알림에서 허용합니다. 아이폰은 설정 → 알림 → DU-library에서 허용합니다.</td></tr>
-              <tr><th>켰는데 알림이 안 옴</th><td>방해 금지 모드와 절전 모드를 끕니다. 갤럭시는 설정 → 배터리에서 삼성 인터넷(또는 크롬)이 "절전 예외"인지 확인합니다.</td></tr>
-              <tr><th>QR 카메라가 안 켜짐</th><td>카메라 권한을 허용합니다. 갤럭시는 주소창 옆 자물쇠 → 권한, 아이폰은 설정 → 사파리 → 카메라.</td></tr>
-              <tr><th>아이콘이 예전 모양</th><td>홈 화면에서 지우고 다시 추가합니다.</td></tr>
-            </tbody>
-          </table>
-        </div>
       </div>
       <p class="next"><a href="#start">다음 · 로그인 →</a></p>
     </section>
@@ -339,13 +306,46 @@
               <li>학번 칸에 아래 값을 넣습니다. 관리자 계정은 내 학번 앞에 <code>a</code>를 붙인 것입니다.</li>
             </ul>
 {{TEAM}}
-            <p class="note bad">관리자 계정은 자기 것만 씁니다. 누가 맡았고 누가 처리했는지가 이름으로 남기 때문에, 남의 계정으로 들어가면 기록이 틀어집니다.</p>
+            <p class="note">관리자 계정은 자기 것만 씁니다. 여러 명이 같은 관리자 계정으로 동시에 들어가면 서로 불편해서 한 사람에 하나씩 나눴습니다.</p>
             <p class="more">가상 학생까지 모두 보려면 <a class="go" href="#accounts-all">전체 계정 보기</a></p>
             <p class="note">운영 시간 밖에는 예약이 거절됩니다. 지금 설정은 학기 중 평일 09:00~22:00이고, 관리자가 바꿀 수 있습니다.</p>
           </div>
-          <figure class="shot"><img src="{{IMG:login}}" alt="로그인 화면. 도서관 사진 위에 2층 49석, 5층 47석 남음이 보이고 아래에 학번과 비밀번호 입력칸이 있다"><figcaption>로그인</figcaption></figure>
+          <figure class="shot"><img src="{{IMG:login}}" alt="로그인 화면. 도서관 사진 위에 2층 92석, 5층 165석 남음이 보이고 아래에 학번과 비밀번호 입력칸, 공통 비밀번호가 있다"><figcaption>로그인</figcaption></figure>
         </div>
 
+        <div class="card">
+          <h3 style="font-size:18px;font-weight:700">로그인했으면 알림을 켭니다 (두 기종 같음)</h3>
+          <ol class="plain-steps">
+            <li>홈 화면 아이콘으로 연 앱에서 로그인한 상태로 시작합니다.</li>
+            <li>오른쪽 위 <b>종</b>을 누릅니다.</li>
+            <li><b>푸시 알림 켜기</b>를 누르고, 휴대폰이 묻는 창에서 <b>허용</b>을 누릅니다.</li>
+            <li>버튼이 <b>푸시 켜짐</b>으로 바뀌면 끝입니다.</li>
+          </ol>
+          <p class="note">알림은 최대 1분쯤 늦게 올 수 있습니다. 알림은 계정이 아니라 기기마다 켜야 하므로, 다른 휴대폰에서 로그인하면 거기서도 한 번 켜야 합니다.</p>
+        </div>
+
+        <div class="card">
+          <h3 style="font-size:18px;font-weight:700">알림이 오는지 확인하기</h3>
+          <ol class="plain-steps">
+            <li>종을 누르면 <b>푸시 켜짐</b> 옆에 <b>알림 확인</b> 버튼이 있습니다. 누릅니다.</li>
+            <li>앱을 닫고 기다립니다. 곧 "알림 확인" 알림이 휴대폰에 뜹니다.</li>
+            <li>알림을 누르면 앱이 열립니다.</li>
+          </ol>
+          <p class="note">좌석을 잡거나 다른 사람이 도와줄 필요가 없습니다. 관리자 계정에서도 똑같이 확인할 수 있습니다.</p>
+        </div>
+
+        <div class="tablebox">
+          <table>
+            <thead><tr><th>안 될 때</th><th>확인할 것</th></tr></thead>
+            <tbody>
+              <tr><th>"푸시 알림 켜기"가 안 보임</th><td>아이폰이면 사파리 탭이 아니라 홈 화면 아이콘으로 열었는지, iOS가 16.4 이상인지 확인합니다.</td></tr>
+              <tr><th>허용 창이 안 뜸</th><td>전에 차단한 적이 있는 경우입니다. 갤럭시는 설정 → 애플리케이션 → 삼성 인터넷(또는 크롬) → 알림에서 허용합니다. 아이폰은 설정 → 알림 → DU-library에서 허용합니다.</td></tr>
+              <tr><th>켰는데 알림이 안 옴</th><td>방해 금지 모드와 절전 모드를 끕니다. 갤럭시는 설정 → 배터리에서 삼성 인터넷(또는 크롬)이 "절전 예외"인지 확인합니다.</td></tr>
+              <tr><th>QR 카메라가 안 켜짐</th><td>카메라 권한을 허용합니다. 갤럭시는 주소창 옆 자물쇠 → 권한, 아이폰은 설정 → 사파리 → 카메라.</td></tr>
+              <tr><th>아이콘이 예전 모양</th><td>홈 화면에서 지우고 다시 추가합니다.</td></tr>
+            </tbody>
+          </table>
+        </div>
         <div class="card">
           <h3 style="font-size:18px;font-weight:700;margin-bottom:12px">좌석 하나가 거치는 상태</h3>
           <div class="flow">
@@ -408,7 +408,7 @@
               <li><b>운영 시간</b>: 운영 시간 밖에는 예약이 거절됩니다. 밤이나 주말에 해 보려면 관리자 시연 탭에서 "운영시간 무시"를 켜고, 끝나면 다시 끕니다.</li>
               <li><b>폐관 시각</b>: 폐관 시각이 되면 이용 중인 좌석이 모두 자동 반납됩니다.</li>
               <li><b>벌점과 예약 정지</b>: 테스트하다 받은 벌점도 실제로 쌓입니다. 관리자의 학생·제재에서 내 계정을 초기화할 수 있습니다.</li>
-              <li><b>푸시 알림</b>: 알림 종 안의 "푸시 알림 켜기"를 눌러야 옵니다. 아이폰은 홈 화면에 추가한 앱에서만 됩니다.</li>
+              <li><b>푸시 알림</b>: 알림 종 안의 "푸시 알림 켜기"를 눌러야 옵니다. 아이폰은 홈 화면에 추가한 앱에서만 됩니다. 켠 뒤에는 "알림 확인"으로 바로 보내 볼 수 있습니다.</li>
             </ul>
           </div>
         </div>
@@ -434,7 +434,7 @@
             </ul>
             <p class="note">예약하면 15분 안에 그 좌석의 QR을 찍어야 합니다. 늦으면 자동 취소되고 벌점 1점입니다.</p>
           </div>
-          <figure class="shot"><img src="{{IMG:seat}}" alt="좌석 지도에서 N-002를 고른 화면. 이용 시간 1~4시간 중 4시간이 선택되어 있고 예약하기 버튼 아래에 15분 안에 체크인하라는 안내가 있다"><figcaption>좌석 고르기</figcaption></figure>
+          <figure class="shot"><img src="{{IMG:seat}}" alt="좌석 지도에서 W-003을 고른 화면. 이용 시간 1~4시간 중 4시간이 선택되어 있고 W-003 예약하기 버튼 아래에 15분 안에 체크인하라는 안내가 있다"><figcaption>좌석 고르기</figcaption></figure>
         </div>
 
         <div class="step has-shot card">
@@ -449,7 +449,7 @@
             </ul>
             <p class="note">실제 운영에서는 도서관 안에서 찍은 QR만 처리됩니다. 위치를 확인해 반경 200m 밖이면 거절합니다. 지금은 테스트라 꺼 두었습니다.</p>
           </div>
-          <figure class="shot"><img src="{{IMG:home}}" alt="홈 화면. 이름과 전공 옆에 체크인 대기 N-002, 14분 49초 남음이 표시된 초록색 칸이 있고 아래에 예약 취소와 내 좌석 버튼이 있다"><figcaption>홈 · 체크인 대기</figcaption></figure>
+          <figure class="shot"><img src="{{IMG:home}}" alt="홈 화면. 이름과 전공 옆에 체크인 대기 W-003, 14분 51초 남음이 표시된 초록색 칸이 있고 아래에 예약 취소와 내 좌석 버튼, 공지 줄, 열람실 카드가 있다"><figcaption>홈 · 체크인 대기</figcaption></figure>
         </div>
 
         <div class="step has-shot card">
@@ -464,7 +464,7 @@
             </ul>
             <p class="note bad">외출 시간을 넘기면 자동 반납되고 벌점 1점입니다. 외출한 뒤에 혼잡도가 바뀌어도 이미 받은 시간은 그대로입니다.</p>
           </div>
-          <figure class="shot"><img src="{{IMG:me}}" alt="내 좌석 화면. N-002 이용 중, 남은 이용 시간 3시간 59분, 아래에 외출, 연장, 자리 이동, 반납 버튼"><figcaption>내 좌석</figcaption></figure>
+          <figure class="shot"><img src="{{IMG:me}}" alt="내 좌석 화면. W-003 이용 중, 남은 이용 시간 3시간 59분, 연장 0회 제한 없음, 아래에 외출, 연장, 자리 이동, 반납 버튼과 벌점 0점"><figcaption>내 좌석</figcaption></figure>
         </div>
 
         <div class="step has-shot card">
@@ -480,7 +480,7 @@
             </ul>
             <p class="note bad">앉아 있는 좌석을 신고하면 허위 신고입니다. 3회면 7일간 신고할 수 없고 벌점 1점입니다.</p>
           </div>
-          <figure class="shot"><img src="{{IMG:report}}" alt="사용 중인 W-002 좌석 화면. 남은 시간 3시간 3분, 이 좌석 빈자리 알림 버튼, 자리비움 신고 버튼과 신고 조건 안내"><figcaption>남의 좌석 QR을 찍었을 때</figcaption></figure>
+          <figure class="shot"><img src="{{IMG:report}}" alt="사용 중인 A-054 좌석 화면. 남은 시간 3시간 36분, 이 좌석 빈자리 알림 버튼과 자리비움 신고 버튼"><figcaption>남의 좌석 QR을 찍었을 때</figcaption></figure>
         </div>
 
         <div class="step has-shot card">
@@ -493,7 +493,7 @@
               <li>자리가 없으면 열람실 카드의 종 버튼으로 빈자리 알림을 켜 둘 수 있습니다.</li>
             </ul>
           </div>
-          <figure class="shot"><img src="{{IMG:stats}}" alt="혼잡도 화면. 목요일이 선택되어 있고 지금 62퍼센트 보통, 7시부터 22시까지 시간대별 막대 그래프"><figcaption>혼잡도</figcaption></figure>
+          <figure class="shot"><img src="{{IMG:stats}}" alt="혼잡도 화면. 목요일이 선택되어 있고 지금 31퍼센트 여유, 7시부터 22시까지 시간대별 막대 그래프"><figcaption>혼잡도</figcaption></figure>
         </div>
 
         <div class="step card">
@@ -530,7 +530,7 @@
               <li>맨 아래에서 그 좌석을 닫습니다. 이용 중이면 "이용이 끝나면 닫기"와 "지금 닫기" 중에 고릅니다.</li>
             </ul>
           </div>
-          <figure class="shot"><img src="{{IMG:admin}}" alt="관제 화면. 처리 대기 2건 버튼, 지금 이용 중 330, 오늘 예약 658, 층별 이용률 탭과 좌석 지도"><figcaption>관제</figcaption></figure>
+          <figure class="shot"><img src="{{IMG:admin}}" alt="관제 화면. 처리 대기 2건 버튼, 지금 이용 중 169, 오늘 예약 838, 층별 이용률 탭과 좌석 지도"><figcaption>관제</figcaption></figure>
         </div>
 
         <div class="step has-shot card">
@@ -545,7 +545,7 @@
               <li>끝난 건은 아래 "방금 끝난 건"에 한 시간 동안 남습니다. 관리자가 처리했으면 누가 했는지, 아니면 어떻게 끝났는지가 보입니다.</li>
             </ul>
           </div>
-          <figure class="shot"><img src="{{IMG:areports}}" alt="처리 대기 화면. 위에 전체, 자리비움 신고, 도움 요청 칩. 신고 카드에 이용자와 신고자가 나란히 있고 아래에 신고자와 대화, 확인 시작 버튼"><figcaption>처리 대기 · 신고</figcaption></figure>
+          <figure class="shot"><img src="{{IMG:areports}}" alt="처리 대기 화면. 위에 전체, 자리비움 신고, 도움 요청 칩. 신고 카드에 자동 반납까지 남은 시간, 이용자와 신고자가 나란히 있다"><figcaption>처리 대기 · 신고</figcaption></figure>
         </div>
 
         <div class="step has-shot card">
@@ -565,10 +565,11 @@
             </div>
             <p>자리에 짐이 남아 있으면 "보관할 짐"에 적고 반납 확정을 누릅니다. 보관 번호가 만들어지고 이용자에게 찾는 곳과 기한이 갑니다.</p>
           </div>
-          <figure class="shot"><img src="{{IMG:abuttons}}" alt="신고 카드 아래쪽. 신고자와 대화, 확인 시작, 보관할 짐 입력칸, 반납 확정과 돌아옴 버튼"><figcaption>신고 처리 버튼</figcaption></figure>
+          <figure class="shot"><img src="{{IMG:abuttons}}" alt="신고 카드 아래쪽. 확인 시작, 보관할 짐 입력칸, 반납 확정, 돌아옴, 반납 10분 연장, 허위 신고 버튼"><figcaption>신고 처리 버튼</figcaption></figure>
         </div>
 
-        <div class="step card" id="claim">
+        <div class="step has-shot card" id="claim">
+          <div>
           <h3><span class="n">4</span>관리자가 여러 명일 때</h3>
           <span class="path">처리 대기 → 내가 맡기 · 넘겨받기</span>
           <ul>
@@ -580,6 +581,8 @@
             <li>맡지 않고 바로 처리해도 처리한 사람이 남습니다. "방금 끝난 건"에 "○○ · 반납 확정"처럼 보입니다.</li>
             <li>도움 요청을 관리자가 맡으면 학생 화면에도 "관리자 확인 중"이 뜹니다.</li>
           </ul>
+          </div>
+          <figure class="shot"><img src="{{IMG:claim}}" alt="처리 대기의 도움 요청 카드. 제목 옆에 이동욱 처리 중 표시가 있고, 아래 노란 줄에 이동욱 처리 중 7분째와 넘겨받기 버튼. 그 아래 대화와 버튼은 흐리게 잠겨 있다"><figcaption>다른 관리자가 맡은 건</figcaption></figure>
         </div>
 
         <div class="step card">
@@ -690,10 +693,10 @@
             </ul>
             <p class="note bad">전체 초기화는 모든 예약, 벌점, 신고, 알림을 지웁니다. 되돌릴 수 없습니다.</p>
           </div>
-          <figure class="shot"><img src="{{IMG:demo}}" alt="시연 탭의 학생 시나리오. 가상 학생과 열람실 선택, 현재 상태 줄, 예약·체크인과 이용, 외출 묶음의 상황 버튼들"><figcaption>시연 · 학생 시나리오</figcaption></figure>
+          <figure class="shot"><img src="{{IMG:demo}}" alt="시연 탭의 학생 시나리오. 가상 학생과 열람실 선택, 현재 상태 줄, 예약·체크인과 이용 묶음의 상황 버튼들"><figcaption>시연 · 학생 시나리오</figcaption></figure>
         </div>
 
-        <div class="step card" id="auto">
+        <div class="step has-shot card" id="auto">
           <div>
             <h3 style="display:block">6. 가상 학생 자동 이용을 켜 두고 테스트하기</h3>
             <span class="path">관리자 → 시연 → 가상 학생 자동 이용</span>
@@ -707,6 +710,7 @@
             </ul>
             <p class="note">켜져 있는 동안 층별 혼잡도 조정과 전체 초기화는 잠깁니다. 끄면 좌석은 그 상태로 남고 다시 쓸 수 있습니다.</p>
           </div>
+          <figure class="shot"><img src="{{IMG:auto}}" alt="시연 탭 맨 위. 가상 학생 자동 이용 스위치가 켜져 있고, 아래 층별 혼잡도의 여유·보통·혼잡 버튼과 전체 초기화가 흐리게 잠겨 있다"><figcaption>시연 · 자동 이용 켜짐</figcaption></figure>
         </div>
 
         <div class="scn card">

@@ -102,6 +102,20 @@ export function NotificationBell() {
     }
   }
 
+  // 알림 확인: 이 기기로 알림이 오는지 바로 보내 본다
+  async function testPush() {
+    if (busy) return;
+    setBusy(true);
+    try {
+      await rpc("test_push");
+      toast("알림을 보냈습니다. 앱을 닫아도 곧 옵니다.", "ok");
+    } catch (e) {
+      toast(errMsg(e), "error");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
     <div ref={box} className="relative shrink-0">
       <button
@@ -128,6 +142,12 @@ export function NotificationBell() {
         >
           <div className="flex items-center justify-between gap-3 border-b border-line px-4 py-3">
             <h2 className="font-bold">알림</h2>
+            <div className="flex items-center gap-1.5">
+            {push && (
+              <button type="button" disabled={busy} onClick={testPush} className="flex min-h-9 items-center rounded-full border border-line px-3 text-[13px] font-semibold transition-colors duration-150 hover:bg-canvas">
+                알림 확인
+              </button>
+            )}
             {push !== null && (
               <button
                 type="button"
@@ -143,6 +163,7 @@ export function NotificationBell() {
                 {push ? "푸시 켜짐" : "푸시 알림 켜기"}
               </button>
             )}
+            </div>
           </div>
 
           {items && items.length > 0 && (
