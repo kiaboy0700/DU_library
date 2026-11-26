@@ -245,6 +245,18 @@
   .viz-side { min-width: 0; width: 100%; }
   .viz-side > .legend + * { margin-top: 16px; }
 
+  /* 휴대폰 푸시 알림 예시 그림 */
+  .pushmock { margin: 16px 0 0; }
+  .pm-phone { max-width: 340px; border-radius: 26px; padding: 18px 12px 22px; background: linear-gradient(160deg, #0c3a33, #12211e 70%); border: 6px solid #10201c; }
+  .pm-time { color: #fff; font-size: 34px; font-weight: 300; text-align: center; letter-spacing: 0.02em; margin-bottom: 14px; font-variant-numeric: tabular-nums; }
+  .pm-card { display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 10px; align-items: start; background: rgba(255, 255, 255, 0.94); color: #1b2421; border-radius: 16px; padding: 10px 12px; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3); }
+  .pm-icon { width: 36px; height: 36px; border-radius: 9px; background: #00826f; color: #fff; font-size: 13px; font-weight: 800; display: grid; place-items: center; }
+  .pm-top { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; color: #5d6966; }
+  .pm-top b { color: #1b2421; }
+  .pm-title { font-size: 15px; font-weight: 700; margin-top: 1px; }
+  .pm-body { font-size: 14px; line-height: 1.35; color: #37423f; }
+  .pushmock figcaption { font-size: 13px; color: var(--muted); margin-top: 8px; }
+
   /* 그 화면 바로 열기 */
   a.openapp { display: inline-flex; align-items: center; min-height: 28px; margin: 8px 0 0 4px; padding: 0 10px; border-radius: 999px; background: var(--deep); color: #fff; font-size: 13px; font-weight: 700; text-decoration: none; white-space: nowrap; vertical-align: top; }
   a.openapp::after { content: " ↗"; white-space: pre; }
@@ -408,7 +420,20 @@
                 <li><span><b>알림 확인</b>을 누르고 앱을 닫습니다</span></li>
                 <li><span>곧 휴대폰에 알림이 뜹니다. 앱 안의 알림함에도 같은 줄이 남습니다</span></li>
               </ol>
-            <p class="note">좌석을 잡거나 다른 사람이 도와줄 필요가 없습니다. 휴대폰 화면에 뜨는 알림은 기종마다 모양이 달라 사진을 넣지 않았습니다.</p>
+            <figure class="pushmock">
+              <div class="pm-phone" aria-hidden="true">
+                <div class="pm-time">10:33</div>
+                <div class="pm-card">
+                  <span class="pm-icon">DU</span>
+                  <div class="pm-txt">
+                    <div class="pm-top"><b>DU-library</b><span>지금</span></div>
+                    <div class="pm-title">알림 확인</div>
+                    <div class="pm-body">이 알림이 보이면 이 기기에서 알림이 정상입니다.</div>
+                  </div>
+                </div>
+              </div>
+              <figcaption>휴대폰에 이렇게 뜹니다 (예시 그림)</figcaption>
+            </figure>
               </div>
             </div>
           </div>
