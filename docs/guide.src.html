@@ -311,6 +311,15 @@
   a.gobtn:hover, a.gobtn:focus-visible { filter: brightness(0.96); outline: 2px solid currentColor; outline-offset: 2px; }
   @media (min-width: 720px) { a.gobtn { display: inline-flex; min-width: 280px; } }
 
+  /* 관리자 화면: PC / 모바일 골라 보기 */
+  #view-guide[data-adm="pc"] .adm-m, #view-guide[data-adm="m"] .adm-pc { display: none !important; }
+  #view-guide[data-adm="pc"] .viz.dual { grid-template-columns: minmax(0, 1fr); justify-items: stretch; }
+  .adm-seg { max-width: 280px; margin-top: 12px; }
+  .viz figure.shotpc { width: 100%; max-width: none; overflow-x: auto; padding: 16px 16px 4px; margin: -16px -16px 0; box-sizing: content-box; }
+  .shotpc .shotbox { min-width: 700px; border-width: 5px; border-radius: 14px; }
+  figure.shot.shotpc .shotbox img { border-radius: 9px; }
+  .shotpc figcaption { position: sticky; left: 0; }
+
   /* 그 화면 바로 열기 */
   a.openapp { display: inline-flex; align-items: center; min-height: 28px; margin: 8px 0 0 4px; padding: 0 10px; border-radius: 999px; background: var(--deep); color: #fff; font-size: 13px; font-weight: 700; text-decoration: none; white-space: nowrap; vertical-align: top; }
   a.openapp::after { content: " ↗"; white-space: pre; }
@@ -964,7 +973,7 @@
       <header>
         <span class="role admin">5단계 · 관리자</span>
         <h2>관리자 따라 하기</h2>
-        <p>이제 관리자 계정(a + 내 학번)으로 들어갑니다. <span class="dev-two">PC와 휴대폰 모두 되지만 PC가 더 쉽습니다.</span><span class="dev-one">학생 계정에서 로그아웃하고 관리자 계정으로 다시 로그인합니다.</span> 방금 학생으로 잡아 둔 내 좌석과 보내 둔 도움 요청이 그대로 보입니다.</p>
+        <p>이제 관리자 계정(a + 내 학번)으로 들어갑니다. <span class="dev-two">PC와 휴대폰 모두 되지만 PC가 더 쉽습니다. 사진은 <b>PC 화면</b>과 <b>모바일 화면</b> 중에 골라 볼 수 있습니다.</span><span class="dev-one">학생 계정에서 로그아웃하고 관리자 계정으로 다시 로그인합니다.</span> 방금 학생으로 잡아 둔 내 좌석과 보내 둔 도움 요청이 그대로 보입니다.</p>
       </header>
       <div class="stack">
         <div class="step has-shot card">
@@ -972,8 +981,13 @@
             <span class="where a adm">앱에서 합니다 · 관리자</span>
             <h3><span class="n">1</span>관제에서 전체를 봅니다</h3>
             <span class="path">관제</span> <a class="openapp" href="https://du-library-ruddy.vercel.app/admin" target="_blank" rel="noopener">이 화면 열기</a>
-            <div class="viz">
-              <figure class="shot"><div class="shotbox"><img src="{{IMG:admin}}" alt="관제 화면. 처리 대기 2건 버튼, 지금 이용 중 169, 오늘 예약 838, 층별 이용률 탭과 좌석 지도"><i class="hl" style="left:4.27%;top:26.35%;width:36.27%;height:5.91%"><b>1</b></i><i class="hl out-r" style="left:4.27%;top:34.24%;width:87.47%;height:25.12%"><b>2</b></i><i class="hl" style="left:4.27%;top:61.08%;width:72.00%;height:5.67%"><b>3</b></i><i class="hl" style="left:4.27%;top:68.47%;width:87.47%;height:23.40%"><b>4</b></i></div><figcaption>관제</figcaption></figure>
+            <div class="seg adm-seg" role="group" aria-label="관리자 화면 보기">
+              <button type="button" data-adm="pc" aria-pressed="true">PC 화면</button>
+              <button type="button" data-adm="m" aria-pressed="false">모바일 화면</button>
+            </div>
+            <div class="viz dual">
+              <figure class="shot adm-m"><div class="shotbox"><img src="{{IMG:admin}}" alt="관제 화면. 처리 대기 2건 버튼, 지금 이용 중 169, 오늘 예약 838, 층별 이용률 탭과 좌석 지도"><i class="hl" style="left:4.27%;top:26.35%;width:36.27%;height:5.91%"><b>1</b></i><i class="hl out-r" style="left:4.27%;top:34.24%;width:87.47%;height:25.12%"><b>2</b></i><i class="hl" style="left:4.27%;top:61.08%;width:72.00%;height:5.67%"><b>3</b></i><i class="hl" style="left:4.27%;top:68.47%;width:87.47%;height:23.40%"><b>4</b></i></div><figcaption>관제</figcaption></figure>
+              <figure class="shot shotpc adm-pc"><div class="shotbox"><img src="{{IMG:pcadmin}}" alt="PC의 관제 화면. 위쪽 메뉴, 오른쪽 위 처리 대기 2건 버튼, 숫자 다섯 칸, 층 탭, 왼쪽 좌석 지도와 오른쪽 좌석 정보 칸"><i class="hl" style="left:85.09%;top:20.28%;width:12.09%;height:5.97%"><b>1</b></i><i class="hl" style="left:1.55%;top:28.61%;width:95.55%;height:9.44%"><b>2</b></i><i class="hl" style="left:1.45%;top:40.42%;width:24.00%;height:5.56%"><b>3</b></i><i class="hl" style="left:3.00%;top:65.97%;width:60.36%;height:33.19%"><b>4</b></i></div><figcaption>관제 · PC</figcaption></figure>
               <div class="viz-side">
               <ol class="legend">
                 <li><span>처리할 일이 있으면 빨간 버튼이 뜹니다</span></li>
@@ -1001,8 +1015,13 @@
             <span class="where a adm">앱에서 합니다 · 관리자</span>
             <h3><span class="n">2</span>처리 대기를 비웁니다</h3>
             <span class="path">처리 대기</span> <a class="openapp" href="https://du-library-ruddy.vercel.app/admin/reports" target="_blank" rel="noopener">이 화면 열기</a>
-            <div class="viz">
-              <figure class="shot"><div class="shotbox"><img src="{{IMG:areports}}" alt="처리 대기 화면. 위에 전체, 자리비움 신고, 도움 요청 칩. 신고 카드에 자동 반납까지 남은 시간, 이용자와 신고자가 나란히 있다"><i class="hl" style="left:3.73%;top:27.59%;width:93.33%;height:5.67%"><b>1</b></i><i class="hl out-l" style="left:8.00%;top:45.57%;width:31.47%;height:2.96%"><b>2</b></i><i class="hl out-l" style="left:8.53%;top:51.72%;width:38.40%;height:20.69%"><b>3</b></i><i class="hl out-r" style="left:49.07%;top:51.72%;width:38.40%;height:20.69%"><b>4</b></i><i class="hl" style="left:8.53%;top:74.14%;width:80.00%;height:5.67%"><b>5</b></i></div><figcaption>처리 대기 · 신고</figcaption></figure>
+            <div class="seg adm-seg" role="group" aria-label="관리자 화면 보기">
+              <button type="button" data-adm="pc" aria-pressed="true">PC 화면</button>
+              <button type="button" data-adm="m" aria-pressed="false">모바일 화면</button>
+            </div>
+            <div class="viz dual">
+              <figure class="shot adm-m"><div class="shotbox"><img src="{{IMG:areports}}" alt="처리 대기 화면. 위에 전체, 자리비움 신고, 도움 요청 칩. 신고 카드에 자동 반납까지 남은 시간, 이용자와 신고자가 나란히 있다"><i class="hl" style="left:3.73%;top:27.59%;width:93.33%;height:5.67%"><b>1</b></i><i class="hl out-l" style="left:8.00%;top:45.57%;width:31.47%;height:2.96%"><b>2</b></i><i class="hl out-l" style="left:8.53%;top:51.72%;width:38.40%;height:20.69%"><b>3</b></i><i class="hl out-r" style="left:49.07%;top:51.72%;width:38.40%;height:20.69%"><b>4</b></i><i class="hl" style="left:8.53%;top:74.14%;width:80.00%;height:5.67%"><b>5</b></i></div><figcaption>처리 대기 · 신고</figcaption></figure>
+              <figure class="shot shotpc adm-pc"><div class="shotbox"><img src="{{IMG:pcareports}}" alt="PC의 처리 대기 화면. 종류 칩 다섯 개와 신고 카드, 이용자와 신고자가 나란히 있고 아래에 신고자와 대화"><i class="hl" style="left:1.09%;top:28.47%;width:52.27%;height:7.22%"><b>1</b></i><i class="hl out-l" style="left:22.09%;top:46.94%;width:9.27%;height:2.22%"><b>2</b></i><i class="hl" style="left:3.00%;top:54.03%;width:46.00%;height:20.69%"><b>3</b></i><i class="hl" style="left:49.64%;top:54.03%;width:46.00%;height:20.69%"><b>4</b></i><i class="hl" style="left:3.00%;top:76.39%;width:52.27%;height:6.25%"><b>5</b></i></div><figcaption>처리 대기 · PC</figcaption></figure>
               <div class="viz-side">
               <ol class="legend">
                 <li><span>종류별로 골라 봅니다</span></li>
@@ -1031,8 +1050,13 @@
             <span class="where a adm">앱에서 합니다 · 관리자</span>
             <h3><span class="n">3</span>신고에 결론을 냅니다</h3>
             <span class="path">처리 대기 → 신고 카드</span> <a class="openapp" href="https://du-library-ruddy.vercel.app/admin/reports" target="_blank" rel="noopener">이 화면 열기</a>
-            <div class="viz">
-              <figure class="shot"><div class="shotbox"><img src="{{IMG:abuttons}}" alt="신고 카드 아래쪽. 확인 시작, 보관할 짐 입력칸, 반납 확정, 돌아옴, 반납 10분 연장, 허위 신고 버튼"><i class="hl" style="left:8.53%;top:40.52%;width:78.93%;height:5.67%"><b>1</b></i><i class="hl" style="left:8.53%;top:47.41%;width:78.93%;height:5.91%"><b>2</b></i><i class="hl" style="left:8.53%;top:54.31%;width:38.93%;height:5.67%"><b>3</b></i><i class="hl" style="left:49.07%;top:54.31%;width:38.93%;height:5.67%"><b>4</b></i><i class="hl" style="left:8.53%;top:60.71%;width:38.93%;height:5.67%"><b>5</b></i><i class="hl" style="left:49.07%;top:60.71%;width:38.93%;height:5.67%"><b>6</b></i></div><figcaption>신고 처리 버튼</figcaption></figure>
+            <div class="seg adm-seg" role="group" aria-label="관리자 화면 보기">
+              <button type="button" data-adm="pc" aria-pressed="true">PC 화면</button>
+              <button type="button" data-adm="m" aria-pressed="false">모바일 화면</button>
+            </div>
+            <div class="viz dual">
+              <figure class="shot adm-m"><div class="shotbox"><img src="{{IMG:abuttons}}" alt="신고 카드 아래쪽. 확인 시작, 보관할 짐 입력칸, 반납 확정, 돌아옴, 반납 10분 연장, 허위 신고 버튼"><i class="hl" style="left:8.53%;top:40.52%;width:78.93%;height:5.67%"><b>1</b></i><i class="hl" style="left:8.53%;top:47.41%;width:78.93%;height:5.91%"><b>2</b></i><i class="hl" style="left:8.53%;top:54.31%;width:38.93%;height:5.67%"><b>3</b></i><i class="hl" style="left:49.07%;top:54.31%;width:38.93%;height:5.67%"><b>4</b></i><i class="hl" style="left:8.53%;top:60.71%;width:38.93%;height:5.67%"><b>5</b></i><i class="hl" style="left:49.07%;top:60.71%;width:38.93%;height:5.67%"><b>6</b></i></div><figcaption>신고 처리 버튼</figcaption></figure>
+              <figure class="shot shotpc adm-pc"><div class="shotbox"><img src="{{IMG:pcabuttons}}" alt="PC의 신고 카드 아래쪽. 확인 시작, 보관할 짐 입력칸, 반납 확정·돌아옴·반납 10분 연장·허위 신고가 한 줄에 있다"><i class="hl" style="left:3.00%;top:33.33%;width:92.64%;height:6.11%"><b>1</b></i><i class="hl" style="left:3.00%;top:41.11%;width:92.64%;height:6.11%"><b>2</b></i><i class="hl" style="left:3.00%;top:48.89%;width:22.64%;height:6.11%"><b>3</b></i><i class="hl" style="left:26.36%;top:48.89%;width:22.64%;height:6.11%"><b>4</b></i><i class="hl" style="left:49.64%;top:48.89%;width:22.64%;height:6.11%"><b>5</b></i><i class="hl" style="left:73.00%;top:48.89%;width:22.64%;height:6.11%"><b>6</b></i></div><figcaption>신고 처리 버튼 · PC</figcaption></figure>
               <div class="viz-side">
               <ol class="legend">
                 <li><span><b>확인 시작</b>: 내가 맡고, 자동 반납을 멈춥니다</span></li>
@@ -1063,8 +1087,13 @@
           <div>
           <h3><span class="n">4</span>관리자가 여러 명일 때</h3>
           <span class="path">처리 대기 → 내가 맡기 · 넘겨받기</span> <a class="openapp" href="https://du-library-ruddy.vercel.app/admin/reports" target="_blank" rel="noopener">이 화면 열기</a>
-            <div class="viz">
-              <figure class="shot"><div class="shotbox"><img src="{{IMG:claim}}" alt="처리 대기의 도움 요청 카드. 제목 옆에 이동욱 처리 중 표시가 있고, 아래 노란 줄에 이동욱 처리 중 7분째와 넘겨받기 버튼. 그 아래 대화와 버튼은 흐리게 잠겨 있다"><i class="hl out-l" style="left:8.53%;top:25.00%;width:22.93%;height:2.71%"><b>1</b></i><i class="hl" style="left:8.53%;top:45.57%;width:52.27%;height:7.39%"><b>2</b></i><i class="hl" style="left:62.40%;top:46.55%;width:22.93%;height:5.42%"><b>3</b></i><i class="hl" style="left:8.53%;top:54.68%;width:78.93%;height:36.95%"><b>4</b></i></div><figcaption>다른 관리자가 맡은 건</figcaption></figure>
+            <div class="seg adm-seg" role="group" aria-label="관리자 화면 보기">
+              <button type="button" data-adm="pc" aria-pressed="true">PC 화면</button>
+              <button type="button" data-adm="m" aria-pressed="false">모바일 화면</button>
+            </div>
+            <div class="viz dual">
+              <figure class="shot adm-m"><div class="shotbox"><img src="{{IMG:claim}}" alt="처리 대기의 도움 요청 카드. 제목 옆에 이동욱 처리 중 표시가 있고, 아래 노란 줄에 이동욱 처리 중 7분째와 넘겨받기 버튼. 그 아래 대화와 버튼은 흐리게 잠겨 있다"><i class="hl out-l" style="left:8.53%;top:25.00%;width:22.93%;height:2.71%"><b>1</b></i><i class="hl" style="left:8.53%;top:45.57%;width:52.27%;height:7.39%"><b>2</b></i><i class="hl" style="left:62.40%;top:46.55%;width:22.93%;height:5.42%"><b>3</b></i><i class="hl" style="left:8.53%;top:54.68%;width:78.93%;height:36.95%"><b>4</b></i></div><figcaption>다른 관리자가 맡은 건</figcaption></figure>
+              <figure class="shot shotpc adm-pc"><div class="shotbox"><img src="{{IMG:pcclaim}}" alt="PC의 도움 요청 카드. 제목 옆 이동욱 처리 중 표시, 노란 줄의 처리 중 6분째와 넘겨받기 버튼, 아래 잠긴 대화 영역"><i class="hl out-l" style="left:23.27%;top:22.64%;width:7.27%;height:2.78%"><b>1</b></i><i class="hl out-l" style="left:4.09%;top:49.17%;width:10.73%;height:2.78%"><b>2</b></i><i class="hl" style="left:87.09%;top:47.50%;width:7.45%;height:6.11%"><b>3</b></i><i class="hl" style="left:3.00%;top:54.72%;width:92.64%;height:44.44%"><b>4</b></i></div><figcaption>다른 관리자가 맡은 건 · PC</figcaption></figure>
               <div class="viz-side">
               <ol class="legend">
                 <li><span>카드 제목 옆에 누가 맡았는지 보입니다</span></li>
@@ -1212,8 +1241,13 @@
             <div class="turn"><span class="who u">이용자</span><p>"이용이 끝나면 좌석이 닫힙니다" 알림이 와 있습니다. 연장이 거절됩니다. 반납하면 좌석이 닫힙니다. 끝나면 관리자의 좌석·열람실에서 그 좌석을 다시 엽니다.</p></div>
             <div class="turn"><span class="who u">이용자</span><p>홈의 공지 줄에 빨간 점이 생기고 알림이 옵니다.</p></div>
           </div>
-            <div class="viz" style="margin-top:18px">
-              <figure class="shot"><div class="shotbox"><img src="{{IMG:aclose}}" alt="관제에서 좌석을 누른 뒤 나오는 칸의 아래쪽. 외출 처리, 이용 시간 연장, 좌석 옮기기, 반납시키기와 맨 아래 좌석 상태의 이용이 끝나면 닫기, 지금 닫기 버튼"><i class="hl" style="left:8.80%;top:65.89%;width:78.67%;height:5.42%"><b>1</b></i><i class="hl" style="left:8.80%;top:75.49%;width:78.67%;height:5.42%"><b>2</b></i><i class="hl" style="left:8.80%;top:7.76%;width:78.67%;height:11.82%"><b>3</b></i><i class="hl out-l" style="left:8.80%;top:44.46%;width:78.67%;height:15.02%"><b>4</b></i></div><figcaption>관제 · 좌석을 눌렀을 때 아래쪽</figcaption></figure>
+            <div class="seg adm-seg" role="group" aria-label="관리자 화면 보기">
+              <button type="button" data-adm="pc" aria-pressed="true">PC 화면</button>
+              <button type="button" data-adm="m" aria-pressed="false">모바일 화면</button>
+            </div>
+            <div class="viz dual" style="margin-top:18px">
+              <figure class="shot adm-m"><div class="shotbox"><img src="{{IMG:aclose}}" alt="관제에서 좌석을 누른 뒤 나오는 칸의 아래쪽. 외출 처리, 이용 시간 연장, 좌석 옮기기, 반납시키기와 맨 아래 좌석 상태의 이용이 끝나면 닫기, 지금 닫기 버튼"><i class="hl" style="left:8.80%;top:65.89%;width:78.67%;height:5.42%"><b>1</b></i><i class="hl" style="left:8.80%;top:75.49%;width:78.67%;height:5.42%"><b>2</b></i><i class="hl" style="left:8.80%;top:7.76%;width:78.67%;height:11.82%"><b>3</b></i><i class="hl out-l" style="left:8.80%;top:44.46%;width:78.67%;height:15.02%"><b>4</b></i></div><figcaption>관제 · 좌석을 눌렀을 때 아래쪽</figcaption></figure>
+              <figure class="shot shotpc adm-pc"><div class="shotbox"><img src="{{IMG:pcaclose}}" alt="PC의 관제에서 좌석을 누른 모습. 왼쪽 좌석 지도, 오른쪽 칸에 이용 시간 연장, 좌석 옮기기, 반납시키기, 이용이 끝나면 닫기와 지금 닫기"><i class="hl" style="left:67.73%;top:70.56%;width:27.91%;height:6.11%"><b>1</b></i><i class="hl" style="left:67.73%;top:81.39%;width:27.91%;height:6.11%"><b>2</b></i><i class="hl" style="left:67.73%;top:12.22%;width:27.91%;height:6.11%"><b>3</b></i><i class="hl" style="left:67.73%;top:46.25%;width:27.91%;height:16.94%"><b>4</b></i></div><figcaption>관제 · 좌석을 눌렀을 때 · PC</figcaption></figure>
               <div class="viz-side">
               <ol class="legend">
                 <li><span><b>이용이 끝나면 닫기</b>: 지금 시간까지는 쓰고, 연장은 안 됩니다</span></li>
@@ -1230,8 +1264,13 @@
             <span class="where a adm">앱에서 합니다 · 관리자</span>
             <h3 style="display:block">5. 혼잡도를 바꿔 규칙이 달라지는 것 보기</h3>
             <span class="path">관리자 → 시연</span> <a class="openapp" href="https://du-library-ruddy.vercel.app/admin/demo" target="_blank" rel="noopener">이 화면 열기</a>
-            <div class="viz">
-              <figure class="shot"><div class="shotbox"><img src="{{IMG:demo}}" alt="시연 탭의 학생 시나리오. 가상 학생과 열람실 선택, 현재 상태 줄, 예약·체크인과 이용 묶음의 상황 버튼들"><i class="hl" style="left:8.00%;top:21.43%;width:80.53%;height:5.91%"><b>1</b></i><i class="hl" style="left:4.27%;top:29.31%;width:88.53%;height:5.42%"><b>2</b></i><i class="hl" style="left:8.00%;top:39.90%;width:80.53%;height:19.21%"><b>3</b></i></div><figcaption>시연 · 학생 시나리오</figcaption></figure>
+            <div class="seg adm-seg" role="group" aria-label="관리자 화면 보기">
+              <button type="button" data-adm="pc" aria-pressed="true">PC 화면</button>
+              <button type="button" data-adm="m" aria-pressed="false">모바일 화면</button>
+            </div>
+            <div class="viz dual">
+              <figure class="shot adm-m"><div class="shotbox"><img src="{{IMG:demo}}" alt="시연 탭의 학생 시나리오. 가상 학생과 열람실 선택, 현재 상태 줄, 예약·체크인과 이용 묶음의 상황 버튼들"><i class="hl" style="left:8.00%;top:21.43%;width:80.53%;height:5.91%"><b>1</b></i><i class="hl" style="left:4.27%;top:29.31%;width:88.53%;height:5.42%"><b>2</b></i><i class="hl" style="left:8.00%;top:39.90%;width:80.53%;height:19.21%"><b>3</b></i></div><figcaption>시연 · 학생 시나리오</figcaption></figure>
+              <figure class="shot shotpc adm-pc"><div class="shotbox"><img src="{{IMG:pcdemo}}" alt="PC의 학생 시나리오. 학생과 열람실 선택, 상태 줄, 예약·체크인과 이용, 외출, 자리비움 신고 묶음의 버튼들"><i class="hl" style="left:3.00%;top:23.19%;width:92.64%;height:6.11%"><b>1</b></i><i class="hl" style="left:3.00%;top:31.67%;width:92.64%;height:6.11%"><b>2</b></i><i class="hl" style="left:3.00%;top:43.89%;width:92.64%;height:6.67%"><b>3</b></i></div><figcaption>시연 · 학생 시나리오 · PC</figcaption></figure>
               <div class="viz-side">
               <ol class="legend">
                 <li><span>학생과 열람실을 고릅니다</span></li>
@@ -1258,8 +1297,13 @@
             <span class="where a adm">앱에서 합니다 · 관리자</span>
             <h3 style="display:block">6. 가상 학생 자동 이용을 켜 두고 테스트하기</h3>
             <span class="path">관리자 → 시연 → 가상 학생 자동 이용</span> <a class="openapp" href="https://du-library-ruddy.vercel.app/admin/demo" target="_blank" rel="noopener">이 화면 열기</a>
-            <div class="viz">
-              <figure class="shot"><div class="shotbox"><img src="{{IMG:auto}}" alt="시연 탭 맨 위. 가상 학생 자동 이용 스위치가 켜져 있고, 아래 층별 혼잡도의 여유·보통·혼잡 버튼과 전체 초기화가 흐리게 잠겨 있다"><i class="hl" style="left:4.27%;top:29.06%;width:87.47%;height:10.84%"><b>1</b></i><i class="hl" style="left:59.73%;top:19.46%;width:32.53%;height:5.67%"><b>2</b></i><i class="hl" style="left:8.53%;top:70.69%;width:78.93%;height:13.30%"><b>3</b></i></div><figcaption>시연 · 자동 이용 켜짐</figcaption></figure>
+            <div class="seg adm-seg" role="group" aria-label="관리자 화면 보기">
+              <button type="button" data-adm="pc" aria-pressed="true">PC 화면</button>
+              <button type="button" data-adm="m" aria-pressed="false">모바일 화면</button>
+            </div>
+            <div class="viz dual">
+              <figure class="shot adm-m"><div class="shotbox"><img src="{{IMG:auto}}" alt="시연 탭 맨 위. 가상 학생 자동 이용 스위치가 켜져 있고, 아래 층별 혼잡도의 여유·보통·혼잡 버튼과 전체 초기화가 흐리게 잠겨 있다"><i class="hl" style="left:4.27%;top:29.06%;width:87.47%;height:10.84%"><b>1</b></i><i class="hl" style="left:59.73%;top:19.46%;width:32.53%;height:5.67%"><b>2</b></i><i class="hl" style="left:8.53%;top:70.69%;width:78.93%;height:13.30%"><b>3</b></i></div><figcaption>시연 · 자동 이용 켜짐</figcaption></figure>
+              <figure class="shot shotpc adm-pc"><div class="shotbox"><img src="{{IMG:pcauto}}" alt="PC의 시연 탭. 가상 학생 자동 이용 스위치가 켜져 있고 전체 초기화와 층별 혼잡도 버튼이 흐리게 잠겨 있다"><i class="hl" style="left:1.45%;top:30.83%;width:95.64%;height:11.67%"><b>1</b></i><i class="hl" style="left:86.36%;top:20.14%;width:10.82%;height:6.11%"><b>2</b></i><i class="hl" style="left:3.00%;top:77.92%;width:44.27%;height:13.89%"><b>3</b></i></div><figcaption>시연 · 자동 이용 켜짐 · PC</figcaption></figure>
               <div class="viz-side">
               <ol class="legend">
                 <li><span>스위치로 켜고 끕니다</span></li>
@@ -1547,6 +1591,21 @@
     Array.prototype.forEach.call(document.querySelectorAll("[data-dev-open]"), function (t) { t.addEventListener("click", open); });
     if (chosen) apply(chosen);
     else if (!root.hidden) open();
+  })();
+
+  // 관리자 화면 사진: PC / 모바일. 처음에는 가이드를 보는 화면 크기에 맞추고, 고르면 기억한다
+  (function () {
+    var root = document.getElementById("view-guide");
+    var btns = Array.prototype.slice.call(document.querySelectorAll(".adm-seg button"));
+    function set(v, save) {
+      root.setAttribute("data-adm", v);
+      btns.forEach(function (b) { b.setAttribute("aria-pressed", b.getAttribute("data-adm") === v ? "true" : "false"); });
+      if (save) { try { localStorage.setItem("du-guide-adm", v); } catch (e) {} }
+    }
+    btns.forEach(function (b) { b.addEventListener("click", function () { set(b.getAttribute("data-adm"), true); }); });
+    var saved = null;
+    try { saved = localStorage.getItem("du-guide-adm"); } catch (e) {}
+    set(saved === "pc" || saved === "m" ? saved : (window.innerWidth >= 720 ? "pc" : "m"), false);
   })();
 
   // 가이드 / 전체 계정 / 좌석 QR 화면 전환
