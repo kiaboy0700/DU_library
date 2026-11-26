@@ -197,10 +197,17 @@
   dialog.qr .code { margin: 14px auto 0; background: #fff; border-radius: 14px; padding: 6px; border: 1px solid var(--line); }
   dialog.qr .code svg { display: block; width: 100%; height: auto; }
   dialog.qr .row { display: grid; grid-template-columns: 48px 1fr 48px; gap: 8px; margin-top: 14px; }
-  dialog.qr .row + .row { grid-template-columns: 1fr; margin-top: 8px; }
+  dialog.qr .row + .row, dialog.qr .qr-hint ~ .row { grid-template-columns: 1fr; margin-top: 8px; }
   dialog.qr button, dialog.qr a.open { min-height: 48px; display: inline-flex; align-items: center; justify-content: center; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: inherit; font-weight: 700; text-decoration: none; cursor: pointer; }
   dialog.qr a.open { background: var(--deep); border-color: var(--deep); color: #fff; }
+  dialog.qr.ask { width: min(320px, calc(100vw - 48px)); }
+  dialog.qr.ask h2 { font-size: 21px; }
+  dialog.qr .ask-txt { margin-top: 8px; color: var(--muted); font-size: 15px; }
+  dialog.qr .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 16px; }
+  dialog.qr .scan-only { display: inline-flex; align-items: center; justify-content: center; min-height: 48px; font-weight: 700; color: var(--muted); }
+  dialog.qr [hidden] { display: none !important; }
   dialog.qr button:disabled { opacity: 0.35; cursor: default; }
+  dialog.qr .qr-hint { margin-top: 12px; padding: 10px 12px; border-radius: 12px; background: var(--warn-tint); color: var(--warn); font-size: 14px; text-align: left; line-height: 1.45; }
 
   /* 다음 단계로 */
   .next { margin-top: 18px; text-align: right; }
@@ -740,12 +747,27 @@
             <span class="where g">가이드에서 합니다</span>
             <h3>가이드에 QR이 크게 뜹니다</h3>
             <div class="viz">
-              <figure class="shot"><div class="shotbox"><img src="{{IMG:gqr2}}" alt="W-003 좌석의 QR이 크게 뜬 창. 아래에 이전 좌석, 이 기기에서 좌석 열기, 다음 좌석 버튼과 닫기 버튼"><i class="hl dev-two" style="left:10.40%;top:28.94%;width:79.20%;height:36.58%"><b>1</b></i><i class="hl dev-one" style="left:25.33%;top:67.24%;width:49.33%;height:5.91%"><b>1</b></i></div><figcaption>좌석 QR</figcaption></figure>
+              <figure class="shot dev-two"><div class="shotbox"><img src="{{IMG:gqr2}}" alt="W-003 좌석의 QR이 크게 뜬 창. QR 아래에 이전 좌석과 다음 좌석 버튼, 가운데에 앱의 카메라로 찍으세요 라는 글, 닫기 버튼"><i class="hl" style="left:10.40%;top:24.01%;width:79.20%;height:36.58%"><b>1</b></i><i class="hl out-l" style="left:10.40%;top:69.83%;width:79.20%;height:9.98%"><b>2</b></i></div><figcaption>좌석 QR · 기기 두 대</figcaption></figure>
+              <figure class="shot dev-one"><div class="shotbox"><img src="{{IMG:gqr2one}}" alt="W-003 좌석의 QR이 크게 뜬 창. QR 아래 가운데에 이 기기에서 좌석 열기 버튼, 그 아래 기기가 한 대일 때 쓰는 버튼이라는 설명과 닫기 버튼"><i class="hl" style="left:25.33%;top:59.85%;width:49.33%;height:5.91%"><b>1</b></i><i class="hl out-l" style="left:10.40%;top:67.24%;width:79.20%;height:14.90%"><b>2</b></i></div><figcaption>좌석 QR · 기기 한 대</figcaption></figure>
               <div class="viz-side">
-              <ol class="legend">
-                <li class="dev-two"><span>이 QR을 휴대폰 카메라로 찍습니다</span></li>
-                <li class="dev-one"><span><b>이 기기에서 좌석 열기</b>를 누릅니다. 앱이 열리고 QR을 찍은 것과 똑같이 처리됩니다</span></li>
+              <ol class="legend dev-two">
+                <li><span>이 QR을 앱의 카메라로 찍습니다</span></li>
+                <li><span>두 대로 골랐기 때문에 "이 기기에서 좌석 열기" 버튼은 숨겨져 있습니다. 잘못 눌러 바로 처리되는 일을 막기 위해서입니다</span></li>
               </ol>
+              <ol class="legend dev-one">
+                <li><span><b>이 기기에서 좌석 열기</b>를 누릅니다. 확인 창이 뜨고, <b>확인</b>을 눌러야 열립니다</span></li>
+                <li><span>창 안에도 이 버튼의 설명이 있습니다</span></li>
+              </ol>
+              <div class="tablebox dev-one" style="margin-top:16px">
+                <table>
+                  <tbody>
+                    <tr><th>왜 있나요</th><td>같은 휴대폰 화면에 뜬 QR은 그 휴대폰 카메라로 찍을 수 없습니다. 기기가 한 대면 찍을 방법이 없어서 이 버튼이 QR을 대신합니다.</td></tr>
+                    <tr><th>무슨 버튼인가요</th><td>QR 안에 들어 있는 좌석 주소를 그대로 여는 버튼입니다. QR을 찍었을 때 열리는 것과 같은 화면입니다.</td></tr>
+                    <tr><th>누르면</th><td>앱이 열리고 QR을 찍은 것으로 바로 처리됩니다. 내 좌석이면 체크인이나 복귀가 되고, 남의 좌석이면 그 좌석 화면이 나옵니다.</td></tr>
+                    <tr><th>주의</th><td>누르는 순간 처리되므로 좌석 번호를 확인하고 누릅니다. 그래서 확인 창을 한 번 거칩니다. 아이폰은 사파리로 열리므로 사파리에도 로그인해 둡니다.</td></tr>
+                  </tbody>
+                </table>
+              </div>
               </div>
             </div>
           </div>
@@ -1803,7 +1825,14 @@
       dlg.querySelector("h2").textContent = s[0];
       dlg.querySelector(".where").textContent = data.rooms[room].name;
       dlg.querySelector(".code").innerHTML = svg(s[2], s[3]);
-      dlg.querySelector("a.open").href = data.origin + "/s/" + s[1];
+      var link = dlg.querySelector("a.open");
+      link.href = data.origin + "/s/" + s[1];
+      disarm();
+      // 기기를 두 대로 골랐으면 여는 버튼을 숨긴다 (찍으면 되므로, 실수로 누르지 않게)
+      var one = document.getElementById("view-guide").getAttribute("data-dev") === "one";
+      link.hidden = !one;
+      dlg.querySelector(".scan-only").hidden = one;
+      Array.prototype.forEach.call(dlg.querySelectorAll(".qr-hint"), function (h) { h.hidden = h.getAttribute("data-for") !== (one ? "one" : "two"); });
       dlg.querySelector("[data-prev]").disabled = i === 0;
       dlg.querySelector("[data-next]").disabled = i === list.length - 1;
       if (!dlg.open) dlg.showModal();
@@ -1851,6 +1880,18 @@
     q.addEventListener("input", draw);
     dlg.querySelector("[data-prev]").addEventListener("click", function () { if (at > 0) open(at - 1); });
     dlg.querySelector("[data-next]").addEventListener("click", function () { if (at < list.length - 1) open(at + 1); });
+    // 여는 버튼은 확인 창을 한 번 거친다 (누르는 순간 체크인 같은 처리가 되므로)
+    var ask = document.getElementById("qr-ask");
+    function disarm() { if (ask.open) ask.close(); }
+    dlg.querySelector("a.open").addEventListener("click", function (e) {
+      e.preventDefault();
+      ask.querySelector("h2").textContent = list[at][0] + " 좌석을 열까요?";
+      ask.querySelector("[data-yes]").href = this.href;
+      ask.showModal();
+    });
+    ask.querySelector("[data-no]").addEventListener("click", function () { ask.close(); });
+    ask.querySelector("[data-yes]").addEventListener("click", function () { setTimeout(function () { ask.close(); }, 200); });
+    ask.addEventListener("click", function (e) { if (e.target === ask) ask.close(); });
     dlg.querySelector("[data-close]").addEventListener("click", function () { dlg.close(); });
     dlg.addEventListener("click", function (e) { if (e.target === dlg) dlg.close(); });
     draw();
