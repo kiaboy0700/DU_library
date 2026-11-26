@@ -227,7 +227,7 @@
   .dd-sub { color: var(--muted); margin-top: 4px; }
   .dd-opts { display: grid; gap: 12px; margin-top: 16px; }
   @media (min-width: 620px) { .dd-opts { grid-template-columns: 1fr 1fr; } }
-  .dd-opt { display: grid; gap: 8px; align-content: start; text-align: left; border: 2px solid var(--line); border-radius: 16px; padding: 16px; background: var(--bg); color: var(--ink); font: inherit; cursor: pointer; }
+  .dd-opt { display: grid; gap: 6px; align-content: start; text-align: left; border: 2px solid var(--line); border-radius: 16px; padding: 14px; background: var(--bg); color: var(--ink); font: inherit; cursor: pointer; }
   .dd-opt:hover, .dd-opt:focus-visible { border-color: var(--deep); outline: none; }
   .dd-opt[aria-pressed="true"] { border-color: var(--deep); background: var(--tint); }
   .dd-opt > b { font-size: 21px; display: flex; align-items: center; gap: 8px; }
@@ -236,7 +236,9 @@
   .dd-row i { font-style: normal; font-weight: 800; font-size: 13px; text-align: center; border-radius: 8px; padding: 2px 0; background: var(--surface); border: 1px solid var(--line); }
   .dd-how { font-size: 14px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 8px; }
   .dd-foot { margin-top: 14px; font-size: 14px; color: var(--muted); }
-  .dd-close { margin-top: 12px; width: 100%; min-height: 48px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: inherit; font-weight: 700; cursor: pointer; }
+  .dd-ok { position: sticky; bottom: 0; box-shadow: 0 0 0 14px var(--surface), 0 -18px 18px -6px var(--surface); margin-top: 14px; width: 100%; min-height: 52px; border-radius: 12px; border: 0; background: var(--deep); color: #fff; font: inherit; font-size: 17px; font-weight: 800; cursor: pointer; }
+  .dd-ok:disabled { opacity: 0.4; cursor: default; }
+  .dd-close { margin-top: 8px; width: 100%; min-height: 48px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: inherit; font-weight: 700; cursor: pointer; }
   .dev-pick p { margin-top: 10px; font-size: 15px; color: rgba(255, 255, 255, 0.9); max-width: none; }
   nav.toc li.dev-chip button { display: block; white-space: nowrap; font: inherit; font-weight: 700; font-size: 14px; color: var(--warn); background: var(--warn-tint); border: 1px solid currentColor; border-radius: 999px; padding: 8px 14px; cursor: pointer; }
   #together .devices { grid-template-columns: 1fr; }
@@ -387,7 +389,7 @@
 
 <dialog class="devdlg" id="dev-dlg" aria-labelledby="dev-dlg-h">
   <h2 id="dev-dlg-h">기기를 몇 대 쓸 수 있나요?</h2>
-  <p class="dd-sub">고른 방식에 맞는 설명만 보여 드립니다.</p>
+  <p class="dd-sub">하나를 고르고 확인을 누르세요. 고른 방식에 맞는 설명만 보여 드립니다.</p>
   <div class="dd-opts">
     <button type="button" class="dd-opt" data-pick="two" aria-pressed="false">
       <b>두 대 <span class="dd-rec">권장</span></b>
@@ -403,6 +405,7 @@
     </button>
   </div>
   <p class="dd-foot">위쪽의 <b>1대 · 2대</b> 버튼으로 언제든 바로 바꿀 수 있습니다.</p>
+  <button type="button" class="dd-ok" data-dev-ok disabled>확인</button>
   <button type="button" class="dd-close" data-dev-close hidden>닫기</button>
 </dialog>
   <nav class="toc" aria-label="목차">
@@ -1687,25 +1690,36 @@
     });
   })();
 
-  // 기기 두 대 / 한 대: 처음 들어오면 팝업으로 묻고, 고른 방식의 설명만 보여 준다. 언제든 다시 열어 바꿀 수 있다
+  // 기기 두 대 / 한 대: 처음 들어오면 팝업으로 묻는다. 팝업에서는 고른 뒤 확인을 눌러야 적용되고,
+  // 위쪽의 1대 · 2대 버튼은 누르는 즉시 바뀐다
   (function () {
     var root = document.getElementById("view-guide");
     var dlg = document.getElementById("dev-dlg");
-    var picks = Array.prototype.slice.call(document.querySelectorAll("[data-pick]"));
+    var dlgPicks = Array.prototype.slice.call(dlg.querySelectorAll("[data-pick]"));
+    var miniPicks = Array.prototype.slice.call(document.querySelectorAll(".dev-mini [data-pick]"));
     var labels = Array.prototype.slice.call(document.querySelectorAll("[data-dev-label]"));
+    var okBtn = dlg.querySelector("[data-dev-ok]");
     var closeBtn = dlg.querySelector("[data-dev-close]");
     var chosen = null;
+    var pending = null;
     try { chosen = localStorage.getItem("du-guide-dev"); } catch (e) {}
     if (chosen !== "one" && chosen !== "two") chosen = null;
+    function press(list, v) { list.forEach(function (b) { b.setAttribute("aria-pressed", b.getAttribute("data-pick") === v ? "true" : "false"); }); }
     function apply(v) {
       root.setAttribute("data-dev", v);
-      picks.forEach(function (b) { b.setAttribute("aria-pressed", b.getAttribute("data-pick") === v ? "true" : "false"); });
+      press(miniPicks, v);
       labels.forEach(function (l) { l.textContent = v === "one" ? "한 대" : "두 대"; });
     }
+    function commit(v) {
+      chosen = v;
+      apply(v);
+      try { localStorage.setItem("du-guide-dev", v); } catch (e) {}
+    }
+    function mark(v) { pending = v; press(dlgPicks, v); okBtn.disabled = !v; }
     function open() {
-      // 아직 고른 적이 없으면 고를 때까지 닫지 못한다
+      // 아직 고른 적이 없으면 고르고 확인할 때까지 닫지 못한다
       closeBtn.hidden = !chosen;
-      if (chosen) apply(chosen);
+      mark(chosen);
       if (typeof dlg.showModal === "function") { if (!dlg.open) dlg.showModal(); }
       else dlg.setAttribute("open", "");
     }
@@ -1713,19 +1727,18 @@
       if (dlg.open && typeof dlg.close === "function") dlg.close();
       else dlg.removeAttribute("open");
     }
-    picks.forEach(function (b) {
-      b.addEventListener("click", function () {
-        var first = !chosen;
-        chosen = b.getAttribute("data-pick");
-        apply(chosen);
-        try { localStorage.setItem("du-guide-dev", chosen); } catch (e) {}
-        close();
-        // 처음 고른 뒤에는 가이드 첫 단계로 내려간다
-        if (first) {
-          var sec = document.querySelector("#view-guide main section:not([hidden])");
-          if (sec) window.scrollTo(0, sec.getBoundingClientRect().top + window.scrollY - 76);
-        }
-      });
+    dlgPicks.forEach(function (b) { b.addEventListener("click", function () { mark(b.getAttribute("data-pick")); }); });
+    miniPicks.forEach(function (b) { b.addEventListener("click", function () { commit(b.getAttribute("data-pick")); }); });
+    okBtn.addEventListener("click", function () {
+      if (!pending) return;
+      var first = !chosen;
+      commit(pending);
+      close();
+      // 처음 고른 뒤에는 가이드 첫 단계로 내려간다
+      if (first) {
+        var sec = document.querySelector("#view-guide main section:not([hidden])");
+        if (sec) window.scrollTo(0, sec.getBoundingClientRect().top + window.scrollY - 124);
+      }
     });
     closeBtn.addEventListener("click", close);
     dlg.addEventListener("cancel", function (e) { if (!chosen) e.preventDefault(); });
