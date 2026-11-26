@@ -107,7 +107,7 @@ export function RoomCard({
           {room.is_open && room.closes_at && <p className="tabular truncate text-[13px] text-white/85">{fmtTime(room.closes_at)} 폐관</p>}
           {!room.is_open && <p className="truncate text-[13px] text-white/85">{room.reason}</p>}
         </div>
-        {room.is_open ? <Tag tone={room.pct >= 80 ? "danger" : room.pct >= 50 ? "warn" : "deep"}>{lv.name}</Tag> : <Tag>운영 종료</Tag>}
+        {room.is_open ? <Tag tone={room.pct >= 80 ? "danger" : room.pct >= 50 ? "warn" : "deep"}>{lv.name}</Tag> : <Tag>운영 시간 아님</Tag>}
       </div>
 
       <div className="flex flex-1 flex-col p-4">

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Pencil, RotateCcw, Search, Trash2, UserRound } from "lucide-react";
 import { useApp } from "@/components/Providers";
-import { Button, Confirm, Empty, Field, Panel, Skeleton, Tag, inputClass, useAction, useFold, useNow } from "@/components/ui";
+import { Button, Confirm, Details, Empty, Field, Panel, Skeleton, Tag, inputClass, useAction, useFold, useNow } from "@/components/ui";
 import { rpc } from "@/lib/supabase";
 import type { Penalty, Profile } from "@/lib/types";
 import { cx, fmtDateTime } from "@/lib/util";
@@ -106,8 +106,7 @@ export default function AdminUsers() {
             )}
           </Panel>
 
-          <details className="rounded-[var(--radius-panel)] border border-line bg-surface">
-            <summary className="cursor-pointer px-4 py-3 text-sm font-semibold">새 학생 계정 만들기</summary>
+          <Details title="새 학생 계정 만들기">
             <form
               className="space-y-3 border-t border-line p-4"
               onSubmit={(e) => {
@@ -138,7 +137,7 @@ export default function AdminUsers() {
                 계정 만들기
               </Button>
             </form>
-          </details>
+          </Details>
         </div>
 
         {!d ? (

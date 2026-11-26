@@ -237,7 +237,7 @@ export default function RoomPage() {
             </div>
           </fieldset>
           <Button variant="primary" size="lg" className="mt-3 w-full" busy={busy === "reserve"} disabled={blocked} onClick={reserve}>
-            {selected.label} 예약하기
+            {summary && !summary.is_open ? "운영 시간이 아닙니다" : `${selected.label} 예약하기`}
           </Button>
           <Hint className="mt-2.5">
             {String(settings?.checkin_minutes ?? 15)}분 안에 좌석 QR 체크인 · 늦으면 자동 취소, 벌점 {String(settings?.pen_no_show ?? 1)}점
@@ -287,7 +287,7 @@ export default function RoomPage() {
 
       {summary && !summary.is_open && (
         <Notice tone="warn" icon={<DoorClosed size={18} aria-hidden />}>
-          {summary.reason}
+          <strong className="font-semibold">운영 시간이 아닙니다</strong> · {summary.reason}
         </Notice>
       )}
       {banned && (

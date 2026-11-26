@@ -288,3 +288,16 @@ export function Hint({ children, className, tone = "muted" }: { children: React.
     </p>
   );
 }
+
+/** 펼쳐 보는 묶음: 접힌 상태에서도 펼칠 수 있다는 것이 화살표로 보인다 */
+export function Details({ title, children, className }: { title: React.ReactNode; children: React.ReactNode; className?: string }) {
+  return (
+    <details className={cx("group rounded-[var(--radius-panel)] border border-line bg-surface", className)}>
+      <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-2 px-4 text-sm font-semibold [&::-webkit-details-marker]:hidden">
+        {title}
+        <ChevronDown size={18} aria-hidden className="shrink-0 text-muted transition-transform duration-150 group-open:rotate-180" />
+      </summary>
+      {children}
+    </details>
+  );
+}

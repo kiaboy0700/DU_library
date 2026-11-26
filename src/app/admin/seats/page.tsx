@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useApp } from "@/components/Providers";
-import { Button, Field, Panel, Skeleton, Tag, inputClass, useAction } from "@/components/ui";
+import { ChevronDown } from "lucide-react";
+import { ActionRow, Button, Confirm, Field, Panel, Skeleton, Tag, inputClass, useAction } from "@/components/ui";
 import { useAdminMap, useRooms } from "@/lib/admin";
 import { rpc, supabase } from "@/lib/supabase";
 import { SEAT_TYPE_LABEL } from "@/lib/types";
@@ -15,6 +16,21 @@ export default function AdminSeats() {
   const { seats, reload } = useAdminMap(roomId);
   const [reason, setReason] = useState("");
   const { busy, run } = useAction((m) => toast(m, "error"));
+  // 좌석을 하나씩 골라 닫고 연다
+  const [picked, setPicked] = useState<Set<number>>(new Set());
+  const [openZone, setOpenZone] = useState<string | null>(null);
+  const [askOff, setAskOff] = useState(false);
+  useEffect(() => {
+    setPicked(new Set());
+    setOpenZone(null);
+  }, [roomId]);
+  const toggle = (id: number) =>
+    setPicked((cur) => {
+      const n = new Set(cur);
+      if (n.has(id)) n.delete(id);
+      else n.add(id);
+      return n;
+    });
 
   useEffect(() => {
     if (rooms?.length && roomId === null) setRoomId(rooms[0].id);
@@ -34,6 +50,13 @@ export default function AdminSeats() {
     return [...m.entries()];
   }, [seats]);
   const off = seats?.filter((s) => !s.is_active) ?? [];
+  const pickedSeats = seats?.filter((s) => picked.has(s.seat_id)) ?? [];
+  const pickedUsed = pickedSeats.filter((s) => s.res).length;
+  const setSeats = (active: boolean) =>
+    act(active ? "pon" : "poff", () => rpc("admin_set_seats", { p_ids: [...picked], p_active: active, p_reason: active ? null : reason || "좌석 점검" }), active ? `${picked.size}석을 다시 열었습니다.` : `${picked.size}석을 사용 중지했습니다.`).then(() => {
+      setPicked(new Set());
+      setAskOff(false);
+    });
 
   const act = (key: string, fn: () => Promise<unknown>, msg: string) =>
     run(key, async () => {
@@ -157,6 +180,77 @@ export default function AdminSeats() {
               </table>
             </div>
           </Panel>
+
+          {/* 좌석을 하나씩: 구역을 펼쳐 좌석을 누르면 선택되고, 아래에서 한꺼번에 닫거나 연다 */}
+          <Panel className="overflow-hidden">
+            <h2 className="px-4 pt-4 text-lg font-bold sm:px-5">좌석</h2>
+            <ul className="mt-3 divide-y divide-line border-t border-line">
+              {zones.map(([z, v]) => {
+                const on = openZone === z;
+                const mine = seats.filter((x) => x.zone === z);
+                const sel = mine.filter((x) => picked.has(x.seat_id)).length;
+                return (
+                  <li key={z}>
+                    <button type="button" aria-expanded={on} onClick={() => setOpenZone(on ? null : z)} className="flex min-h-12 w-full items-center gap-2 px-4 text-left hover:bg-canvas sm:px-5">
+                      <span className="font-bold">{z}구역</span>
+                      <span className="tabular text-sm text-muted">
+                        {v.type} · {v.total}석
+                      </span>
+                      {sel > 0 && <Tag tone="deep">{sel}석 선택</Tag>}
+                      {v.off > 0 && <Tag>{v.off}석 중지</Tag>}
+                      <ChevronDown size={18} aria-hidden className={cx("ml-auto shrink-0 text-muted transition-transform duration-150", on && "rotate-180")} />
+                    </button>
+                    {on && (
+                      <div className="grid grid-cols-[repeat(auto-fill,minmax(68px,1fr))] gap-1.5 px-4 pb-4 sm:px-5">
+                        {mine.map((x) => {
+                          const p = picked.has(x.seat_id);
+                          return (
+                            <button
+                              key={x.seat_id}
+                              type="button"
+                              aria-pressed={p}
+                              aria-label={`${x.label}${!x.is_active ? ", 사용 중지" : x.res ? ", 이용 중" : ""}`}
+                              onClick={() => toggle(x.seat_id)}
+                              className={cx(
+                                "tabular relative flex min-h-11 items-center justify-center rounded-[var(--radius-ctl)] border text-[13px] font-semibold transition-colors duration-150",
+                                p ? "border-du-deep bg-du-deep text-white" : !x.is_active ? "border-dashed border-[#b9c6c2] bg-canvas text-muted line-through" : "border-line bg-surface hover:bg-canvas",
+                              )}
+                            >
+                              {x.label}
+                              {x.res && x.is_active && <span aria-hidden className={cx("absolute right-1 top-1 size-1.5 rounded-full", p ? "bg-white" : "bg-du-deep")} />}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+            {picked.size > 0 && (
+              <div className="sticky bottom-[calc(60px+env(safe-area-inset-bottom))] border-t border-line bg-surface p-3 sm:bottom-0">
+                <p className="tabular mb-2 truncate text-sm font-semibold">
+                  {picked.size}석 선택 <span className="font-normal text-muted">{pickedSeats.slice(0, 6).map((x) => x.label).join(", ")}{pickedSeats.length > 6 && " …"}</span>
+                </p>
+                <ActionRow wide={3}>
+                  <Button variant="danger" busy={busy === "poff"} disabled={pickedSeats.every((x) => !x.is_active)} onClick={() => (pickedUsed > 0 ? setAskOff(true) : setSeats(false))}>
+                    사용 중지
+                  </Button>
+                  <Button variant="primary" busy={busy === "pon"} disabled={pickedSeats.every((x) => x.is_active)} onClick={() => setSeats(true)}>
+                    다시 열기
+                  </Button>
+                  <Button className="col-span-2 sm:col-span-1" onClick={() => setPicked(new Set())}>
+                    선택 해제
+                  </Button>
+                </ActionRow>
+              </div>
+            )}
+          </Panel>
+          {askOff && (
+            <Confirm title="좌석 사용 중지" confirmLabel="사용 중지" danger busy={busy === "poff"} onClose={() => setAskOff(false)} onConfirm={() => setSeats(false)}>
+              이용 중인 학생 <b className="tabular">{pickedUsed}명</b>이 벌점 없이 반납됩니다.
+            </Confirm>
+          )}
 
           <Panel>
             <h2 className="px-4 pt-4 text-lg font-bold sm:px-5">

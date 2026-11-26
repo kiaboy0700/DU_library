@@ -8,7 +8,7 @@ import { Banner } from "@/components/Banner";
 import { useApp } from "@/components/Providers";
 import { QrScanner } from "@/components/QrScanner";
 import { RoomCard, useRoomActions } from "@/components/RoomCards";
-import { Button, Confirm, Hint, Notice, Skeleton, useAction, useNow } from "@/components/ui";
+import { Button, Confirm, Details, Hint, Notice, Skeleton, useAction, useNow } from "@/components/ui";
 import { hoursLabel, useHome, useSettings } from "@/lib/hooks";
 import { rpc, supabase } from "@/lib/supabase";
 import { NOTICE_SEEN_KEY, cx, fmtRemain } from "@/lib/util";
@@ -283,8 +283,7 @@ export default function HomePage() {
       </section>
 
       {/* 간단한 이용 규칙: 핵심만 한 줄씩. 자세한 조건은 그 행동을 하는 자리에서 알려 준다 */}
-      <details className="rounded-[var(--radius-panel)] border border-line bg-surface">
-        <summary className="flex min-h-12 cursor-pointer items-center px-4 text-sm font-semibold">이용 규칙</summary>
+      <Details title="이용 규칙">
         <dl className="divide-y divide-line border-t border-line text-sm">
           {[
             ["체크인", `예약 후 ${settings?.checkin_minutes ?? 15}분 안에 좌석 QR`],
@@ -299,7 +298,7 @@ export default function HomePage() {
             </div>
           ))}
         </dl>
-      </details>
+      </Details>
     </div>
   );
 }

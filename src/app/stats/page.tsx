@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Panel, Skeleton } from "@/components/ui";
 import { useHome } from "@/lib/hooks";
 import { rpc } from "@/lib/supabase";
@@ -14,31 +14,19 @@ interface Cell {
 const DOW = ["월", "화", "수", "목", "금", "토", "일"];
 const HOURS = Array.from({ length: 16 }, (_, i) => i + 7); // 7시~22시
 
-// 단일 색상(DU Deep Green) 5단계 + 값은 칸 안의 숫자로도 표시
-const shade = (pct: number) => (pct >= 80 ? "#00594c" : pct >= 60 ? "#00826f" : pct >= 40 ? "#57ab9d" : pct >= 20 ? "#a8d5cc" : "#e3f1ee");
-const ink = (pct: number) => (pct >= 40 ? "#ffffff" : "#1f4a43");
-
 function kstNow() {
   const k = new Date(Date.now() + 9 * 3600_000);
   return { dow: k.getUTCDay() === 0 ? 7 : k.getUTCDay(), hour: k.getUTCHours() };
 }
 
+/** 혼잡도: 요일을 고르면 그날의 시간대별 평균을 막대로 보여 준다. 오늘은 지금 시각의 실제 이용률을 함께 쓴다 */
 export default function StatsPage() {
   const { home } = useHome();
   const [roomId, setRoomId] = useState<number | null>(null);
   const [cells, setCells] = useState<Cell[] | null>(null);
   const cur = kstNow();
-  const scroller = useRef<HTMLDivElement>(null);
-  // 표가 화면보다 넓을 때: 지금 시간대 칸이 가운데 오도록 옆으로 옮겨 놓는다
-  // (운영 시간 밖이면 가장 가까운 끝으로)
-  useEffect(() => {
-    const el = scroller.current;
-    if (!el || !cells?.length) return;
-    const hour = Math.min(HOURS[HOURS.length - 1], Math.max(HOURS[0], cur.hour));
-    const col = el.querySelector<HTMLElement>(`[data-hour="${hour}"]`);
-    if (col) el.scrollLeft = col.offsetLeft - el.clientWidth / 2 + col.offsetWidth / 2;
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- 표를 새로 받았을 때만
-  }, [cells]);
+  const [dow, setDow] = useState(cur.dow);
+  const [picked, setPicked] = useState<number | null>(null);
 
   useEffect(() => {
     if (home && roomId === null) setRoomId(home.rooms[0]?.id ?? null);
@@ -56,14 +44,18 @@ export default function StatsPage() {
   }, [cells]);
 
   const room = home?.rooms.find((r) => r.id === roomId);
-  const today = HOURS.map((h) => ({ h, pct: at(cur.dow, h) ?? 0 }));
-  // '지금'은 평균이 아니라 실제 이용률을 쓴다 (위의 문장과 숫자가 어긋나지 않게)
-  const upcoming = today.filter((t) => t.h >= cur.hour).slice(0, 6).map((t) => (t.h === cur.hour && room ? { ...t, pct: room.pct } : t));
-  const peak = Math.max(40, ...upcoming.map((t) => t.pct));
-  const quiet = today.filter((t) => t.h >= cur.hour && t.h >= 9).sort((a, b) => a.pct - b.pct)[0];
+  const isToday = dow === cur.dow;
+  // 오늘의 '지금' 칸은 평균이 아니라 실제 이용률
+  const bars = HOURS.map((h) => ({ h, pct: isToday && h === cur.hour && room ? room.pct : (at(dow, h) ?? 0), now: isToday && h === cur.hour }));
+  const sorted = [...bars].sort((a, b) => a.pct - b.pct);
+  const quiet = sorted[0];
+  const busy = sorted[sorted.length - 1];
+  // 기본으로 보여 주는 칸: 오늘이면 지금, 다른 요일이면 가장 붐비는 시간
+  const shown = (picked !== null ? bars.find((b) => b.h === picked) : bars.find((b) => b.now)) ?? busy;
+  const empty = cells !== null && cells.length === 0;
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       <h1 className="text-[22px] font-bold">혼잡도</h1>
 
       <div role="tablist" aria-label="열람실" className="flex gap-1.5">
@@ -84,96 +76,108 @@ export default function StatsPage() {
         )) ?? <Skeleton className="h-10 w-48 !rounded-full" />}
       </div>
 
-      <Panel className="p-4">
-        <h2 className="font-bold">오늘 예상</h2>
+      <Panel className="p-4 sm:p-5">
+        {/* 요일 */}
+        <div role="tablist" aria-label="요일" className="grid grid-cols-7 gap-1">
+          {DOW.map((d, i) => {
+            const on = dow === i + 1;
+            return (
+              <button
+                key={d}
+                role="tab"
+                type="button"
+                aria-selected={on}
+                onClick={() => {
+                  setDow(i + 1);
+                  setPicked(null);
+                }}
+                className={cx(
+                  "relative flex min-h-10 items-center justify-center rounded-[var(--radius-ctl)] text-sm font-semibold transition-colors duration-150",
+                  on ? "bg-du-deep text-white" : "bg-canvas hover:bg-[#e3ebe8]",
+                )}
+              >
+                {d}
+                {i + 1 === cur.dow && <span className={cx("absolute bottom-1 size-1 rounded-full", on ? "bg-white" : "bg-du-deep")} aria-label="오늘" />}
+              </button>
+            );
+          })}
+        </div>
+
         {cells === null ? (
-          <Skeleton className="mt-3 h-28" />
-        ) : upcoming.length === 0 ? (
-          <p className="mt-2 text-sm text-muted">오늘 운영이 끝났습니다.</p>
+          <Skeleton className="mt-4 h-56" />
+        ) : empty ? (
+          <p className="mt-4 text-sm text-muted">기록이 부족합니다</p>
         ) : (
           <>
-            <p className="mt-1 text-sm text-[#3d4744]">
-              지금 <strong className="tabular">{room?.pct ?? "-"}%</strong>
-              {quiet && (
-                <>
-                  {" · "}
-                  가장 한산한 시간 <strong className="tabular">{quiet.h}시</strong> <span className="tabular text-muted">({quiet.pct}%)</span>
-                </>
-              )}
-            </p>
-            <ol className="mt-4 flex h-28 items-end gap-2" aria-label="시간대별 예상 이용률">
-              {upcoming.map((t) => {
-                const lv = level(t.pct);
-                return (
-                  <li key={t.h} className="flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-1">
-                    <span className="tabular text-xs font-semibold" style={{ color: lv.color }}>
-                      {t.pct}%
-                    </span>
-                    <span className="w-full max-w-12 rounded-t-md" style={{ height: `${Math.max(4, (t.pct / peak) * 66)}%`, background: lv.color }} />
-                    <span className={cx("tabular text-xs", t.h === cur.hour ? "font-bold" : "text-muted")}>{t.h === cur.hour ? "지금" : `${t.h}시`}</span>
-                  </li>
-                );
-              })}
-            </ol>
+            {/* 고른 시간대의 값 (기본은 지금) */}
+            <div className="mt-4 flex items-end justify-between gap-3">
+              <p aria-live="polite">
+                <span className="block text-[13px] text-muted">{shown.now ? "지금" : `${DOW[dow - 1]}요일 ${shown.h}시 평균`}</span>
+                <span className="flex items-baseline gap-2">
+                  <span className="tabular text-[34px] font-bold leading-none tracking-tight">{shown.pct}%</span>
+                  <span className="text-sm font-semibold" style={{ color: level(shown.pct).color }}>
+                    {level(shown.pct).name}
+                  </span>
+                </span>
+              </p>
+              <dl className="tabular shrink-0 text-right text-[13px]">
+                <div>
+                  <dt className="inline text-muted">한산 </dt>
+                  <dd className="inline font-semibold">
+                    {quiet.h}시 {quiet.pct}%
+                  </dd>
+                </div>
+                <div>
+                  <dt className="inline text-muted">붐빔 </dt>
+                  <dd className="inline font-semibold">
+                    {busy.h}시 {busy.pct}%
+                  </dd>
+                </div>
+              </dl>
+            </div>
+
+            {/* 시간대별 막대: 색은 여유·보통·혼잡 */}
+            <div className="relative mt-4">
+              {/* 50%·80% 기준선 */}
+              <span aria-hidden className="absolute inset-x-0 border-t border-dashed border-line" style={{ bottom: `calc(20px + ${0.8 * 144}px)` }} />
+              <span aria-hidden className="absolute inset-x-0 border-t border-dashed border-line" style={{ bottom: `calc(20px + ${0.5 * 144}px)` }} />
+              <ol className="relative flex items-end gap-[3px] sm:gap-1.5" aria-label={`${DOW[dow - 1]}요일 시간대별 이용률`}>
+                {bars.map((b) => {
+                  const on = shown.h === b.h;
+                  return (
+                    <li key={b.h} className="min-w-0 flex-1">
+                      <button
+                        type="button"
+                        aria-label={`${b.h}시 ${b.pct}퍼센트${b.now ? ", 지금" : ""}`}
+                        aria-pressed={on}
+                        onClick={() => setPicked(b.h)}
+                        className="flex w-full flex-col items-center justify-end"
+                      >
+                        <span className="flex h-36 w-full items-end">
+                          <span
+                            className={cx("w-full rounded-t-[4px] transition-[height,opacity] duration-200", !on && "opacity-55")}
+                            style={{ height: `${Math.max(3, b.pct)}%`, background: level(b.pct).color }}
+                          />
+                        </span>
+                        <span className={cx("tabular flex h-5 items-center text-[11px]", b.now ? "font-bold text-du-black" : on ? "font-semibold text-du-black" : "text-muted")}>{b.h}</span>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ol>
+            </div>
+
+            <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted" aria-label="색 범례">
+              {[20, 60, 90].map((v) => (
+                <li key={v} className="flex items-center gap-1.5">
+                  <span className="size-2.5 rounded-sm" style={{ background: level(v).color }} aria-hidden />
+                  {level(v).name}
+                </li>
+              ))}
+              <li className="ml-auto">최근 5주 평균</li>
+            </ul>
           </>
         )}
-      </Panel>
-
-      <Panel className="p-4">
-        <h2 className="font-bold">요일·시간대별 평균 (최근 5주)</h2>
-        {cells === null ? (
-          <Skeleton className="mt-3 h-64" />
-        ) : cells.length === 0 ? (
-          <p className="mt-2 text-sm text-muted">기록이 부족합니다</p>
-        ) : (
-          <div ref={scroller} className="mt-3 overflow-x-auto" tabIndex={0} aria-label="요일·시간대별 평균 이용률 표, 스크롤 가능">
-            <table className="tabular w-full min-w-[620px] border-separate border-spacing-[3px] text-center text-[11px]">
-              <thead>
-                <tr>
-                  <th scope="col" className="sticky left-0 z-10 w-8 bg-surface">
-                    <span className="sr-only">요일</span>
-                  </th>
-                  {HOURS.map((h) => (
-                    <th key={h} scope="col" data-hour={h} className={cx("pb-1 font-medium text-muted", h === cur.hour && "font-bold text-du-black")}>
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {DOW.map((d, i) => (
-                  <tr key={d}>
-                    <th scope="row" className={cx("sticky left-0 z-10 bg-surface pr-1 text-xs font-medium text-muted", i + 1 === cur.dow && "font-bold text-du-black")}>
-                      {d}
-                    </th>
-                    {HOURS.map((h) => {
-                      const v = at(i + 1, h) ?? 0;
-                      const nowCell = i + 1 === cur.dow && h === cur.hour;
-                      return (
-                        <td key={h} className={cx("h-8 rounded-[5px] font-semibold", nowCell && "outline-2 outline-offset-1 outline-du-black")} style={{ background: shade(v), color: ink(v) }}>
-                          {v}
-                          <span className="sr-only">퍼센트{nowCell && ", 현재 시간대"}</span>
-                        </td>
-                      );
-                    })}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-        <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted" aria-hidden>
-          <span className="flex items-center gap-2 whitespace-nowrap">
-            한산
-            <span className="flex overflow-hidden rounded">
-              {[10, 30, 50, 70, 90].map((v) => (
-                <span key={v} className="h-3 w-7" style={{ background: shade(v) }} />
-              ))}
-            </span>
-            혼잡
-          </span>
-          <span className="whitespace-nowrap">테두리 칸이 지금</span>
-        </div>
       </Panel>
     </div>
   );
