@@ -24,8 +24,12 @@ export default function LoginPage() {
   }, []);
 
   useEffect(() => {
-    // 로그인하면 이전에 보던 화면과 상관없이 처음 화면으로 간다
-    if (status) router.replace(status.profile.role === "admin" ? "/admin" : "/");
+    // 로그인하면 이전에 보던 화면과 상관없이 처음 화면으로 간다.
+    // 단, 좌석 QR을 찍고 온 학생은 그 좌석으로 돌려보내 체크인 같은 처리가 바로 이어지게 한다
+    if (!status) return;
+    const next = new URLSearchParams(window.location.search).get("next") ?? "";
+    const seat = status.profile.role !== "admin" && /^\/s\/[0-9a-f-]{36}$/i.test(next);
+    router.replace(seat ? next : status.profile.role === "admin" ? "/admin" : "/");
   }, [status, router]);
 
   async function submit(e: React.FormEvent) {

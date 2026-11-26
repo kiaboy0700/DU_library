@@ -150,7 +150,8 @@ export function Shell({ children }: { children: React.ReactNode }) {
 
   // 모든 화면은 로그인 후에 볼 수 있다
   useEffect(() => {
-    if (status === null && !bare) router.replace("/login");
+    // 좌석 QR로 들어왔다가 로그인하러 가는 경우, 로그인 뒤에 그 좌석으로 돌아오게 주소를 넘긴다
+    if (status === null && !bare) router.replace(path.startsWith("/s/") ? `/login?next=${path}` : "/login");
   }, [status, bare, path, router]);
   const items = isAdmin ? ADMIN_NAV : NAV;
   // 관리자 화면은 넓게, 좌석 배치도 화면은 중간 너비로
