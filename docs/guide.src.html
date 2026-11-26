@@ -131,6 +131,16 @@
   .need { font-size: 14px; color: var(--muted); margin-bottom: 14px; }
   .need b { color: var(--ink); }
 
+  /* 기종별 설치 순서 */
+  .os-grid { display: grid; gap: 14px; }
+  @media (min-width: 720px) { .os-grid { grid-template-columns: 1fr 1fr; } }
+  .os h3 { font-size: 20px; font-weight: 700; }
+  .os-sub { font-size: 14px; color: var(--muted); margin-top: 2px; }
+  .os ol, .plain-steps { margin: 12px 0 0; padding-left: 1.3em; display: grid; gap: 8px; }
+  .os ol li::marker, .plain-steps li::marker { font-weight: 700; color: var(--deep-ink); }
+  .os-alt { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); font-size: 15px; color: var(--muted); }
+  .os-alt b { color: var(--ink); }
+
   footer { color: var(--muted); font-size: 14px; }
 </style>
 
@@ -151,6 +161,7 @@
   <nav class="toc" aria-label="목차">
     <ol>
       <li><a href="#start">시작하기</a></li>
+      <li><a href="#install">앱으로 설치</a></li>
       <li><a href="#user">이용자 따라 하기</a></li>
       <li><a href="#admin">관리자 따라 하기</a></li>
       <li><a href="#together">함께 해 보기</a></li>
@@ -172,7 +183,7 @@
             <ul>
               <li>로그인하기 전에도 2층·5층에 남은 좌석 수가 보입니다.</li>
               <li>비밀번호 <code>eorneo1234!</code>는 한글 자판으로 "대구대1234!"를 친 것과 같습니다.</li>
-              <li>휴대폰에서는 브라우저 메뉴의 "홈 화면에 추가"로 앱처럼 쓸 수 있습니다. 아이폰은 이렇게 추가해야 푸시 알림이 옵니다.</li>
+              <li>휴대폰에서는 먼저 아래 <a href="#install">앱으로 설치</a>부터 해 두세요. 알림을 받으려면 필요합니다.</li>
             </ul>
             <p class="note">운영 시간은 학기 중 평일 09:00~22:00, 방학 09:00~17:00이고 주말은 휴관입니다. 시험기간에는 24시간 운영합니다. 운영 시간 밖에는 예약이 거절됩니다.</p>
           </div>
@@ -191,6 +202,74 @@
             <div class="st"><b>반납</b><span>직접, 시간 종료, 자동 회수</span></div>
           </div>
           <p style="margin-top:12px;color:var(--muted);font-size:15px">체크인, 외출 복귀, 자리 확인은 모두 책상에 붙은 좌석 QR 하나로 합니다. 키오스크는 없습니다.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="install">
+      <header>
+        <span class="role both">처음 한 번</span>
+        <h2>휴대폰에 앱으로 설치하기</h2>
+        <p>갤럭시와 아이폰 모두 홈 화면에 추가하면 앱처럼 열립니다. 주소창 없이 전체 화면으로 쓰고, 푸시 알림을 받고, QR 카메라 권한을 한 번만 허용하면 됩니다. 테스트를 시작하기 전에 팀원 모두 이것부터 해 주세요.</p>
+      </header>
+      <div class="stack">
+        <div class="os-grid">
+          <div class="card os">
+            <h3>갤럭시 (안드로이드)</h3>
+            <p class="os-sub">크롬 기준</p>
+            <ol>
+              <li>크롬에서 <code>du-library-ruddy.vercel.app</code>을 엽니다.</li>
+              <li>오른쪽 위 <b>⋮</b> 메뉴를 누릅니다.</li>
+              <li><b>홈 화면에 추가</b>(또는 <b>앱 설치</b>)를 누르고 <b>설치</b>를 누릅니다.</li>
+              <li>홈 화면에 생긴 대구대 아이콘으로 엽니다.</li>
+            </ol>
+            <p class="os-alt"><b>삼성 인터넷</b>을 쓴다면: 아래쪽 <b>≡</b> 메뉴 → <b>현재 페이지 추가</b> → <b>홈 화면</b>.</p>
+          </div>
+          <div class="card os">
+            <h3>아이폰</h3>
+            <p class="os-sub">사파리로 해야 합니다 · iOS 16.4 이상</p>
+            <ol>
+              <li>사파리에서 <code>du-library-ruddy.vercel.app</code>을 엽니다.</li>
+              <li>아래쪽 <b>공유</b> 버튼(네모에서 화살표가 올라가는 모양)을 누릅니다.</li>
+              <li>목록을 내려 <b>홈 화면에 추가</b>를 누르고 <b>추가</b>를 누릅니다.</li>
+              <li>홈 화면에 생긴 대구대 아이콘으로 엽니다.</li>
+            </ol>
+            <p class="os-alt">아이폰은 <b>홈 화면 아이콘으로 열었을 때만</b> 푸시 알림이 됩니다. 사파리 탭에서는 알림 켜기가 되지 않습니다.</p>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 style="font-size:18px;font-weight:700">알림 켜기 (두 기종 같음)</h3>
+          <ol class="plain-steps">
+            <li>홈 화면 아이콘으로 앱을 열고 로그인합니다.</li>
+            <li>오른쪽 위 <b>종</b>을 누릅니다.</li>
+            <li><b>푸시 알림 켜기</b>를 누르고, 휴대폰이 묻는 창에서 <b>허용</b>을 누릅니다.</li>
+            <li>버튼이 <b>푸시 켜짐</b>으로 바뀌면 끝입니다.</li>
+          </ol>
+          <p class="note">알림은 최대 1분쯤 늦게 올 수 있습니다. 알림은 계정이 아니라 기기마다 켜야 하므로, 다른 휴대폰에서 로그인하면 거기서도 한 번 켜야 합니다.</p>
+        </div>
+
+        <div class="card">
+          <h3 style="font-size:18px;font-weight:700">알림이 오는지 확인해 보기</h3>
+          <p style="margin-top:6px;color:var(--muted)">알림을 켠 휴대폰은 앱을 닫아 두고, 다른 기기에서 관리자로 로그인해 아래를 해 봅니다.</p>
+          <div class="play" style="margin-top:12px">
+            <div class="turn"><span class="who a">관리자</span><p><b>시연</b> 탭에서 알림을 켠 학생을 고르고 <b>종료 9분 전 · 연장 가능</b>을 누릅니다.</p></div>
+            <div class="turn"><span class="who u">휴대폰</span><p>1분 안에 "⏰ ○○ 이용 종료 10분 전" 알림이 뜹니다. 누르면 내 좌석이 열립니다.</p></div>
+            <div class="turn"><span class="who a">관리자</span><p>공지에서 "알림도 보내기"를 켜고 글을 올려도 됩니다. 학생 모두에게 "📢 공지" 알림이 갑니다.</p></div>
+          </div>
+        </div>
+
+        <div class="tablebox">
+          <table>
+            <thead><tr><th>안 될 때</th><th>확인할 것</th></tr></thead>
+            <tbody>
+              <tr><th>"푸시 알림 켜기"가 안 보임</th><td>아이폰이면 사파리 탭이 아니라 홈 화면 아이콘으로 열었는지, iOS가 16.4 이상인지 확인합니다.</td></tr>
+              <tr><th>허용 창이 안 뜸</th><td>전에 차단한 적이 있는 경우입니다. 갤럭시는 설정 → 애플리케이션 → 크롬(또는 설치된 앱) → 알림에서 허용합니다. 아이폰은 설정 → 알림 → 창파 좌석예약에서 허용합니다.</td></tr>
+              <tr><th>켰는데 알림이 안 옴</th><td>방해 금지 모드와 절전 모드를 끕니다. 갤럭시는 설정 → 배터리에서 크롬이 "절전 예외"인지 확인합니다.</td></tr>
+              <tr><th>QR 카메라가 안 켜짐</th><td>카메라 권한을 허용합니다. 갤럭시는 주소창 옆 자물쇠 → 권한, 아이폰은 설정 → 사파리 → 카메라.</td></tr>
+              <tr><th>아이콘이 예전 모양</th><td>홈 화면에서 지우고 다시 추가합니다.</td></tr>
+            </tbody>
+          </table>
         </div>
       </div>
     </section>
