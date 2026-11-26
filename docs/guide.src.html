@@ -385,7 +385,6 @@
   footer { color: var(--muted); font-size: 14px; }
 </style>
 
-<div id="view-guide" data-dev="two">
 <dialog class="devdlg" id="dev-dlg" aria-labelledby="dev-dlg-h">
   <h2 id="dev-dlg-h">기기를 몇 대 쓸 수 있나요?</h2>
   <p class="dd-sub">고른 방식에 맞는 설명만 보여 드립니다.</p>
@@ -430,6 +429,7 @@
       </div>
     </div>
   </nav>
+<div id="view-guide" data-dev="two">
 <div class="hero">
   <div class="hero-in">
     <p class="eyebrow">대구대학교 창파도서관 · 열람실 좌석 예약</p>
@@ -747,12 +747,12 @@
             <span class="where g">가이드에서 합니다</span>
             <h3>가이드에 QR이 크게 뜹니다</h3>
             <div class="viz">
-              <figure class="shot dev-two"><div class="shotbox"><img src="{{IMG:gqr2}}" alt="W-003 좌석의 QR이 크게 뜬 창. QR 아래에 이전 좌석과 다음 좌석 버튼, 가운데에 앱의 카메라로 찍으세요 라는 글, 닫기 버튼"><i class="hl" style="left:10.40%;top:24.01%;width:79.20%;height:36.58%"><b>1</b></i><i class="hl out-l" style="left:10.40%;top:69.83%;width:79.20%;height:9.98%"><b>2</b></i></div><figcaption>좌석 QR · 기기 두 대</figcaption></figure>
-              <figure class="shot dev-one"><div class="shotbox"><img src="{{IMG:gqr2one}}" alt="W-003 좌석의 QR이 크게 뜬 창. QR 아래 가운데에 이 기기에서 좌석 열기 버튼, 그 아래 기기가 한 대일 때 쓰는 버튼이라는 설명과 닫기 버튼"><i class="hl" style="left:25.33%;top:61.08%;width:49.33%;height:5.91%"><b>1</b></i><i class="hl out-l" style="left:10.40%;top:68.47%;width:79.20%;height:12.44%"><b>2</b></i></div><figcaption>좌석 QR · 기기 한 대</figcaption></figure>
+              <figure class="shot dev-two"><div class="shotbox"><img src="{{IMG:gqr2one}}" alt="W-003 좌석의 QR이 크게 뜬 창. QR 아래 가운데에 이 기기에서 좌석 열기 버튼, 그 아래 기기가 한 대일 때 쓰는 버튼이라는 설명과 닫기 버튼"><i class="hl" style="left:10.40%;top:22.78%;width:79.20%;height:36.58%"><b>1</b></i><i class="hl" style="left:25.33%;top:61.08%;width:49.33%;height:5.91%"><b>2</b></i></div><figcaption>좌석 QR</figcaption></figure>
+              <figure class="shot dev-one"><div class="shotbox"><img src="{{IMG:gqr2one}}" alt="W-003 좌석의 QR이 크게 뜬 창. QR 아래 가운데에 이 기기에서 좌석 열기 버튼, 그 아래 기기가 한 대일 때 쓰는 버튼이라는 설명과 닫기 버튼"><i class="hl" style="left:25.33%;top:61.08%;width:49.33%;height:5.91%"><b>1</b></i><i class="hl out-l" style="left:10.40%;top:68.47%;width:79.20%;height:12.44%"><b>2</b></i></div><figcaption>좌석 QR</figcaption></figure>
               <div class="viz-side">
               <ol class="legend dev-two">
                 <li><span>이 QR을 앱의 카메라로 찍습니다</span></li>
-                <li><span>두 대로 골랐기 때문에 "이 기기에서 좌석 열기" 버튼은 숨겨져 있습니다. 잘못 눌러 바로 처리되는 일을 막기 위해서입니다</span></li>
+                <li><span><b>이 기기에서 좌석 열기</b>는 기기가 한 대일 때 QR을 대신하는 버튼입니다. 두 대면 쓰지 않아도 됩니다. 눌러도 확인 창이 먼저 뜹니다</span></li>
               </ol>
               <ol class="legend dev-one">
                 <li><span><b>이 기기에서 좌석 열기</b>를 누릅니다. 확인 창이 뜨고, <b>확인</b>을 눌러야 열립니다</span></li>
@@ -1572,6 +1572,7 @@
     var cur = -1;
 
     function show(i, keepScroll) {
+      if (window.__toGuide) window.__toGuide();
       i = Math.max(0, Math.min(slides.length - 1, i));
       var sl = slides[i];
       secs.forEach(function (sec, si) { sec.hidden = si !== sl.si; });
@@ -1789,6 +1790,7 @@
         try { history.replaceState(null, "", location.pathname + location.search); } catch (err) {}
       });
     });
+    window.__toGuide = function () { if (cur !== "guide") { show("guide", false); try { history.replaceState(null, "", location.pathname + location.search); } catch (err) {} } };
     window.addEventListener("hashchange", route);
     route();
   })();
@@ -1828,11 +1830,6 @@
       var link = dlg.querySelector("a.open");
       link.href = data.origin + "/s/" + s[1];
       disarm();
-      // 기기를 두 대로 골랐으면 여는 버튼을 숨긴다 (찍으면 되므로, 실수로 누르지 않게)
-      var one = document.getElementById("view-guide").getAttribute("data-dev") === "one";
-      link.hidden = !one;
-      dlg.querySelector(".scan-only").hidden = one;
-      Array.prototype.forEach.call(dlg.querySelectorAll(".qr-hint"), function (h) { h.hidden = h.getAttribute("data-for") !== (one ? "one" : "two"); });
       dlg.querySelector("[data-prev]").disabled = i === 0;
       dlg.querySelector("[data-next]").disabled = i === list.length - 1;
       if (!dlg.open) dlg.showModal();
