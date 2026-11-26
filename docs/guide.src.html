@@ -1,0 +1,506 @@
+<title>창파도서관 좌석예약 가이드</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap">
+<style>
+  /* 배치: 큰 화면은 왼쪽에 따라다니는 목차 + 오른쪽 본문, 좁은 화면은 위쪽 목차 칩 + 한 줄 본문. 단계마다 설명 옆에 휴대폰 화면 한 장 */
+  :root {
+    --bg: #f3f6f5;
+    --surface: #ffffff;
+    --ink: #1c2422;
+    --muted: #5d6b67;
+    --line: #dbe4e1;
+    --deep: #00826f;
+    --deep-ink: #00594c;
+    --tint: #e4f3ef;
+    --warn: #8a5a00;
+    --warn-tint: #fbf0d9;
+    --danger: #b3261e;
+    --danger-tint: #fbe6e3;
+    --user: #00826f;
+    --admin: #3b4a8f;
+    --admin-tint: #e7eaf7;
+    --shadow: 0 10px 30px -14px rgb(0 60 50 / 0.35);
+    --font: "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0f1614; --surface: #18211f; --ink: #e8efec; --muted: #9db0aa; --line: #2a3835;
+      --deep: #35b39c; --deep-ink: #7ad6c3; --tint: #17302b;
+      --warn: #f0c36a; --warn-tint: #33290f; --danger: #ff8a80; --danger-tint: #3a1a17;
+      --user: #35b39c; --admin: #a7b4f2; --admin-tint: #1f2540;
+      --shadow: 0 10px 30px -14px rgb(0 0 0 / 0.7);
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0f1614; --surface: #18211f; --ink: #e8efec; --muted: #9db0aa; --line: #2a3835;
+    --deep: #35b39c; --deep-ink: #7ad6c3; --tint: #17302b;
+    --warn: #f0c36a; --warn-tint: #33290f; --danger: #ff8a80; --danger-tint: #3a1a17;
+    --user: #35b39c; --admin: #a7b4f2; --admin-tint: #1f2540;
+    --shadow: 0 10px 30px -14px rgb(0 0 0 / 0.7);
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body { background: var(--bg); color: var(--ink); font-family: var(--font); font-size: 16px; line-height: 1.65; word-break: keep-all; }
+  h1, h2, h3 { text-wrap: balance; line-height: 1.3; margin: 0; letter-spacing: -0.02em; }
+  p { margin: 0; }
+  a { color: var(--deep-ink); }
+  .num { font-variant-numeric: tabular-nums; }
+  code { font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; font-size: 0.92em; background: var(--tint); color: var(--deep-ink); padding: 0.1em 0.4em; border-radius: 6px; word-break: break-all; }
+
+  .hero { background: #00594c; color: #fff; }
+  .hero-in { max-width: 1120px; margin: 0 auto; padding-block: 44px 40px; padding-left: max(20px, env(safe-area-inset-left, 0px)); padding-right: max(20px, env(safe-area-inset-right, 0px)); }
+  .hero .eyebrow { font-size: 14px; font-weight: 700; letter-spacing: 0.04em; opacity: 0.85; }
+  .hero h1 { font-size: clamp(30px, 5.4vw, 46px); font-weight: 900; margin-top: 8px; }
+  .hero p { margin-top: 12px; max-width: 40em; opacity: 0.92; }
+  .hero-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; margin-top: 24px; }
+  .hero-facts div { background: rgb(255 255 255 / 0.12); border: 1px solid rgb(255 255 255 / 0.22); border-radius: 14px; padding: 12px 14px; min-width: 0; }
+  .hero-facts dt { font-size: 13px; opacity: 0.85; }
+  .hero-facts dd { margin: 2px 0 0; font-weight: 700; word-break: keep-all; overflow-wrap: anywhere; }
+  .hero-facts a { color: #fff; }
+
+  .wrap { max-width: 1120px; margin: 0 auto; padding-block: 24px 64px; padding-left: max(20px, env(safe-area-inset-left, 0px)); padding-right: max(20px, env(safe-area-inset-right, 0px)); display: grid; gap: 28px; }
+  @media (min-width: 960px) { .wrap { grid-template-columns: 210px minmax(0, 1fr); gap: 44px; } }
+
+  nav.toc { min-width: 0; }
+  nav.toc ol { list-style: none; margin: 0; padding: 0; display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; }
+  nav.toc ol::-webkit-scrollbar { display: none; }
+  nav.toc a { display: block; white-space: nowrap; text-decoration: none; font-weight: 700; font-size: 14px; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 8px 14px; }
+  nav.toc a:hover, nav.toc a:focus-visible { border-color: var(--deep); color: var(--deep-ink); outline: none; }
+  @media (min-width: 960px) {
+    nav.toc { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 20px); align-self: start; }
+    nav.toc ol { flex-direction: column; gap: 4px; overflow: visible; }
+    nav.toc a { border: 0; background: transparent; border-radius: 10px; padding: 8px 10px; white-space: normal; }
+    nav.toc a:hover, nav.toc a:focus-visible { background: var(--tint); }
+  }
+
+  main { min-width: 0; display: grid; gap: 56px; }
+  section > header { margin-bottom: 18px; }
+  .role { display: inline-block; font-size: 13px; font-weight: 700; border-radius: 999px; padding: 3px 10px; margin-bottom: 8px; }
+  .role.user { background: var(--tint); color: var(--deep-ink); }
+  .role.admin { background: var(--admin-tint); color: var(--admin); }
+  .role.both { background: var(--warn-tint); color: var(--warn); }
+  section h2 { font-size: clamp(24px, 3.6vw, 30px); font-weight: 900; }
+  section > header p { color: var(--muted); margin-top: 6px; max-width: 42em; }
+
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 20px; min-width: 0; }
+  .stack { display: grid; gap: 14px; }
+
+  /* 좌석 상태 흐름 */
+  .flow { display: flex; flex-wrap: wrap; align-items: stretch; gap: 8px; }
+  .flow .st { flex: 1 1 130px; background: var(--tint); border-radius: 14px; padding: 12px 14px; min-width: 0; }
+  .flow .st b { display: block; color: var(--deep-ink); }
+  .flow .st span { font-size: 14px; color: var(--muted); }
+  .flow .arrow { align-self: center; color: var(--muted); font-weight: 700; }
+  @media (max-width: 620px) { .flow { flex-direction: column; } .flow .st { flex: none; } .flow .arrow { transform: rotate(90deg); } }
+
+  /* 단계 */
+  .step { display: grid; gap: 18px; align-items: start; }
+  @media (min-width: 720px) { .step.has-shot { grid-template-columns: minmax(0, 1fr) 232px; gap: 28px; } }
+  .step h3 { font-size: 20px; font-weight: 700; display: flex; align-items: baseline; gap: 10px; }
+  .step h3 .n { flex: none; display: inline-grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: var(--deep); color: #fff; font-size: 15px; font-weight: 700; transform: translateY(2px); }
+  .admin-sec .step h3 .n { background: var(--admin); }
+  .step ul { margin: 10px 0 0; padding-left: 1.2em; display: grid; gap: 6px; }
+  .step p + p, .step ul + p { margin-top: 10px; }
+  .path { display: inline-block; font-size: 13px; font-weight: 700; color: var(--muted); border: 1px solid var(--line); border-radius: 8px; padding: 1px 8px; margin-top: 8px; }
+  .note { margin-top: 12px; border-radius: 12px; padding: 10px 12px; font-size: 15px; background: var(--warn-tint); color: var(--warn); }
+  .note.bad { background: var(--danger-tint); color: var(--danger); }
+
+  figure.shot { margin: 0; justify-self: center; width: min(232px, 70vw); }
+  figure.shot img { display: block; width: 100%; height: auto; border-radius: 22px; border: 6px solid #10201c; box-shadow: var(--shadow); background: #fff; }
+  figure.shot figcaption { text-align: center; font-size: 13px; color: var(--muted); margin-top: 8px; }
+
+  /* 표 */
+  .tablebox { overflow-x: auto; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; font-size: 15px; }
+  th, td { text-align: left; vertical-align: top; padding: 10px 14px; border-bottom: 1px solid var(--line); }
+  tr:last-child td, tr:last-child th { border-bottom: 0; }
+  thead th { font-size: 13px; color: var(--muted); font-weight: 700; background: var(--bg); }
+  tbody th { font-weight: 700; white-space: nowrap; }
+
+  /* 함께 해 보기: 이용자와 관리자가 번갈아 */
+  .play { display: grid; gap: 10px; }
+  .turn { display: grid; grid-template-columns: 76px minmax(0, 1fr); gap: 12px; align-items: start; }
+  .who { font-size: 13px; font-weight: 700; text-align: center; border-radius: 10px; padding: 5px 4px; }
+  .who.u { background: var(--tint); color: var(--deep-ink); }
+  .who.a { background: var(--admin-tint); color: var(--admin); }
+  .who.s { background: var(--bg); color: var(--muted); border: 1px solid var(--line); }
+  .turn p { padding-top: 3px; }
+  .scn h3 { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+  .scn .lead { color: var(--muted); margin-bottom: 14px; }
+  .need { font-size: 14px; color: var(--muted); margin-bottom: 14px; }
+  .need b { color: var(--ink); }
+
+  footer { color: var(--muted); font-size: 14px; }
+</style>
+
+<div class="hero">
+  <div class="hero-in">
+    <p class="eyebrow">대구대학교 창파도서관 · 열람실 좌석 예약</p>
+    <h1>좌석예약 가이드</h1>
+    <p>붐빌수록 규칙이 엄격해지는 좌석 예약 웹입니다. 이용자와 관리자가 각각 무엇을 하는지, 서로의 화면에 무엇이 일어나는지 순서대로 따라 해 볼 수 있게 정리했습니다.</p>
+    <dl class="hero-facts">
+      <div><dt>주소</dt><dd><a href="https://du-library-ruddy.vercel.app">du-library-ruddy.vercel.app</a></dd></div>
+      <div><dt>이용자 로그인</dt><dd>학번 + 비밀번호 <span class="num" style="white-space:nowrap">eorneo1234!</span></dd></div>
+      <div><dt>관리자 로그인</dt><dd>학번 칸에 admin + 같은 비밀번호</dd></div>
+    </dl>
+  </div>
+</div>
+
+<div class="wrap">
+  <nav class="toc" aria-label="목차">
+    <ol>
+      <li><a href="#start">시작하기</a></li>
+      <li><a href="#user">이용자 따라 하기</a></li>
+      <li><a href="#admin">관리자 따라 하기</a></li>
+      <li><a href="#together">함께 해 보기</a></li>
+      <li><a href="#rules">규칙 한 장</a></li>
+      <li><a href="#test">테스트할 때</a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <section id="start">
+      <header>
+        <h2>시작하기</h2>
+        <p>가입은 없습니다. 학번과 공통 비밀번호로 들어가면 이용자는 홈으로, 관리자는 관제 화면으로 갑니다.</p>
+      </header>
+      <div class="stack">
+        <div class="step has-shot card">
+          <div>
+            <h3>로그인 화면에서 빈자리부터 보입니다</h3>
+            <ul>
+              <li>로그인하기 전에도 2층·5층에 남은 좌석 수가 보입니다.</li>
+              <li>비밀번호 <code>eorneo1234!</code>는 한글 자판으로 "대구대1234!"를 친 것과 같습니다.</li>
+              <li>휴대폰에서는 브라우저 메뉴의 "홈 화면에 추가"로 앱처럼 쓸 수 있습니다. 아이폰은 이렇게 추가해야 푸시 알림이 옵니다.</li>
+            </ul>
+            <p class="note">운영 시간은 학기 중 평일 09:00~22:00, 방학 09:00~17:00이고 주말은 휴관입니다. 시험기간에는 24시간 운영합니다. 운영 시간 밖에는 예약이 거절됩니다.</p>
+          </div>
+          <figure class="shot"><img src="{{IMG:login}}" alt="로그인 화면. 도서관 사진 위에 2층 49석, 5층 47석 남음이 보이고 아래에 학번과 비밀번호 입력칸이 있다"><figcaption>로그인</figcaption></figure>
+        </div>
+
+        <div class="card">
+          <h3 style="font-size:18px;font-weight:700;margin-bottom:12px">좌석 하나가 거치는 상태</h3>
+          <div class="flow">
+            <div class="st"><b>체크인 대기</b><span>예약 후 15분 안에 좌석 QR</span></div>
+            <span class="arrow" aria-hidden="true">→</span>
+            <div class="st"><b>이용 중</b><span>최대 4시간, 2시간씩 연장</span></div>
+            <span class="arrow" aria-hidden="true">⇄</span>
+            <div class="st"><b>외출</b><span>혼잡도에 따라 20~60분</span></div>
+            <span class="arrow" aria-hidden="true">→</span>
+            <div class="st"><b>반납</b><span>직접, 시간 종료, 자동 회수</span></div>
+          </div>
+          <p style="margin-top:12px;color:var(--muted);font-size:15px">체크인, 외출 복귀, 자리 확인은 모두 책상에 붙은 좌석 QR 하나로 합니다. 키오스크는 없습니다.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="user">
+      <header>
+        <span class="role user">이용자</span>
+        <h2>이용자 따라 하기</h2>
+        <p>아래 순서대로 한 번 해 보면 이용자 쪽 기능을 모두 지나갑니다. 좌석 QR은 관리자 계정의 <b>좌석 QR</b> 탭에 있는 것을 다른 화면에 띄워 놓고 찍으면 됩니다.</p>
+      </header>
+      <div class="stack">
+        <div class="step has-shot card">
+          <div>
+            <h3><span class="n">1</span>좌석을 예약합니다</h3>
+            <span class="path">홈 → 좌석 고르기</span>
+            <ul>
+              <li>좌석 지도에서 초록색 빈자리를 누르고 이용 시간을 고른 뒤 <b>예약하기</b>를 누릅니다.</li>
+              <li>고르기 귀찮으면 <b>빠른 예약</b>. 그 열람실의 빈 좌석 하나가 바로 잡힙니다.</li>
+              <li>자리에 이미 와 있다면 빈 좌석의 QR을 바로 찍어도 됩니다. 예약과 체크인이 한 번에 됩니다.</li>
+            </ul>
+            <p class="note">예약하면 15분 안에 그 좌석의 QR을 찍어야 합니다. 늦으면 자동 취소되고 벌점 1점입니다.</p>
+          </div>
+          <figure class="shot"><img src="{{IMG:seat}}" alt="좌석 지도에서 N-002를 고른 화면. 이용 시간 1~4시간 중 4시간이 선택되어 있고 예약하기 버튼 아래에 15분 안에 체크인하라는 안내가 있다"><figcaption>좌석 고르기</figcaption></figure>
+        </div>
+
+        <div class="step has-shot card">
+          <div>
+            <h3><span class="n">2</span>QR을 찍어 체크인합니다</h3>
+            <span class="path">홈 → 내 자리 칸 누르기</span>
+            <ul>
+              <li>홈 위쪽의 초록색 내 자리 칸에 좌석 번호와 남은 시간이 나옵니다. 누르면 카메라가 켜집니다.</li>
+              <li>내 좌석 QR을 찍으면 버튼을 더 누르지 않아도 바로 체크인됩니다.</li>
+              <li>다른 좌석을 찍으면 "내 좌석이 아닙니다" 창이 뜹니다. 빈자리면 그 좌석으로 바꿔 체크인할 수 있습니다.</li>
+              <li>마음이 바뀌면 <b>예약 취소</b>. 취소한 좌석은 10분 동안 다시 예약할 수 없습니다.</li>
+            </ul>
+          </div>
+          <figure class="shot"><img src="{{IMG:home}}" alt="홈 화면. 이름과 전공 옆에 체크인 대기 N-002, 14분 49초 남음이 표시된 초록색 칸이 있고 아래에 예약 취소와 내 좌석 버튼이 있다"><figcaption>홈 · 체크인 대기</figcaption></figure>
+        </div>
+
+        <div class="step has-shot card">
+          <div>
+            <h3><span class="n">3</span>이용 중에 할 수 있는 일</h3>
+            <span class="path">내 좌석</span>
+            <ul>
+              <li><b>외출</b>: 누르면 지금 혼잡도에서 몇 분 안에 돌아와야 하는지 먼저 알려 줍니다. 돌아와서 좌석 QR을 찍으면 복귀입니다.</li>
+              <li><b>연장</b>: 종료 30분 전부터 2시간씩. 한산할 때는 횟수 제한이 없고, 혼잡할 때는 2회까지입니다.</li>
+              <li><b>자리 이동</b>: 옮길 좌석의 QR을 찍으면 남은 시간 그대로 옮겨집니다.</li>
+              <li><b>반납</b>: 반납한 좌석은 10분 동안 다시 예약할 수 없습니다.</li>
+            </ul>
+            <p class="note bad">외출 시간을 넘기면 자동 반납되고 벌점 1점입니다. 외출한 뒤에 혼잡도가 바뀌어도 이미 받은 시간은 그대로입니다.</p>
+          </div>
+          <figure class="shot"><img src="{{IMG:me}}" alt="내 좌석 화면. N-002 이용 중, 남은 이용 시간 3시간 59분, 아래에 외출, 연장, 자리 이동, 반납 버튼"><figcaption>내 좌석</figcaption></figure>
+        </div>
+
+        <div class="step has-shot card">
+          <div>
+            <h3><span class="n">4</span>비어 있는 남의 좌석을 신고합니다</h3>
+            <span class="path">그 좌석의 QR 찍기</span>
+            <ul>
+              <li>사용 중으로 표시됐는데 사람이 없는 좌석의 QR을 찍으면 남은 시간과 <b>자리비움 신고</b> 버튼이 나옵니다.</li>
+              <li>신고하면 이용자에게 "자리 확인 요청"이 가고, 10~20분 안에 QR을 찍지 않으면 자동 반납됩니다.</li>
+              <li>신고한 뒤에는 그 화면에 진행 단계가 보이고, 결과가 나오기 전까지 취소할 수 있습니다.</li>
+              <li>반납되면 신고자가 5분 동안 그 좌석을 먼저 예약할 수 있습니다.</li>
+              <li><b>이 좌석 빈자리 알림</b>을 켜면 그 좌석이 비거나 종료 5분 전에 알려 줍니다.</li>
+            </ul>
+            <p class="note bad">앉아 있는 좌석을 신고하면 허위 신고입니다. 3회면 7일간 신고할 수 없고 벌점 1점입니다.</p>
+          </div>
+          <figure class="shot"><img src="{{IMG:report}}" alt="사용 중인 W-002 좌석 화면. 남은 시간 3시간 3분, 이 좌석 빈자리 알림 버튼, 자리비움 신고 버튼과 신고 조건 안내"><figcaption>남의 좌석 QR을 찍었을 때</figcaption></figure>
+        </div>
+
+        <div class="step has-shot card">
+          <div>
+            <h3><span class="n">5</span>언제 가면 한산한지 봅니다</h3>
+            <span class="path">혼잡도</span>
+            <ul>
+              <li>요일을 고르면 시간대별 평균 이용률이 막대로 나옵니다. 색이 여유·보통·혼잡입니다.</li>
+              <li>오늘은 지금 시각의 실제 이용률이 함께 보입니다.</li>
+              <li>자리가 없으면 열람실 카드의 종 버튼으로 빈자리 알림을 켜 둘 수 있습니다.</li>
+            </ul>
+          </div>
+          <figure class="shot"><img src="{{IMG:stats}}" alt="혼잡도 화면. 목요일이 선택되어 있고 지금 62퍼센트 보통, 7시부터 22시까지 시간대별 막대 그래프"><figcaption>혼잡도</figcaption></figure>
+        </div>
+
+        <div class="step card">
+          <h3><span class="n">6</span>문제가 생겼을 때</h3>
+          <span class="path">내 좌석 → 도움 요청 · 벌점</span>
+          <ul>
+            <li><b>도움 요청</b>: QR이 안 찍히거나 좌석에 문제가 있으면 보냅니다. 보내는 순간부터 관리자가 처리할 때까지 자동 취소·반납·벌점이 멈춥니다. 다른 좌석 이야기면 QR을 찍거나 번호를 적어 지정합니다.</li>
+            <li><b>관리자와 대화</b>: 관리자가 대화를 열면 그 자리에서 메시지를 주고받습니다.</li>
+            <li><b>이의신청</b>: 받은 벌점이나 허위 신고 기록이 부당하면 사유를 적어 신청합니다.</li>
+            <li><b>알림</b>: 오른쪽 위 종. 종류별 아이콘으로 구분되고 하나씩 또는 한꺼번에 지울 수 있습니다.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="admin" class="admin-sec">
+      <header>
+        <span class="role admin">관리자</span>
+        <h2>관리자 따라 하기</h2>
+        <p>관리자는 학생이 못 하는 일을 대신 해 주고, 자동으로 끝나지 않는 일에 결론을 냅니다. 메뉴는 위쪽 탭에 있습니다.</p>
+      </header>
+      <div class="stack">
+        <div class="step has-shot card">
+          <div>
+            <h3><span class="n">1</span>관제에서 전체를 봅니다</h3>
+            <span class="path">관제</span>
+            <ul>
+              <li>오늘 예약·노쇼·자동 회수 건수와 층별 이용률이 위에 있습니다.</li>
+              <li>좌석 지도에서 좌석을 누르면 이용자, 남은 시간, 벌점이 나옵니다.</li>
+              <li>그 자리에서 대리 체크인·복귀, 이용 시간 연장, 대기 시간 연장, 좌석 옮기기, 반납, 벌점 부여를 할 수 있습니다.</li>
+              <li>빈 좌석에는 학번을 적어 대신 배정할 수 있습니다. 휴대폰이 고장 난 학생을 위한 기능입니다.</li>
+              <li>맨 아래에서 그 좌석을 닫습니다. 이용 중이면 "이용이 끝나면 닫기"와 "지금 닫기" 중에 고릅니다.</li>
+            </ul>
+          </div>
+          <figure class="shot"><img src="{{IMG:admin}}" alt="관제 화면. 처리 대기 2건 버튼, 지금 이용 중 330, 오늘 예약 658, 층별 이용률 탭과 좌석 지도"><figcaption>관제</figcaption></figure>
+        </div>
+
+        <div class="step has-shot card">
+          <div>
+            <h3><span class="n">2</span>처리 대기를 비웁니다</h3>
+            <span class="path">처리 대기</span>
+            <ul>
+              <li>위쪽 칩으로 자리비움 신고, 도움 요청, 이의신청, 보관 중인 짐을 오갑니다. 건마다 접혀 있다가 누르면 펼쳐집니다.</li>
+              <li><b>신고</b>: 이용자와 신고자가 나란히 보이고 이용자의 남은 시간이 나옵니다. 확인하러 가기 전에 <b>확인 시작</b>을 누르면 양쪽에 알림이 가고 자동 반납이 멈춥니다.</li>
+              <li><b>도움 요청</b>: 좌석 위치 버튼을 누르면 관제 지도에서 그 좌석이 열립니다. 체크인 대기 시간을 늘려 주거나 대리 체크인을 합니다.</li>
+              <li><b>이의신청</b>: 승인하면 벌점이 취소되고, 반려하면 답변이 학생에게 갑니다.</li>
+              <li>학생이 취소했거나 스스로 해결된 건은 아래 "방금 끝난 건"에 한 시간 동안 남습니다.</li>
+            </ul>
+          </div>
+          <figure class="shot"><img src="{{IMG:areports}}" alt="처리 대기 화면. 위에 전체, 자리비움 신고, 도움 요청 칩. 신고 카드에 이용자와 신고자가 나란히 있고 아래에 신고자와 대화, 확인 시작 버튼"><figcaption>처리 대기 · 신고</figcaption></figure>
+        </div>
+
+        <div class="step has-shot card">
+          <div>
+            <h3><span class="n">3</span>신고에 결론을 냅니다</h3>
+            <span class="path">처리 대기 → 신고 카드</span>
+            <div class="tablebox" style="margin-top:12px">
+              <table>
+                <thead><tr><th>버튼</th><th>결과</th></tr></thead>
+                <tbody>
+                  <tr><th>반납 확정</th><td>좌석 반납, 이용자 벌점 2~3점. 신고자에게 우선 예약권</td></tr>
+                  <tr><th>돌아옴</th><td>이용자가 돌아온 경우. 양쪽 모두 불이익 없음</td></tr>
+                  <tr><th>반납 10분 연장</th><td>자동 반납을 10분 늦춤</td></tr>
+                  <tr><th>허위 신고</th><td>이용자가 앉아 있었던 경우. 신고자에게 기록</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <p>자리에 짐이 남아 있으면 "보관할 짐"에 적고 반납 확정을 누릅니다. 보관 번호가 만들어지고 이용자에게 찾는 곳과 기한이 갑니다.</p>
+          </div>
+          <figure class="shot"><img src="{{IMG:abuttons}}" alt="신고 카드 아래쪽. 신고자와 대화, 확인 시작, 보관할 짐 입력칸, 반납 확정과 돌아옴 버튼"><figcaption>신고 처리 버튼</figcaption></figure>
+        </div>
+
+        <div class="step card">
+          <h3><span class="n">4</span>나머지 메뉴</h3>
+          <div class="tablebox" style="margin-top:12px">
+            <table>
+              <thead><tr><th>메뉴</th><th>하는 일</th></tr></thead>
+              <tbody>
+                <tr><th>학생·제재</th><td>학번이나 이름으로 찾아 벌점 부여·취소, 예약 정지·해제, 좌석 이동 기록 확인, 계정 만들기·수정·삭제, 학생 한 명 초기화</td></tr>
+                <tr><th>좌석·열람실</th><td>열람실 임시 폐쇄, 구역이나 좌석을 골라 닫고 열기</td></tr>
+                <tr><th>좌석 QR</th><td>좌석별 QR 보기·인쇄, 유출됐을 때 재발급</td></tr>
+                <tr><th>운영 설정</th><td>예약·연장·외출·신고 시간, 벌점 기준, 운영 기간과 휴관일, 테스트 설정</td></tr>
+                <tr><th>통계·기록</th><td>일별 예약·노쇼·자동 회수, 관리자 처리 기록</td></tr>
+                <tr><th>공지</th><td>공지 쓰기. "알림도 보내기"를 켜면 학생 모두에게 알림</td></tr>
+                <tr><th>시연</th><td>층별 혼잡도 맞추기, 학생을 원하는 상황으로 만들기, 전체 초기화</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="together">
+      <header>
+        <span class="role both">이용자 + 관리자</span>
+        <h2>함께 해 보기</h2>
+        <p>기기 두 대(또는 브라우저 창 두 개)로 한쪽은 이용자, 한쪽은 관리자로 로그인해 놓고 따라 하면 서로의 화면이 바뀌는 것을 볼 수 있습니다.</p>
+      </header>
+      <div class="stack">
+        <div class="scn card">
+          <h3>1. 자리비움 신고부터 반납까지</h3>
+          <p class="lead">이 서비스의 핵심 흐름입니다. 세 사람이 필요합니다.</p>
+          <p class="need"><b>준비</b> 이용자 A는 좌석을 이용 중(체크인 후 10분 이상), 신고자 B는 좌석 없음. 혼자 해 볼 때는 시연 탭의 "이용 중"으로 A를 만들면 됩니다.</p>
+          <div class="play">
+            <div class="turn"><span class="who u">신고자 B</span><p>A의 좌석 QR을 찍고 <b>자리비움 신고</b>를 누릅니다.</p></div>
+            <div class="turn"><span class="who s">자동</span><p>A에게 "자리 확인 요청 · 15분 안에 응답" 알림이 갑니다. 관리자에게 신고 팝업이 뜹니다.</p></div>
+            <div class="turn"><span class="who a">관리자</span><p>처리 대기에서 <b>확인 시작</b>을 누릅니다. A와 B에게 "관리자 확인 중" 알림이 가고 자동 반납이 멈춥니다.</p></div>
+            <div class="turn"><span class="who a">관리자</span><p>필요하면 대화에 메시지를 보냅니다. 관리자가 먼저 보내야 B가 답할 수 있습니다.</p></div>
+            <div class="turn"><span class="who a">관리자</span><p>자리가 비어 있으면 짐을 적고 <b>반납 확정</b>.</p></div>
+            <div class="turn"><span class="who s">자동</span><p>A는 벌점과 짐 보관 안내를 받습니다. B는 "5분 동안 먼저 예약할 수 있습니다" 알림을 받습니다.</p></div>
+            <div class="turn"><span class="who u">신고자 B</span><p>알림을 눌러 그 좌석을 예약합니다. 그 5분 동안 다른 학생은 예약할 수 없습니다.</p></div>
+          </div>
+          <p class="note">다르게 끝나는 경우도 해 보세요. A가 돌아와 자기 좌석 QR을 찍으면 신고는 끝나고 관리자에게 "확인하러 가지 않아도 됩니다"가 갑니다. 관리자가 아무것도 하지 않으면 기한이 지나 자동 반납됩니다.</p>
+        </div>
+
+        <div class="scn card">
+          <h3>2. 도움 요청과 대화</h3>
+          <p class="lead">QR이 안 찍혀 체크인을 못 하는 학생을 구제하는 흐름입니다.</p>
+          <div class="play">
+            <div class="turn"><span class="who u">이용자</span><p>좌석을 예약한 뒤 내 좌석에서 <b>도움 요청</b>을 보냅니다.</p></div>
+            <div class="turn"><span class="who s">자동</span><p>그 예약의 자동 취소와 벌점이 멈춥니다. 관리자에게 팝업이 뜹니다.</p></div>
+            <div class="turn"><span class="who a">관리자</span><p>처리 대기에서 좌석 위치를 확인하고, 이름 옆의 남은 대기 시간을 보고 <b>체크인 대기 15분 연장</b>을 누릅니다. 분은 바꿀 수 있습니다.</p></div>
+            <div class="turn"><span class="who a">관리자</span><p>메시지를 보내 대화를 엽니다.</p></div>
+            <div class="turn"><span class="who u">이용자</span><p>내 좌석의 도움 요청 칸에서 답합니다.</p></div>
+            <div class="turn"><span class="who a">관리자</span><p><b>대리 체크인</b>을 누르거나 처리 결과를 적고 <b>완료 처리</b>.</p></div>
+          </div>
+        </div>
+
+        <div class="scn card">
+          <h3>3. 벌점, 예약 정지, 이의신청</h3>
+          <div class="play">
+            <div class="turn"><span class="who a">관리자</span><p>시연 탭에서 학생을 고르고 <b>벌점 3점 → 예약 정지</b>를 누릅니다.</p></div>
+            <div class="turn"><span class="who s">자동</span><p>3일간 예약이 정지되고, 이용 중이던 좌석도 바로 반납됩니다.</p></div>
+            <div class="turn"><span class="who u">이용자</span><p>내 좌석의 벌점 내역에서 <b>이의신청</b>을 누르고 사유를 적습니다.</p></div>
+            <div class="turn"><span class="who a">관리자</span><p>처리 대기의 이의신청에서 <b>승인</b>. 벌점이 취소되고 정지도 풀립니다.</p></div>
+          </div>
+        </div>
+
+        <div class="scn card">
+          <h3>4. 좌석 닫기와 공지</h3>
+          <div class="play">
+            <div class="turn"><span class="who u">이용자</span><p>좌석 하나를 이용 중으로 둡니다.</p></div>
+            <div class="turn"><span class="who a">관리자</span><p>관제에서 그 좌석을 누르고 <b>이용이 끝나면 닫기</b>.</p></div>
+            <div class="turn"><span class="who u">이용자</span><p>"이용이 끝나면 좌석이 닫힙니다" 알림을 받습니다. 연장이 거절됩니다. 반납하면 좌석이 닫힙니다.</p></div>
+            <div class="turn"><span class="who a">관리자</span><p>공지에서 글을 쓰고 "알림도 보내기"를 켭니다.</p></div>
+            <div class="turn"><span class="who u">이용자</span><p>홈의 공지 줄에 빨간 점이 생기고 알림이 옵니다.</p></div>
+          </div>
+        </div>
+
+        <div class="step has-shot card">
+          <div>
+            <h3 style="display:block">5. 혼잡도를 바꿔 규칙이 달라지는 것 보기</h3>
+            <span class="path">관리자 → 시연</span>
+            <ul>
+              <li>층별 혼잡도를 여유 30%, 보통 65%, 혼잡 90%로 맞출 수 있습니다. 가상 학생으로 채웁니다.</li>
+              <li>혼잡으로 바꾼 뒤 이용자 화면에서 외출을 누르면 60분이던 안내가 20분으로 바뀝니다. 연장도 2회로 제한됩니다.</li>
+              <li><b>학생 시나리오</b>의 버튼을 누르면 고른 학생이 바로 그 상황이 됩니다. 체크인 마감 1분 전, 외출 초과, 신고 접수 같은 것을 기다리지 않고 볼 수 있습니다.</li>
+              <li><b>자동 시연</b>은 상황을 순서대로 담아 두고 몇 초 간격으로 실행합니다. 발표 때 손을 떼고 보여 줄 수 있습니다.</li>
+            </ul>
+            <p class="note bad">전체 초기화는 모든 예약, 벌점, 신고, 알림을 지웁니다. 되돌릴 수 없습니다.</p>
+          </div>
+          <figure class="shot"><img src="{{IMG:demo}}" alt="시연 탭의 학생 시나리오. 가상 학생과 열람실 선택, 현재 상태 줄, 예약·체크인과 이용, 외출 묶음의 상황 버튼들"><figcaption>시연 · 학생 시나리오</figcaption></figure>
+        </div>
+      </div>
+    </section>
+
+    <section id="rules">
+      <header>
+        <h2>규칙 한 장</h2>
+        <p>숫자는 모두 관리자의 운영 설정에서 바꿀 수 있습니다. 아래는 지금 설정값입니다.</p>
+      </header>
+      <div class="stack">
+        <div class="tablebox">
+          <table>
+            <thead><tr><th>혼잡도</th><th>이용률</th><th>외출 허용</th><th>신고 응답</th><th>연장</th></tr></thead>
+            <tbody class="num">
+              <tr><th>여유</th><td>50% 미만</td><td>60분</td><td>20분</td><td>제한 없음</td></tr>
+              <tr><th>보통</th><td>50~80%</td><td>40분</td><td>15분</td><td>제한 없음</td></tr>
+              <tr><th>혼잡</th><td>80% 이상</td><td>20분</td><td>10분</td><td>2회 (0시·12시에 다시 셈)</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="tablebox">
+          <table>
+            <thead><tr><th>항목</th><th>규칙</th></tr></thead>
+            <tbody>
+              <tr><th>예약</th><td>한 사람 한 좌석, 한 번에 최대 4시간. 15분 안에 QR 체크인</td></tr>
+              <tr><th>연장</th><td>종료 30분 전부터 2시간씩. 횟수는 좌석을 바꿔도 합산</td></tr>
+              <tr><th>재예약</th><td>방금 쓴 좌석(반납·종료·취소·이동 전 좌석)은 10분 뒤부터</td></tr>
+              <tr><th>자리 이동</th><td>옮길 좌석 QR을 찍으면 이동. 남은 시간과 연장 횟수 그대로</td></tr>
+              <tr><th>신고 제한</th><td>체크인 10분 이내 좌석 불가, 1시간 3건·하루 5건, 같은 이용자는 24시간에 한 번</td></tr>
+              <tr><th>우선 예약</th><td>신고한 좌석이 반납되면 신고자에게 5분. 체크인 대기 중이면 1분 안에 그 좌석으로 바꿀지 선택</td></tr>
+              <tr><th>짐 보관</th><td>신고로 반납된 좌석의 짐은 2층 안내 데스크에서 7일. 기간이 지나면 폐기될 수 있음</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="tablebox">
+          <table>
+            <thead><tr><th>벌점</th><th>점수</th></tr></thead>
+            <tbody class="num">
+              <tr><th>예약 후 미체크인</th><td>1점</td></tr>
+              <tr><th>외출 시간 초과</th><td>1점</td></tr>
+              <tr><th>자리비움 (신고 확인)</th><td>2점, 혼잡하거나 시험기간이면 3점</td></tr>
+              <tr><th>허위 신고 3회</th><td>1점 + 7일간 신고 정지</td></tr>
+              <tr><th>예약 정지</th><td>최근 30일 3점이면 3일, 6점이면 14일. 정지되면 이용 중인 좌석도 반납</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="test">
+      <header>
+        <h2>테스트할 때 알아 둘 것</h2>
+      </header>
+      <div class="card">
+        <div class="step">
+          <ul style="margin-top:0">
+            <li><b>좌석 QR</b>: 실제 책상에 붙일 수 없으니 관리자의 좌석 QR 탭에서 좌석을 골라 다른 화면에 띄우고 휴대폰으로 찍습니다.</li>
+            <li><b>밤이나 주말에 테스트</b>: 운영 시간 밖에는 예약이 안 됩니다. 운영 설정의 테스트 설정이나 시연 탭에서 "운영시간 무시"를 켜면 됩니다. 끝나면 다시 끕니다.</li>
+            <li><b>위치 확인</b>: 지금은 꺼져 있어서 도서관 밖에서도 QR이 처리됩니다. 켜면 도서관 반경 안에서만 됩니다.</li>
+            <li><b>폐관 시각</b>: 22시가 되면 이용 중인 좌석이 모두 자동 반납됩니다. 다음 날 열람실이 비어 보이면 시연 탭에서 혼잡도를 다시 채웁니다.</li>
+            <li><b>가상 학생</b>: 혼잡도를 채우는 데 쓰는 계정이 440명 있습니다. 통계에도 포함되니 발표 때 실제 수치로 말하지 않도록 주의합니다.</li>
+            <li><b>푸시 알림</b>: 알림 종 안의 "푸시 알림 켜기"를 눌러야 옵니다. 아이폰은 홈 화면에 추가한 앱에서만 됩니다.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <footer>창의문제해결 과제 · 붐빌수록 더 엄격해지는 스마트 좌석 예약 웹</footer>
+  </main>
+</div>
