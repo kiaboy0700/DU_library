@@ -62,19 +62,24 @@
   .wrap { max-width: 1120px; margin: 0 auto; padding-block: 24px 64px; padding-left: max(20px, env(safe-area-inset-left, 0px)); padding-right: max(20px, env(safe-area-inset-right, 0px)); display: grid; gap: 28px; }
   @media (min-width: 960px) { .wrap { grid-template-columns: 210px minmax(0, 1fr); gap: 44px; } }
 
-  nav.toc { min-width: 0; }
+  nav.toc { min-width: 0; position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); padding-block: 8px; margin-block: -8px; }
+  body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
   nav.toc ol { list-style: none; margin: 0; padding: 0; display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; }
   nav.toc ol::-webkit-scrollbar { display: none; }
   nav.toc a { display: block; white-space: nowrap; text-decoration: none; font-weight: 700; font-size: 14px; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 8px 14px; }
   nav.toc a:hover, nav.toc a:focus-visible { border-color: var(--deep); color: var(--deep-ink); outline: none; }
+  nav.toc a[aria-current="true"] { background: var(--deep); border-color: var(--deep); color: #fff; }
   @media (min-width: 960px) {
-    nav.toc { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 20px); align-self: start; }
+    nav.toc { top: calc(env(safe-area-inset-top, 0px) + 20px); align-self: start; padding-block: 0; margin-block: 0; background: transparent; }
     nav.toc ol { flex-direction: column; gap: 4px; overflow: visible; }
     nav.toc a { border: 0; background: transparent; border-radius: 10px; padding: 8px 10px; white-space: normal; }
     nav.toc a:hover, nav.toc a:focus-visible { background: var(--tint); }
+    nav.toc a[aria-current="true"] { background: var(--tint); color: var(--deep-ink); box-shadow: inset 3px 0 0 var(--deep); }
   }
 
   main { min-width: 0; display: grid; gap: 56px; }
+  section { scroll-margin-top: calc(env(safe-area-inset-top, 0px) + 72px); }
+  @media (min-width: 960px) { section { scroll-margin-top: calc(env(safe-area-inset-top, 0px) + 20px); } }
   section > header { margin-bottom: 18px; }
   .role { display: inline-block; font-size: 13px; font-weight: 700; border-radius: 999px; padding: 3px 10px; margin-bottom: 8px; }
   .role.user { background: var(--tint); color: var(--deep-ink); }
@@ -583,3 +588,37 @@
     <footer>창의문제해결 과제 · 붐빌수록 더 엄격해지는 스마트 좌석 예약 웹</footer>
   </main>
 </div>
+
+<script>
+  // 화면에 보이는 구역을 목차에 표시한다
+  (function () {
+    var links = Array.prototype.slice.call(document.querySelectorAll("nav.toc a"));
+    var list = document.querySelector("nav.toc ol");
+    var sections = links.map(function (a) { return document.getElementById(a.getAttribute("href").slice(1)); });
+    var current = null;
+    function mark() {
+      // 화면 위쪽 3분의 1 지점을 지난 구역 가운데 마지막 것이 지금 보는 구역
+      var line = window.innerHeight * 0.33;
+      var idx = 0;
+      for (var i = 0; i < sections.length; i++) {
+        if (sections[i] && sections[i].getBoundingClientRect().top <= line) idx = i;
+      }
+      // 맨 아래까지 내렸으면 마지막 구역
+      if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4) idx = sections.length - 1;
+      if (idx === current) return;
+      current = idx;
+      links.forEach(function (a, i) {
+        if (i === idx) a.setAttribute("aria-current", "true");
+        else a.removeAttribute("aria-current");
+      });
+      // 좁은 화면의 가로 목차에서는 표시된 칩이 보이게 옆으로 옮긴다
+      var a = links[idx];
+      if (list && list.scrollWidth > list.clientWidth) {
+        list.scrollLeft = a.parentElement.offsetLeft - list.offsetLeft - (list.clientWidth - a.offsetWidth) / 2;
+      }
+    }
+    window.addEventListener("scroll", mark, { passive: true });
+    window.addEventListener("resize", mark);
+    mark();
+  })();
+</script>
