@@ -45,7 +45,7 @@ export default function MePage() {
   const [helpLabel, setHelpLabel] = useState("");
   const [helpScan, setHelpScan] = useState(false);
   const [rooms, setRooms] = useState<{ id: number; name: string }[]>([]);
-  const [myHelp, setMyHelp] = useState<{ id: number; reason: string; message: string | null; created_at: string; seat_label: string | null; room_name: string | null } | null>(null);
+  const [myHelp, setMyHelp] = useState<{ id: number; reason: string; message: string | null; created_at: string; seat_label: string | null; room_name: string | null; claimed?: boolean } | null>(null);
   const helpOpen = !!status?.help_open;
   // 내가 한 신고 중 처리 중인 것
   const [myReports, setMyReports] = useState<{ id: number; seat_label: string; room_name: string; created_at: string; stage: "received" | "checking"; chat: boolean }[]>([]);
@@ -631,7 +631,10 @@ export default function MePage() {
                 <p className="text-base font-bold">관리자가 확인하고 있습니다</p>
                 {myHelp && (
                   <>
-                    <p className="mt-0.5 font-semibold">{myHelp.reason}</p>
+                    <p className="mt-0.5 flex flex-wrap items-center gap-2 font-semibold">
+                      {myHelp.reason}
+                      {myHelp.claimed && <Tag tone="deep">관리자 확인 중</Tag>}
+                    </p>
                     {myHelp.seat_label && (
                       <p className="flex items-center gap-1 text-[#3d4744]">
                         <MapPin size={14} aria-hidden />

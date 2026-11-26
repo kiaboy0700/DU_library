@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { Ban, Check, Clock, Eye, Inbox, MapPin, Package, Search, Undo2, X } from "lucide-react";
+import { Ban, Check, Clock, Eye, Hand, Inbox, MapPin, Package, Search, Undo2, X } from "lucide-react";
 import { HelpChat } from "@/components/HelpChat";
 import { useApp } from "@/components/Providers";
 import { ActionRow, Button, Confirm, Empty, FoldPanel, GraceControl, Panel, Skeleton, Tag, inputClass, useAction, useNow } from "@/components/ui";
@@ -21,6 +21,9 @@ interface Report {
   reporter_name: string;
   reporter_sid: string;
   stage: "received" | "checking";
+  handler_id: string | null;
+  handler_name: string | null;
+  handler_at: string | null;
   end_at: string;
   checked_in_at: string | null;
   extend_count: number;
@@ -40,6 +43,9 @@ interface Help {
   res_status: string | null;
   end_at: string | null;
   deadline: string | null;
+  handler_id: string | null;
+  handler_name: string | null;
+  handler_at: string | null;
 }
 interface Appeal {
   id: number;
@@ -54,6 +60,9 @@ interface Appeal {
   report_id: number | null;
   report_seat: string | null;
   report_at: string | null;
+  handler_id: string | null;
+  handler_name: string | null;
+  handler_at: string | null;
 }
 interface Item {
   id: number;
@@ -84,7 +93,8 @@ interface RecentReport {
   room_name: string;
   owner_name: string;
   reporter_name: string;
-  how: "cancelled" | "returned" | "auto" | "closed";
+  how: "cancelled" | "returned" | "auto" | "closed" | "admin" | "admin_confirm" | "admin_returned" | "admin_false";
+  handler_name: string | null;
 }
 interface RecentHelp {
   id: number;
@@ -92,8 +102,74 @@ interface RecentHelp {
   reason: string;
   name: string;
   student_id: string;
+  handler_name: string | null;
 }
-const HOW: Record<RecentReport["how"], string> = { cancelled: "신고자가 취소", returned: "이용자가 돌아옴", auto: "자동 반납", closed: "이용자가 반납" };
+const HOW: Record<RecentReport["how"], string> = { cancelled: "신고자가 취소", returned: "이용자가 돌아옴", auto: "자동 반납", closed: "이용자가 반납", admin: "처리", admin_confirm: "반납 확정", admin_returned: "돌아옴 확인", admin_false: "허위 신고" };
+type Kind = "report" | "help" | "appeal";
+interface Handled {
+  id: number;
+  handler_id: string | null;
+  handler_name: string | null;
+  handler_at: string | null;
+}
+
+/** 누가 맡았는지. 다른 관리자가 맡은 건은 넘겨받아야 처리할 수 있다 */
+function Claim({
+  kind,
+  item,
+  me,
+  now,
+  busy,
+  claimable,
+  releasable,
+  onClaim,
+  onRelease,
+  onTake,
+}: {
+  kind: Kind;
+  item: Handled;
+  me: string | undefined;
+  now: number;
+  busy: string | null;
+  claimable: boolean;
+  releasable: boolean;
+  onClaim: () => void;
+  onRelease: () => void;
+  onTake: () => void;
+}) {
+  const key = `${kind}${item.id}`;
+  if (!item.handler_id) {
+    if (!claimable) return null;
+    return (
+      <Button variant="soft" className="mt-3 w-full" busy={busy === `cl${key}`} onClick={onClaim}>
+        <Hand size={16} aria-hidden />
+        내가 맡기
+      </Button>
+    );
+  }
+  const mine = item.handler_id === me;
+  const mins = item.handler_at ? Math.max(0, Math.floor((now - new Date(item.handler_at).getTime()) / 60_000)) : 0;
+  return (
+    <div className={`mt-3 flex flex-wrap items-center justify-between gap-2 rounded-[var(--radius-ctl)] px-3 py-2 ${mine ? "bg-du-tint" : "bg-warn-tint"}`}>
+      <span className={`text-sm font-bold ${mine ? "text-du-deep-dark" : "text-[#5c3d00]"}`}>
+        {mine ? "내가 처리 중" : `${item.handler_name ?? "다른 관리자"} 처리 중`}
+        <span className="tabular ml-1.5 font-normal">{mins}분째</span>
+      </span>
+      {mine
+        ? releasable && (
+            <Button variant="quiet" busy={busy === `rl${key}`} onClick={onRelease}>
+              내려놓기
+            </Button>
+          )
+        : (
+            <Button busy={busy === `tk${key}`} onClick={onTake}>
+              넘겨받기
+            </Button>
+          )}
+    </div>
+  );
+}
+
 interface Overview {
   reports: Report[];
   helps: Help[];
@@ -103,7 +179,10 @@ interface Overview {
 }
 
 export default function AdminReports() {
-  const { toast, pulse } = useApp();
+  const { toast, pulse, status } = useApp();
+  const me = status?.profile.id;
+  // 다른 관리자가 맡은 건을 넘겨받기 전에 한 번 묻는다
+  const [take, setTake] = useState<{ kind: Kind; id: number; name: string } | null>(null);
   const now = useNow();
   const [ov, setOv] = useState<Overview | null>(null);
   const [text, setText] = useState<Record<string, string>>({});
@@ -161,6 +240,21 @@ export default function AdminReports() {
       await load();
     });
 
+  const claimProps = (kind: Kind, item: Handled) => ({
+    kind,
+    item,
+    me,
+    now,
+    busy,
+    onClaim: () => act(`cl${kind}${item.id}`, () => rpc("admin_claim", { p_kind: kind, p_id: item.id }), "맡았습니다."),
+    onRelease: () => act(`rl${kind}${item.id}`, () => rpc("admin_release", { p_kind: kind, p_id: item.id }), "내려놓았습니다."),
+    onTake: () => setTake({ kind, id: item.id, name: item.handler_name ?? "다른 관리자" }),
+  });
+  const locked = (item: Handled) => !!item.handler_id && item.handler_id !== me;
+  const who = (item: Handled) =>
+    item.handler_id && <Tag tone={item.handler_id === me ? "deep" : "warn"}>{item.handler_id === me ? "내가 처리 중" : `${item.handler_name ?? "다른 관리자"} 처리 중`}</Tag>;
+  const fs = (item: Handled) => `m-0 min-w-0 border-0 p-0 ${locked(item) ? "opacity-45" : ""}`;
+
   if (!ov) return <Skeleton className="h-80 !rounded-[var(--radius-panel)]" />;
   const empty = ov.reports.length + ov.helps.length + ov.appeals.length === 0;
 
@@ -196,6 +290,17 @@ export default function AdminReports() {
         <Panel>
           <Empty icon={<Inbox size={36} strokeWidth={1.6} aria-hidden />} title="처리할 일이 없습니다" />
         </Panel>
+      )}
+      {take && (
+        <Confirm
+          title="넘겨받기"
+          confirmLabel="넘겨받기"
+          busy={busy === `tk${take.kind}${take.id}`}
+          onClose={() => setTake(null)}
+          onConfirm={() => act(`tk${take.kind}${take.id}`, () => rpc("admin_claim", { p_kind: take.kind, p_id: take.id, p_take: true }), "넘겨받았습니다.").then(() => setTake(null))}
+        >
+          {take.name}님이 처리 중인 건입니다. 넘겨받으면 {take.name}님에게 알림이 갑니다.
+        </Confirm>
       )}
       {falseId !== null && (
         <Confirm
@@ -234,6 +339,7 @@ export default function AdminReports() {
                         {r.room_name} {r.seat_label}
                       </span>
                       {fresh(r.created_at)}
+                      {who(r)}
                       {r.stage === "checking" ? (
                         <Tag tone="deep">확인 중 · 자동 반납 멈춤</Tag>
                       ) : (
@@ -269,6 +375,8 @@ export default function AdminReports() {
                         </dd>
                       </div>
                     </dl>
+                    <Claim {...claimProps("report", r)} claimable={false} releasable={r.stage !== "checking"} />
+                    <fieldset disabled={locked(r)} className={fs(r)}>
                     <HelpChat kind="report" helpId={r.id} admin className="mt-3 max-w-xl" />
                     {/* 확인하러 가기 전에 누른다: 이용자와 신고자에게 알리고, 결론을 낼 때까지 자동 반납을 멈춘다 */}
                     {r.stage !== "checking" && (
@@ -319,6 +427,7 @@ export default function AdminReports() {
                         허위 신고
                       </Button>
                     </ActionRow>
+                    </fieldset>
                   </div>
                 </FoldPanel>
               );
@@ -341,6 +450,7 @@ export default function AdminReports() {
                   <>
                     <span className="text-base font-bold">{h.reason}</span>
                     {fresh(h.created_at)}
+                    {who(h)}
                     <span className="text-sm text-muted">
                       {h.name}
                       {h.seat_label && ` · ${h.seat_label}`}
@@ -377,6 +487,8 @@ export default function AdminReports() {
                   </p>
                   {h.message && <p className="mt-1 rounded-md bg-canvas px-2.5 py-2 text-sm">{h.message}</p>}
                   <p className="tabular mt-1 text-[13px] text-muted">{fmtDateTime(h.created_at)} 접수</p>
+                  <Claim {...claimProps("help", h)} claimable releasable />
+                  <fieldset disabled={locked(h)} className={fs(h)}>
                   <HelpChat helpId={h.id} admin className="mt-3 max-w-xl" />
                   <div className="mt-3 grid gap-2 sm:grid-cols-2">
                     {h.reservation_id && (h.res_status === "reserved" || h.res_status === "away") && (
@@ -420,6 +532,7 @@ export default function AdminReports() {
                       </Button>
                     </div>
                   </div>
+                  </fieldset>
                 </div>
               </FoldPanel>
             ))}
@@ -442,6 +555,7 @@ export default function AdminReports() {
                     <span className="font-bold">{a.name}</span>
                     <span className="tabular text-sm text-muted">{a.student_id}</span>
                     {fresh(a.created_at)}
+                    {who(a)}
                     <Tag tone={a.report_id ? "warn" : "neutral"}>{a.report_id ? "허위 신고" : <span className="tabular">벌점 {a.points}점</span>}</Tag>
                   </>
                 }
@@ -459,6 +573,8 @@ export default function AdminReports() {
                     )}
                   </p>
                   <p className="mt-2 rounded-md bg-canvas px-2.5 py-2 text-sm">{a.message}</p>
+                  <Claim {...claimProps("appeal", a)} claimable releasable />
+                  <fieldset disabled={locked(a)} className={fs(a)}>
                   <div className="mt-3 grid gap-2">
                     <input
                       className={inputClass}
@@ -476,6 +592,7 @@ export default function AdminReports() {
                     </Button>
                     </ActionRow>
                   </div>
+                  </fieldset>
                 </div>
               </FoldPanel>
             ))}
@@ -496,7 +613,7 @@ export default function AdminReports() {
                     <span className="font-bold">
                       {r.room_name} {r.seat_label}
                     </span>
-                    <Tag tone={r.how === "cancelled" ? "warn" : r.how === "returned" ? "deep" : "neutral"}>{HOW[r.how]}</Tag>
+                    <Tag tone={r.how === "cancelled" ? "warn" : r.how === "returned" || r.handler_name ? "deep" : "neutral"}>{r.handler_name ? `${r.handler_name} · ${HOW[r.how]}` : HOW[r.how]}</Tag>
                     <span className="w-full text-[13px] text-muted">
                       이용자 {r.owner_name} · 신고자 {r.reporter_name} · <span className="tabular">{fmtTime(r.resolved_at)}</span>
                     </span>
@@ -506,7 +623,7 @@ export default function AdminReports() {
                 ov.recent_helps.map((h) => (
                   <li key={`h${h.id}`} className="flex flex-wrap items-center gap-x-2 gap-y-1 px-4 py-3">
                     <span className="font-bold">{h.reason}</span>
-                    <Tag tone="warn">학생이 취소</Tag>
+                    <Tag tone={h.handler_name ? "deep" : "warn"}>{h.handler_name ? `${h.handler_name} 처리` : "학생이 취소"}</Tag>
                     <span className="w-full text-[13px] text-muted">
                       {h.name} <span className="tabular">{h.student_id}</span> · <span className="tabular">{fmtTime(h.resolved_at)}</span>
                     </span>
