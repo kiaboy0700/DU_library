@@ -210,8 +210,26 @@
   #together .seg { max-width: 420px; }
   #view-guide[data-dev="two"] .dev-one, #view-guide[data-dev="one"] .dev-two { display: none !important; }
   .dev-pick { margin-top: 18px; border: 1px solid rgba(255, 255, 255, 0.28); border-radius: 16px; padding: 14px 16px; background: rgba(255, 255, 255, 0.08); }
-  .dev-pick > b { display: block; font-size: 17px; }
-  .dev-pick .seg { max-width: 420px; margin-top: 10px; }
+  .dev-now { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .dev-now b { font-size: 17px; }
+  .dev-open { min-height: 40px; padding: 0 16px; border-radius: 999px; border: 1px solid rgba(255, 255, 255, 0.6); background: rgba(255, 255, 255, 0.14); color: #fff; font: inherit; font-weight: 700; cursor: pointer; }
+  .dev-open.on-light { border-color: currentColor; background: var(--warn-tint); color: var(--warn); }
+  dialog.devdlg { border: 0; border-radius: 22px; padding: 22px; width: min(600px, calc(100vw - 28px)); max-height: calc(100dvh - 28px); overflow: auto; background: var(--surface); color: var(--ink); }
+  dialog.devdlg::backdrop { background: rgba(0, 0, 0, 0.62); }
+  dialog.devdlg h2 { font-size: 24px; font-weight: 800; letter-spacing: -0.01em; }
+  .dd-sub { color: var(--muted); margin-top: 4px; }
+  .dd-opts { display: grid; gap: 12px; margin-top: 16px; }
+  @media (min-width: 620px) { .dd-opts { grid-template-columns: 1fr 1fr; } }
+  .dd-opt { display: grid; gap: 8px; align-content: start; text-align: left; border: 2px solid var(--line); border-radius: 16px; padding: 16px; background: var(--bg); color: var(--ink); font: inherit; cursor: pointer; }
+  .dd-opt:hover, .dd-opt:focus-visible { border-color: var(--deep); outline: none; }
+  .dd-opt[aria-pressed="true"] { border-color: var(--deep); background: var(--tint); }
+  .dd-opt > b { font-size: 21px; display: flex; align-items: center; gap: 8px; }
+  .dd-rec { font-size: 12px; font-weight: 800; background: var(--deep); color: #fff; border-radius: 999px; padding: 2px 8px; }
+  .dd-row { display: grid; grid-template-columns: 58px minmax(0, 1fr); gap: 10px; align-items: start; font-size: 15px; }
+  .dd-row i { font-style: normal; font-weight: 800; font-size: 13px; text-align: center; border-radius: 8px; padding: 2px 0; background: var(--surface); border: 1px solid var(--line); }
+  .dd-how { font-size: 14px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 8px; }
+  .dd-foot { margin-top: 14px; font-size: 14px; color: var(--muted); }
+  .dd-close { margin-top: 12px; width: 100%; min-height: 48px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: inherit; font-weight: 700; cursor: pointer; }
   .dev-pick p { margin-top: 10px; font-size: 15px; color: rgba(255, 255, 255, 0.9); max-width: none; }
   nav.toc li.dev-chip button { display: block; white-space: nowrap; font: inherit; font-weight: 700; font-size: 14px; color: var(--warn); background: var(--warn-tint); border: 1px solid currentColor; border-radius: 999px; padding: 8px 14px; cursor: pointer; }
   #together .devices { grid-template-columns: 1fr; }
@@ -325,6 +343,26 @@
 </style>
 
 <div id="view-guide" data-dev="two">
+<dialog class="devdlg" id="dev-dlg" aria-labelledby="dev-dlg-h">
+  <h2 id="dev-dlg-h">기기를 몇 대 쓸 수 있나요?</h2>
+  <p class="dd-sub">고른 방식에 맞는 설명만 보여 드립니다.</p>
+  <div class="dd-opts">
+    <button type="button" class="dd-opt" data-pick="two" aria-pressed="false">
+      <b>두 대 <span class="dd-rec">권장</span></b>
+      <span class="dd-row"><i>휴대폰</i><span>학생 앱. QR을 찍고 푸시 알림을 받습니다</span></span>
+      <span class="dd-row"><i>PC</i><span>가이드와 관리자 화면. 다른 휴대폰이어도 됩니다</span></span>
+      <span class="dd-how">QR을 실제로 카메라로 찍고, 상대 화면이 바뀌는 것을 바로 봅니다.</span>
+    </button>
+    <button type="button" class="dd-opt" data-pick="one" aria-pressed="false">
+      <b>한 대</b>
+      <span class="dd-row"><i>휴대폰</i><span>앱과 가이드를 번갈아 엽니다</span></span>
+      <span class="dd-row"><i>QR</i><span>찍는 대신 가이드의 "이 기기에서 좌석 열기"로 엽니다</span></span>
+      <span class="dd-how">학생과 관리자는 로그아웃하고 다시 로그인하며 바꿉니다. 화면이 바뀌는 순간은 볼 수 없습니다.</span>
+    </button>
+  </div>
+  <p class="dd-foot">위쪽 목차 끝의 "기기" 버튼으로 언제든 바꿀 수 있습니다.</p>
+  <button type="button" class="dd-close" data-dev-close hidden>닫기</button>
+</dialog>
   <nav class="toc" aria-label="목차">
     <ol>
       <li><a href="#install">앱으로 설치</a></li>
@@ -336,7 +374,7 @@
       <li><a href="#rules">규칙 한 장</a></li>
       <li class="ext"><a href="#accounts-all">전체 계정</a></li>
       <li class="ext"><a href="#seat-qr">좌석 QR (가이드)</a></li>
-      <li class="ext dev-chip"><button type="button" data-dev-toggle>기기 <span data-dev-label>두 대</span></button></li>
+      <li class="ext dev-chip"><button type="button" data-dev-open>기기 <span data-dev-label>두 대</span></button></li>
     </ol>
   </nav>
 <div class="hero">
@@ -350,14 +388,9 @@
       <div><dt>관리자 로그인</dt><dd>학번 칸에 a + 내 학번, 같은 비밀번호</dd></div>
     </dl>
     <div class="dev-pick">
-      <b>먼저 고르세요 · 기기를 몇 대 쓰나요?</b>
-      <div class="seg dev-seg" role="group" aria-label="기기 수">
-        <button type="button" data-dev="two" aria-pressed="true">두 대 (권장)</button>
-        <button type="button" data-dev="one" aria-pressed="false">한 대</button>
-      </div>
-      <p class="dev-two">휴대폰은 학생 앱, PC(또는 다른 휴대폰)는 가이드와 관리자 화면으로 씁니다. 좌석 QR을 실제로 카메라로 찍고, 상대 화면이 바뀌는 것을 바로 봅니다.</p>
-      <p class="dev-one">휴대폰 하나로 앱과 가이드를 번갈아 엽니다. QR은 찍는 대신 가이드의 "이 기기에서 좌석 열기"로 엽니다. 학생과 관리자는 로그아웃하고 다시 로그인하며 바꿉니다.</p>
-      <p style="font-size:13px;opacity:0.8">고른 방식에 맞는 설명만 나옵니다. 위쪽 목차 끝의 "기기" 버튼으로 언제든 바꿀 수 있습니다.</p>
+      <div class="dev-now"><b>기기 <span data-dev-label>두 대</span>로 보는 중</b><button type="button" class="dev-open" data-dev-open>바꾸기</button></div>
+      <p class="dev-two">휴대폰은 학생 앱, PC(또는 다른 휴대폰)는 가이드와 관리자 화면으로 씁니다.</p>
+      <p class="dev-one">휴대폰 하나로 앱과 가이드를 번갈아 엽니다.</p>
     </div>
   </div>
 </div>
@@ -626,7 +659,7 @@
               <summary>자세히</summary>
             <ul>
               <li>홈 위쪽의 초록색 내 자리 칸에 좌석 번호와 남은 시간이 나옵니다. 누르면 카메라가 켜집니다.</li>
-              <li>내 좌석 QR을 찍으면 버튼을 더 누르지 않아도 바로 체크인됩니다. 찍을 QR은 앱이 아니라 가이드에 있습니다. 다음 장에서 이어집니다.</li>
+              <li>내 좌석 QR을 찍으면 버튼을 더 누르지 않아도 바로 체크인되고 내 좌석 화면으로 넘어갑니다. 찍을 QR은 앱이 아니라 가이드에 있습니다. 다음 장에서 이어집니다.</li>
               <li>다른 좌석을 찍으면 "내 좌석이 아닙니다" 창이 뜹니다. 빈자리면 그 좌석으로 바꿔 체크인할 수 있습니다.</li>
               <li>마음이 바뀌면 <b>예약 취소</b>. 취소한 좌석은 10분 동안 다시 예약할 수 없습니다.</li>
             </ul>
@@ -712,16 +745,18 @@
         <div class="step has-shot card">
           <div>
             <span class="where a">앱에서 합니다 · 휴대폰</span>
-            <h3>체크인됩니다</h3>
+            <h3>바로 내 좌석으로 넘어가며 체크인됩니다</h3>
             <div class="viz">
-              <figure class="shot"><div class="shotbox"><img src="{{IMG:checkin}}" alt="W-003 좌석 화면. 내 좌석 사용 중 표시, 체크인했습니다 열공하세요 라는 초록색 안내, 14시 16분까지 남은 시간 3시간 59분, 외출 연장 반납 버튼"><i class="hl" style="left:8.53%;top:21.92%;width:83.20%;height:5.67%"><b>1</b></i><i class="hl out-l" style="left:67.20%;top:11.70%;width:25.60%;height:3.20%"><b>2</b></i><i class="hl" style="left:8.53%;top:32.76%;width:83.20%;height:6.16%"><b>3</b></i></div><figcaption>체크인 완료</figcaption></figure>
+              <figure class="shot"><div class="shotbox"><img src="{{IMG:checkin}}" alt="내 좌석 화면. 위에 체크인했습니다 열공하세요 라는 안내가 떠 있고, W-002 이용 중, 남은 이용 시간 3시간 59분, 외출 연장 자리 이동 반납 버튼"><i class="hl" style="left:4.27%;top:8.13%;width:87.47%;height:5.42%"><b>1</b></i><i class="hl out-l" style="left:75.47%;top:18.47%;width:12.80%;height:2.96%"><b>2</b></i><i class="hl out-l" style="left:8.80%;top:27.71%;width:78.93%;height:8.62%"><b>3</b></i><i class="hl" style="left:8.80%;top:47.66%;width:78.93%;height:12.32%"><b>4</b></i></div><figcaption>체크인 직후의 내 좌석</figcaption></figure>
               <div class="viz-side">
               <ol class="legend">
-                <li><span>내 좌석 QR을 <span class="dev-two">찍자마자</span><span class="dev-one">열자마자</span> 체크인됩니다</span></li>
-                <li><span>상태가 <b>사용 중</b>으로 바뀝니다</span></li>
-                <li><span>이 화면에서 바로 외출·연장·반납을 할 수 있습니다</span></li>
+                <li><span>내 좌석 QR을 <span class="dev-two">찍으면</span><span class="dev-one">열면</span> 바로 <b>내 좌석</b> 화면으로 넘어가고, 체크인했다는 안내가 뜹니다</span></li>
+                <li><span>상태가 <b>이용 중</b>으로 바뀝니다</span></li>
+                <li><span>남은 이용 시간이 흐르기 시작합니다</span></li>
+                <li><span>여기서 바로 외출·연장·자리 이동·반납을 합니다</span></li>
               </ol>
             <p class="note bad">예약하고 15분 안에 여기까지 오지 않으면 자동 취소되고 벌점 1점입니다.</p>
+            <p class="note">외출에서 돌아와 내 좌석 QR을 찍었을 때도 같은 화면으로 바로 넘어갑니다.</p>
               </div>
             </div>
           </div>
@@ -1079,11 +1114,8 @@
       <header>
         <span class="role both">6단계 · 이용자 + 관리자</span>
         <h2>함께 해 보기</h2>
-        <p>관리자와 학생이 서로 주고받는 기능입니다. 처음에 고른 기기 수에 맞는 순서로 나옵니다. 여기서도 바꿀 수 있습니다.</p>
-        <div class="seg dev-seg" role="group" aria-label="기기 수" id="dev-seg">
-          <button type="button" data-dev="two" aria-pressed="true">기기 두 대 (권장)</button>
-          <button type="button" data-dev="one" aria-pressed="false">기기 한 대</button>
-        </div>
+        <p>관리자와 학생이 서로 주고받는 기능입니다. 처음에 고른 기기 수에 맞는 순서로 나옵니다.</p>
+        <p style="margin-top:10px"><button type="button" class="dev-open on-light" data-dev-open>기기 <span data-dev-label>두 대</span> · 바꾸기</button></p>
         <div class="devices">
           <div class="dev-two"><b>기기 두 대</b><span>휴대폰은 학생(내 학번), PC는 관리자(a + 내 학번)로 로그인해 두는 것이 가장 쉽습니다. 휴대폰 두 대도 됩니다. 상대 화면이 바로 바뀌는 것을 볼 수 있습니다. 좌석 QR은 한쪽 화면에 띄우고 다른 쪽으로 찍습니다.</span></div>
           <div class="dev-one"><b>기기 한 대</b><span>아래 순서의 "전환" 줄마다 로그아웃하고 다른 계정으로 다시 로그인합니다. 화면이 바뀌는 순간은 볼 수 없고, 다시 들어가서 결과를 확인합니다. QR은 찍을 수 없으니 좌석 QR 화면의 "이 기기에서 좌석 열기"를 누릅니다. 아이폰은 사파리로 열리므로 사파리에서도 한 번 로그인해 둡니다.</span></div>
@@ -1469,21 +1501,52 @@
     });
   })();
 
-  // 기기 두 대 / 한 대: 한 번 고르면 가이드 전체가 그 방식의 설명만 보여 준다
+  // 기기 두 대 / 한 대: 처음 들어오면 팝업으로 묻고, 고른 방식의 설명만 보여 준다. 언제든 다시 열어 바꿀 수 있다
   (function () {
     var root = document.getElementById("view-guide");
-    var btns = Array.prototype.slice.call(document.querySelectorAll(".dev-seg button"));
+    var dlg = document.getElementById("dev-dlg");
+    var picks = Array.prototype.slice.call(dlg.querySelectorAll("[data-pick]"));
     var labels = Array.prototype.slice.call(document.querySelectorAll("[data-dev-label]"));
-    var toggles = Array.prototype.slice.call(document.querySelectorAll("[data-dev-toggle]"));
-    function set(v) {
+    var closeBtn = dlg.querySelector("[data-dev-close]");
+    var chosen = null;
+    try { chosen = localStorage.getItem("du-guide-dev"); } catch (e) {}
+    if (chosen !== "one" && chosen !== "two") chosen = null;
+    function apply(v) {
       root.setAttribute("data-dev", v);
-      btns.forEach(function (b) { b.setAttribute("aria-pressed", b.getAttribute("data-dev") === v ? "true" : "false"); });
+      picks.forEach(function (b) { b.setAttribute("aria-pressed", b.getAttribute("data-pick") === v ? "true" : "false"); });
       labels.forEach(function (l) { l.textContent = v === "one" ? "한 대" : "두 대"; });
-      try { localStorage.setItem("du-guide-dev", v); } catch (e) {}
     }
-    btns.forEach(function (b) { b.addEventListener("click", function () { set(b.getAttribute("data-dev")); }); });
-    toggles.forEach(function (t) { t.addEventListener("click", function () { set(root.getAttribute("data-dev") === "one" ? "two" : "one"); }); });
-    try { if (localStorage.getItem("du-guide-dev") === "one") set("one"); } catch (e) {}
+    function open() {
+      // 아직 고른 적이 없으면 고를 때까지 닫지 못한다
+      closeBtn.hidden = !chosen;
+      if (chosen) apply(chosen);
+      if (typeof dlg.showModal === "function") { if (!dlg.open) dlg.showModal(); }
+      else dlg.setAttribute("open", "");
+    }
+    function close() {
+      if (dlg.open && typeof dlg.close === "function") dlg.close();
+      else dlg.removeAttribute("open");
+    }
+    picks.forEach(function (b) {
+      b.addEventListener("click", function () {
+        var first = !chosen;
+        chosen = b.getAttribute("data-pick");
+        apply(chosen);
+        try { localStorage.setItem("du-guide-dev", chosen); } catch (e) {}
+        close();
+        // 처음 고른 뒤에는 가이드 첫 단계로 내려간다
+        if (first) {
+          var sec = document.querySelector("#view-guide main section:not([hidden])");
+          if (sec) window.scrollTo(0, sec.getBoundingClientRect().top + window.scrollY - 76);
+        }
+      });
+    });
+    closeBtn.addEventListener("click", close);
+    dlg.addEventListener("cancel", function (e) { if (!chosen) e.preventDefault(); });
+    dlg.addEventListener("click", function (e) { if (e.target === dlg && chosen) close(); });
+    Array.prototype.forEach.call(document.querySelectorAll("[data-dev-open]"), function (t) { t.addEventListener("click", open); });
+    if (chosen) apply(chosen);
+    else if (!root.hidden) open();
   })();
 
   // 가이드 / 전체 계정 / 좌석 QR 화면 전환

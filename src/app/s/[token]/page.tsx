@@ -14,6 +14,8 @@ import { rpc, supabase } from "@/lib/supabase";
 import { SEAT_TYPE_LABEL, STATE_LABEL, type SeatContext, type SeatInfo } from "@/lib/types";
 import { cx, fmtRemain, fmtTime, getPosition } from "@/lib/util";
 
+const TO_ME = new Set(["check_in", "come_back", "confirm_presence", "move_seat", "switch_seat"]);
+
 /** 좌석 QR을 스캔하면 열리는 화면. 상황에 맞는 동작 하나를 가장 크게 보여 준다 */
 export default function SeatQrPage() {
   const { token } = useParams<{ token: string }>();
@@ -52,6 +54,13 @@ export default function SeatQrPage() {
     run(key, async () => {
       const pos = ctx?.gps_required ? await getPosition() : null;
       const r = await rpc(fn, { p_token: token, p_lat: pos?.lat ?? null, p_lng: pos?.lng ?? null, ...extra });
+      // 내 좌석에 대한 처리는 결과를 알리고 바로 내 좌석 화면으로 간다 (중간 화면을 한 번 더 거치지 않게)
+      if (TO_ME.has(fn)) {
+        toast(okText(r), "ok");
+        await refresh();
+        router.replace("/me");
+        return;
+      }
       setDone(okText(r));
       setConfirm(null);
       await Promise.all([refresh(), load()]);
@@ -91,6 +100,10 @@ export default function SeatQrPage() {
     } else if (st === "in_use" && ctx.pending_report) {
       auto.current = true;
       scan("here", "confirm_presence", () => "자리에 있음을 확인했습니다. 벌점은 없습니다.");
+    } else if (st === "in_use") {
+      // 이용 중인 내 좌석을 다시 찍었으면 할 일이 없으니 내 좌석 화면으로
+      auto.current = true;
+      router.replace("/me");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- 좌석 정보를 처음 받았을 때 한 번만
   }, [ctx]);
@@ -217,8 +230,9 @@ export default function SeatQrPage() {
                         await rpc("reserve_seat", { p_seat: seat.id, p_minutes: (hours ?? maxHours) * 60 });
                         const pos = ctx.gps_required ? await getPosition() : null;
                         await rpc("check_in", { p_token: token, p_lat: pos?.lat ?? null, p_lng: pos?.lng ?? null });
-                        setDone(`${seat.label} 좌석 이용을 시작했습니다.`);
-                        await Promise.all([refresh(), load()]);
+                        toast(`${seat.label} 좌석 이용을 시작했습니다.`, "ok");
+                        await refresh();
+                        router.replace("/me");
                       })
                     }
                   >
