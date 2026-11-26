@@ -6,7 +6,7 @@ import { ChevronRight, MousePointerClick, PenLine } from "lucide-react";
 import { OccupancyMeter } from "@/components/OccupancyMeter";
 import { useApp } from "@/components/Providers";
 import { LEGEND, LegendSwatch, SeatMap, type SeatVisual } from "@/components/SeatMap";
-import { Button, Empty, Field, GraceControl, Panel, Skeleton, Tag, inputClass, useAction, useNow } from "@/components/ui";
+import { Button, Empty, Field, GraceControl, Hint, Panel, Skeleton, Tag, inputClass, useAction, useNow } from "@/components/ui";
 import { useAdminMap, useRooms, type AdminSeat } from "@/lib/admin";
 import { useHome } from "@/lib/hooks";
 import { rpc } from "@/lib/supabase";
@@ -224,10 +224,16 @@ export default function AdminHome() {
                   await done(`${picked.label} 좌석을 배정했습니다.`);
                 })
               }
-              onToggle={() =>
+              onOpen={() =>
                 run("toggle", async () => {
-                  await rpc("admin_set_seats", { p_ids: [picked.seat_id], p_active: !picked.is_active, p_reason: reason || "시설 점검" });
-                  await done(picked.is_active ? `${picked.label} 좌석 사용을 중지했습니다.` : `${picked.label} 좌석을 다시 열었습니다.`);
+                  await rpc("admin_set_seats", { p_ids: [picked.seat_id], p_active: true, p_reason: null });
+                  await done(picked.close_pending ? `${picked.label} 좌석 닫기를 취소했습니다.` : `${picked.label} 좌석을 다시 열었습니다.`);
+                })
+              }
+              onClose={(wait) =>
+                run(wait ? "closeWait" : "toggle", async () => {
+                  await rpc("admin_close_seats", { p_ids: [picked.seat_id], p_reason: reason || "시설 점검", p_wait: wait });
+                  await done(wait ? `${picked.label} 좌석은 이용이 끝나면 닫힙니다.` : `${picked.label} 좌석을 닫았습니다.`);
                 })
               }
               onAct={resAct}
@@ -262,7 +268,8 @@ function SeatPanel(p: {
   points: number;
   setPoints: (v: number) => void;
   onAssign: (checkin: boolean) => void;
-  onToggle: () => void;
+  onOpen: () => void;
+  onClose: (wait: boolean) => void;
   onAct: (key: string, action: string, msg: string, arg?: number | null) => void;
   onMove: () => void;
 }) {
@@ -419,10 +426,34 @@ function SeatPanel(p: {
       <div className="mt-4 space-y-2 border-t border-line pt-3">
         <h3 className="text-xs font-bold text-muted">좌석 상태</h3>
         {!seat.is_active && <p className="text-sm text-muted">중지 사유: {seat.inactive_reason ?? "-"}</p>}
-        <Button className="w-full" busy={p.busy === "toggle"} onClick={p.onToggle}>
-          {seat.is_active ? "이 좌석 사용 중지" : "이 좌석 다시 열기"}
-        </Button>
-        {seat.is_active && r && <p className="mt-1.5 text-xs text-muted">이용 중인 학생은 벌점 없이 반납됩니다</p>}
+        {!seat.is_active ? (
+          <Button variant="primary" className="w-full" busy={p.busy === "toggle"} onClick={p.onOpen}>
+            이 좌석 다시 열기
+          </Button>
+        ) : seat.close_pending ? (
+          <>
+            <p className="rounded-md bg-warn-tint px-2.5 py-2 text-[13px] font-semibold text-[#5c3d00]">이용이 끝나면 닫힙니다</p>
+            <Button className="w-full" busy={p.busy === "toggle"} onClick={p.onOpen}>
+              닫기 취소
+            </Button>
+          </>
+        ) : r ? (
+          <>
+            {/* 이용 중인 좌석: 끝난 뒤에 닫을지, 지금 닫을지 */}
+            <Button variant="primary" className="w-full" busy={p.busy === "closeWait"} onClick={() => p.onClose(true)}>
+              이용이 끝나면 닫기
+            </Button>
+            <Hint>지금 시간까지 쓰고, 연장은 할 수 없습니다</Hint>
+            <Button variant="softDanger" className="w-full" busy={p.busy === "toggle"} onClick={() => p.onClose(false)}>
+              지금 닫기
+            </Button>
+            <Hint>벌점 없이 바로 반납됩니다</Hint>
+          </>
+        ) : (
+          <Button variant="softDanger" className="w-full" busy={p.busy === "toggle"} onClick={() => p.onClose(false)}>
+            이 좌석 닫기
+          </Button>
+        )}
       </div>
     </div>
   );

@@ -158,6 +158,7 @@ export function Confirm({
   busy,
   onConfirm,
   onClose,
+  alt,
 }: {
   title: React.ReactNode;
   children?: React.ReactNode;
@@ -166,6 +167,8 @@ export function Confirm({
   busy?: boolean;
   onConfirm: () => void;
   onClose: () => void;
+  /** 또 하나의 선택지: 있으면 맨 위에 채운 버튼으로 나온다 (더 순한 방법을 먼저 권할 때) */
+  alt?: { label: string; onClick: () => void; busy?: boolean };
 }) {
   useEffect(() => {
     const key = (e: KeyboardEvent) => e.key === "Escape" && onClose();
@@ -179,9 +182,14 @@ export function Confirm({
           {title}
         </h2>
         {children && <div className="mt-2 text-[15px] leading-relaxed">{children}</div>}
-        <div className="mt-5 grid grid-cols-2 gap-2">
+        {alt && (
+          <Button variant="primary" size="lg" className="mt-5 w-full" busy={alt.busy} autoFocus onClick={alt.onClick}>
+            {alt.label}
+          </Button>
+        )}
+        <div className={cx("grid grid-cols-2 gap-2", alt ? "mt-2" : "mt-5")}>
           <Button onClick={onClose}>닫기</Button>
-          <Button variant={danger ? "danger" : "primary"} busy={busy} autoFocus onClick={onConfirm}>
+          <Button variant={danger ? "danger" : "primary"} busy={busy} autoFocus={!alt} onClick={onConfirm}>
             {confirmLabel}
           </Button>
         </div>

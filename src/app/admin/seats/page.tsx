@@ -57,6 +57,12 @@ export default function AdminSeats() {
       setPicked(new Set());
       setAskOff(false);
     });
+  // 이용 중인 좌석은 이용이 끝난 뒤에 닫고, 빈 좌석은 바로 닫는다
+  const closeAfter = () =>
+    act("pwait", () => rpc("admin_close_seats", { p_ids: [...picked], p_reason: reason || "좌석 점검", p_wait: true }), "빈 좌석은 닫았고, 이용 중인 좌석은 이용이 끝나면 닫힙니다.").then(() => {
+      setPicked(new Set());
+      setAskOff(false);
+    });
 
   const act = (key: string, fn: () => Promise<unknown>, msg: string) =>
     run(key, async () => {
@@ -131,56 +137,6 @@ export default function AdminSeats() {
             </div>
           </Panel>
 
-          <Panel>
-            <h2 className="px-4 pt-4 text-lg font-bold sm:px-5">구역</h2>
-            <div className="mt-3 overflow-x-auto border-t border-line">
-              <table className="tabular w-full min-w-[520px] text-left text-sm">
-                <thead className="text-xs text-muted">
-                  <tr>
-                    <th className="px-4 py-2 font-medium sm:px-5">구역</th>
-                    <th className="px-2 py-2 font-medium">종류</th>
-                    <th className="px-2 py-2 text-right font-medium">좌석</th>
-                    <th className="px-2 py-2 text-right font-medium">이용 중</th>
-                    <th className="px-2 py-2 text-right font-medium">중지</th>
-                    <th className="px-4 py-2 sm:px-5" />
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-line">
-                  {zones.map(([z, v]) => (
-                    <tr key={z}>
-                      <th scope="row" className="px-4 py-2.5 font-bold sm:px-5">
-                        {z}구역
-                      </th>
-                      <td className="px-2">{v.type}</td>
-                      <td className="px-2 text-right">{v.total}</td>
-                      <td className="px-2 text-right">{v.used}</td>
-                      <td className="px-2 text-right">{v.off}</td>
-                      <td className="px-4 py-1.5 text-right sm:px-5">
-                        <div className="flex justify-end gap-1.5">
-                          <Button
-                            size="sm"
-                            variant="danger"
-                            disabled={v.off === v.total}
-                            busy={busy === `off${z}`}
-                            onClick={() => {
-                              if (v.used > 0 && !window.confirm(`${z}구역에 이용 중인 학생 ${v.used}명이 있습니다. 차단하면 모두 벌점 없이 반납됩니다. 계속할까요?`)) return;
-                              act(`off${z}`, () => rpc("admin_set_seats", { p_ids: v.ids, p_active: false, p_reason: reason || "구역 점검" }), `${z}구역을 차단했습니다.`);
-                            }}
-                          >
-                            구역 차단
-                          </Button>
-                          <Button size="sm" disabled={v.off === 0} busy={busy === `on${z}`} onClick={() => act(`on${z}`, () => rpc("admin_set_seats", { p_ids: v.ids, p_active: true, p_reason: null }), `${z}구역을 다시 열었습니다.`)}>
-                            다시 열기
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </Panel>
-
           {/* 좌석을 하나씩: 구역을 펼쳐 좌석을 누르면 선택되고, 아래에서 한꺼번에 닫거나 연다 */}
           <Panel className="overflow-hidden">
             <h2 className="px-4 pt-4 text-lg font-bold sm:px-5">좌석</h2>
@@ -197,9 +153,28 @@ export default function AdminSeats() {
                         {v.type} · {v.total}석
                       </span>
                       {sel > 0 && <Tag tone="deep">{sel}석 선택</Tag>}
+                      {v.used > 0 && <span className="tabular text-sm text-muted">이용 {v.used}</span>}
                       {v.off > 0 && <Tag>{v.off}석 중지</Tag>}
+                      {mine.some((x) => x.close_pending) && <Tag tone="warn">{mine.filter((x) => x.close_pending).length}석 닫힐 예정</Tag>}
                       <ChevronDown size={18} aria-hidden className={cx("ml-auto shrink-0 text-muted transition-transform duration-150", on && "rotate-180")} />
                     </button>
+                    {on && (
+                      <div className="px-4 pb-2 sm:px-5">
+                        <Button
+                          size="sm"
+                          onClick={() =>
+                            setPicked((cur) => {
+                              const n = new Set(cur);
+                              const all = mine.every((x) => n.has(x.seat_id));
+                              mine.forEach((x) => (all ? n.delete(x.seat_id) : n.add(x.seat_id)));
+                              return n;
+                            })
+                          }
+                        >
+                          {sel === mine.length ? `${z}구역 전체 해제` : `${z}구역 전체 선택`}
+                        </Button>
+                      </div>
+                    )}
                     {on && (
                       <div className="grid grid-cols-[repeat(auto-fill,minmax(68px,1fr))] gap-1.5 px-4 pb-4 sm:px-5">
                         {mine.map((x) => {
@@ -209,11 +184,11 @@ export default function AdminSeats() {
                               key={x.seat_id}
                               type="button"
                               aria-pressed={p}
-                              aria-label={`${x.label}${!x.is_active ? ", 사용 중지" : x.res ? ", 이용 중" : ""}`}
+                              aria-label={`${x.label}${!x.is_active ? ", 사용 중지" : x.close_pending ? ", 닫힐 예정" : x.res ? ", 이용 중" : ""}`}
                               onClick={() => toggle(x.seat_id)}
                               className={cx(
                                 "tabular relative flex min-h-11 items-center justify-center rounded-[var(--radius-ctl)] border text-[13px] font-semibold transition-colors duration-150",
-                                p ? "border-du-deep bg-du-deep text-white" : !x.is_active ? "border-dashed border-[#b9c6c2] bg-canvas text-muted line-through" : "border-line bg-surface hover:bg-canvas",
+                                p ? "border-du-deep bg-du-deep text-white" : !x.is_active ? "border-dashed border-[#b9c6c2] bg-canvas text-muted line-through" : x.close_pending ? "border-dashed border-warn bg-warn-tint text-[#5c3d00]" : "border-line bg-surface hover:bg-canvas",
                               )}
                             >
                               {x.label}
@@ -236,7 +211,7 @@ export default function AdminSeats() {
                   <Button variant="danger" busy={busy === "poff"} disabled={pickedSeats.every((x) => !x.is_active)} onClick={() => (pickedUsed > 0 ? setAskOff(true) : setSeats(false))}>
                     사용 중지
                   </Button>
-                  <Button variant="primary" busy={busy === "pon"} disabled={pickedSeats.every((x) => x.is_active)} onClick={() => setSeats(true)}>
+                  <Button variant="primary" busy={busy === "pon"} disabled={pickedSeats.every((x) => x.is_active && !x.close_pending)} onClick={() => setSeats(true)}>
                     다시 열기
                   </Button>
                   <Button className="col-span-2 sm:col-span-1" onClick={() => setPicked(new Set())}>
@@ -247,8 +222,23 @@ export default function AdminSeats() {
             )}
           </Panel>
           {askOff && (
-            <Confirm title="좌석 사용 중지" confirmLabel="사용 중지" danger busy={busy === "poff"} onClose={() => setAskOff(false)} onConfirm={() => setSeats(false)}>
-              이용 중인 학생 <b className="tabular">{pickedUsed}명</b>이 벌점 없이 반납됩니다.
+            <Confirm
+              title="이용 중인 좌석이 있습니다"
+              confirmLabel="지금 닫기"
+              danger
+              busy={busy === "poff"}
+              onClose={() => setAskOff(false)}
+              onConfirm={() => setSeats(false)}
+              alt={{ label: "이용이 끝나면 닫기", onClick: closeAfter, busy: busy === "pwait" }}
+            >
+              <ul className="list-disc space-y-1 pl-5">
+                <li>
+                  <b>이용이 끝나면 닫기</b>: 학생 <b className="tabular">{pickedUsed}명</b>은 지금 시간까지 쓰고, 연장은 할 수 없습니다.
+                </li>
+                <li>
+                  <b>지금 닫기</b>: 벌점 없이 바로 반납됩니다.
+                </li>
+              </ul>
             </Confirm>
           )}
 

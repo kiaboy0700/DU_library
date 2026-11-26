@@ -14,6 +14,8 @@ export interface AdminSeat {
   is_active: boolean;
   inactive_reason: string | null;
   qr_token: string;
+  /** 지금 쓰는 학생의 이용이 끝나면 닫힐 좌석 */
+  close_pending?: boolean;
   res: {
     id: number;
     status: "reserved" | "in_use" | "away";
