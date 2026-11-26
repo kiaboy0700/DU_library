@@ -221,6 +221,62 @@
   #together .devices { grid-template-columns: 1fr; }
   .turn.dev-one p { color: var(--muted); font-weight: 700; }
 
+  /* 좁은 화면에서는 3칸 비교표를 항목별로 쌓는다 */
+  @media (max-width: 640px) {
+    table.cmp, table.cmp tbody { display: block; }
+    table.cmp thead { display: none; }
+    table.cmp tr { display: block; padding: 12px 14px; }
+    table.cmp tr + tr { border-top: 1px solid var(--line); }
+    table.cmp th, table.cmp td { display: block; padding: 0; border: 0; background: none; }
+    table.cmp th { font-size: 17px; }
+    table.cmp td::before { content: attr(data-l); display: block; margin-top: 8px; font-size: 12px; font-weight: 700; color: var(--muted); }
+  }
+
+  /* 사진 위 번호 표시와 그에 맞춘 설명 */
+  .step.has-shot { display: block; }
+  .viz { display: grid; gap: 16px; margin-top: 14px; justify-items: center; }
+  @media (min-width: 720px) { .viz { grid-template-columns: 290px minmax(0, 1fr); justify-items: stretch; align-items: start; gap: 24px; } }
+  .viz figure.shot { width: min(300px, 100%); justify-self: center; }
+  .shotbox { position: relative; border: 6px solid #10201c; border-radius: 22px; overflow: hidden; background: #fff; box-shadow: var(--shadow); }
+  figure.shot .shotbox img { border: 0; border-radius: 0; box-shadow: none; }
+  .hl { position: absolute; border: 2.5px solid #e5352b; border-radius: 9px; box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.92), 0 2px 8px rgba(0, 0, 0, 0.25); pointer-events: none; }
+  .hl b, ol.legend li::before { width: 22px; height: 22px; border-radius: 50%; background: #e5352b; color: #fff; font-size: 13px; font-weight: 800; line-height: 22px; text-align: center; font-variant-numeric: tabular-nums; }
+  .hl b { position: absolute; left: -9px; top: -9px; box-shadow: 0 0 0 2px #fff; }
+  ol.legend { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; counter-reset: lg; width: 100%; }
+  ol.legend li { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 10px; align-items: start; }
+  ol.legend li::before { counter-increment: lg; content: counter(lg); margin-top: 2px; }
+  details.more-d { margin-top: 12px; border-top: 1px solid var(--line); }
+  details.more-d > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 8px; min-height: 44px; font-weight: 700; color: var(--muted); }
+  details.more-d > summary::-webkit-details-marker { display: none; }
+  details.more-d > summary::after { content: ""; width: 8px; height: 8px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted); transform: rotate(45deg) translateY(-3px); transition: transform 0.15s; }
+  details.more-d[open] > summary::after { transform: rotate(-135deg) translateY(-3px); }
+
+  /* 그 화면 바로 열기 */
+  a.openapp { display: inline-flex; align-items: center; min-height: 28px; margin: 8px 0 0 4px; padding: 0 10px; border-radius: 999px; background: var(--deep); color: #fff; font-size: 13px; font-weight: 700; text-decoration: none; white-space: nowrap; vertical-align: top; }
+  a.openapp::after { content: " ↗"; white-space: pre; }
+  a.openapp[href^="#"]::after { content: " →"; }
+  a.openapp:hover, a.openapp:focus-visible { filter: brightness(1.1); outline: 2px solid var(--deep); outline-offset: 2px; }
+
+  /* 한 화면에 한 단계: 아래 막대로 넘긴다 */
+  .js-pager .next { display: none; }
+  .js-pager main { display: block; padding-bottom: 104px; }
+  .js-pager .wrap { padding-bottom: 0; }
+  .js-pager footer { display: none; }
+  .js-pager section.compact > header > :not(.role):not(h2) { display: none; }
+  .js-pager section.compact > header { margin-bottom: 12px; }
+  .pager { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; background: var(--surface); border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom, 0px); box-shadow: 0 -6px 20px rgba(0, 0, 0, 0.06); }
+  .pg-prog { height: 3px; background: var(--line); }
+  .pg-prog i { display: block; height: 100%; width: 0; background: var(--deep); transition: width 0.2s; }
+  .pager-in { max-width: 880px; margin: 0 auto; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 10px max(16px, env(safe-area-inset-left, 0px)); }
+  .pg { min-height: 48px; min-width: 84px; padding: 0 16px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: inherit; font-weight: 700; cursor: pointer; white-space: nowrap; }
+  .pg.go { background: var(--deep); border-color: var(--deep); color: #fff; }
+  .pg:disabled { opacity: 0.35; cursor: default; }
+  .pg:focus-visible { outline: 2px solid var(--deep); outline-offset: 2px; }
+  .pg-mid { text-align: center; min-width: 0; }
+  .pg-mid b { display: block; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pg-mid span { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  @media (prefers-reduced-motion: reduce) { .pg-prog i { transition: none; } }
+
   footer { color: var(--muted); font-size: 14px; }
 </style>
 
@@ -229,7 +285,7 @@
   <div class="hero-in">
     <p class="eyebrow">대구대학교 창파도서관 · 열람실 좌석 예약</p>
     <h1>DU-library 가이드</h1>
-    <p>붐빌수록 규칙이 엄격해지는 좌석 예약 웹입니다. 위에서부터 순서대로 따라 하면 이용자 기능, 관리자 기능, 둘이 주고받는 기능을 모두 한 번씩 써 보게 됩니다.</p>
+    <p>붐빌수록 규칙이 엄격해지는 좌석 예약 웹입니다. 한 화면에 한 단계씩 나옵니다. 아래 <b>다음</b>을 누르거나 옆으로 밀어 넘기면서 그대로 따라 하면 이용자 기능, 관리자 기능, 둘이 주고받는 기능을 모두 한 번씩 써 보게 됩니다.</p>
     <dl class="hero-facts">
       <div><dt>주소</dt><dd><a href="https://du-library-ruddy.vercel.app">du-library-ruddy.vercel.app</a></dd></div>
       <div><dt>이용자 로그인</dt><dd>학번 + 비밀번호 <span class="num" style="white-space:nowrap">eorneo1234!</span></dd></div>
@@ -300,17 +356,32 @@
         <div class="step has-shot card">
           <div>
             <h3>로그인 화면에서 빈자리부터 보입니다</h3>
+            <div class="viz">
+              <figure class="shot"><div class="shotbox"><img src="{{IMG:login}}" alt="로그인 화면. 도서관 사진 위에 2층 92석, 5층 165석 남음이 보이고 아래에 학번과 비밀번호 입력칸, 공통 비밀번호가 있다"><i class="hl" style="left:5.33%;top:28.57%;width:89.60%;height:11.58%"><b>1</b></i><i class="hl" style="left:10.67%;top:51.48%;width:86.93%;height:19.21%"><b>2</b></i><i class="hl" style="left:14.93%;top:80.79%;width:45.87%;height:3.45%"><b>3</b></i></div><figcaption>로그인</figcaption></figure>
+              <ol class="legend">
+                <li><span>로그인하기 전에도 층별 남은 좌석이 보입니다</span></li>
+                <li><span>학번과 비밀번호를 넣습니다</span></li>
+                <li><span>비밀번호는 모두 같습니다</span></li>
+              </ol>
+            </div>
+{{TEAM}}
+            <p class="note">관리자 계정은 자기 것만 씁니다. 여러 명이 같은 관리자 계정으로 동시에 들어가면 서로 불편해서 한 사람에 하나씩 나눴습니다.</p>
+            <div class="devices" style="margin-top:14px">
+              <div><b>학생은 휴대폰으로</b><span>QR 찍기와 푸시 알림이 휴대폰 기준이라 학생 화면은 휴대폰에서 써 주세요.</span></div>
+              <div><b>관리자는 PC나 휴대폰</b><span>둘 다 됩니다. 좌석 지도와 처리 대기를 넓게 볼 수 있어서 PC가 더 쉽습니다.</span></div>
+            </div>
+            <p class="more">가상 학생까지 모두 보려면 <a class="go" href="#accounts-all">전체 계정 보기</a></p>
+            <p class="note">운영 시간 밖에는 예약이 거절됩니다. 지금 설정은 학기 중 평일 09:00~22:00이고, 관리자가 바꿀 수 있습니다.</p>
+                      <details class="more-d">
+              <summary>자세히</summary>
             <ul>
               <li>로그인하기 전에도 2층·5층에 남은 좌석 수가 보입니다.</li>
               <li>비밀번호 <code>eorneo1234!</code>는 한글 자판으로 "대구대1234!"를 친 것과 같습니다.</li>
               <li>학번 칸에 아래 값을 넣습니다. 관리자 계정은 내 학번 앞에 <code>a</code>를 붙인 것입니다.</li>
+              <li>학생 계정은 휴대폰으로, 관리자 계정은 PC로 쓰는 것을 권합니다.</li>
             </ul>
-{{TEAM}}
-            <p class="note">관리자 계정은 자기 것만 씁니다. 여러 명이 같은 관리자 계정으로 동시에 들어가면 서로 불편해서 한 사람에 하나씩 나눴습니다.</p>
-            <p class="more">가상 학생까지 모두 보려면 <a class="go" href="#accounts-all">전체 계정 보기</a></p>
-            <p class="note">운영 시간 밖에는 예약이 거절됩니다. 지금 설정은 학기 중 평일 09:00~22:00이고, 관리자가 바꿀 수 있습니다.</p>
+            </details>
           </div>
-          <figure class="shot"><img src="{{IMG:login}}" alt="로그인 화면. 도서관 사진 위에 2층 92석, 5층 165석 남음이 보이고 아래에 학번과 비밀번호 입력칸, 공통 비밀번호가 있다"><figcaption>로그인</figcaption></figure>
         </div>
 
         <div class="card">
@@ -371,14 +442,14 @@
       </header>
       <div class="stack">
         <div class="tablebox">
-          <table>
+          <table class="cmp">
             <thead><tr><th>항목</th><th>실제 운영</th><th>지금</th></tr></thead>
             <tbody>
-              <tr><th>위치 확인</th><td>도서관 반경 200m 안에서 찍은 QR만 처리됩니다. 체크인, 외출 복귀, 자리 이동, 신고 모두 해당합니다. 휴대폰 위치 권한을 허용해야 하고, 밖에서 찍으면 거절됩니다.</td><td>꺼 두었습니다. 집에서 찍어도 됩니다.</td></tr>
-              <tr><th>좌석 QR</th><td>책상마다 붙어 있습니다.</td><td><a class="go" href="#seat-qr">좌석 QR 보기</a>에서 좌석을 골라 다른 기기로 찍거나, 같은 기기에서 바로 엽니다.</td></tr>
-              <tr><th>계정</th><td>학생마다 자기 계정.</td><td>팀원 계정과 가상 학생 계정. 비밀번호가 모두 같습니다.</td></tr>
-              <tr><th>다른 이용자</th><td>실제 학생들.</td><td>가상 학생 440명이 운영 시간에 스스로 이용합니다. <a href="#auto">자동 이용</a></td></tr>
-              <tr><th>통계</th><td>실제 이용 기록.</td><td>가상 학생 기록이 섞여 있습니다. 발표 때 실제 수치처럼 말하지 않습니다.</td></tr>
+              <tr><th>위치 확인</th><td data-l="실제 운영">도서관 반경 200m 안에서 찍은 QR만 처리됩니다. 체크인, 외출 복귀, 자리 이동, 신고 모두 해당합니다. 휴대폰 위치 권한을 허용해야 하고, 밖에서 찍으면 거절됩니다.</td><td data-l="지금">꺼 두었습니다. 집에서 찍어도 됩니다.</td></tr>
+              <tr><th>좌석 QR</th><td data-l="실제 운영">책상마다 붙어 있습니다.</td><td data-l="지금"><a class="go" href="#seat-qr">좌석 QR 보기</a>에서 좌석을 골라 다른 기기로 찍거나, 같은 기기에서 바로 엽니다.</td></tr>
+              <tr><th>계정</th><td data-l="실제 운영">학생마다 자기 계정.</td><td data-l="지금">팀원 계정과 가상 학생 계정. 비밀번호가 모두 같습니다.</td></tr>
+              <tr><th>다른 이용자</th><td data-l="실제 운영">실제 학생들.</td><td data-l="지금">가상 학생 440명이 운영 시간에 스스로 이용합니다. <a href="#auto">자동 이용</a></td></tr>
+              <tr><th>통계</th><td data-l="실제 운영">실제 이용 기록.</td><td data-l="지금">가상 학생 기록이 섞여 있습니다. 발표 때 실제 수치처럼 말하지 않습니다.</td></tr>
             </tbody>
           </table>
         </div>
@@ -420,57 +491,101 @@
       <header>
         <span class="role user">4단계 · 이용자</span>
         <h2>이용자 따라 하기</h2>
-        <p>내 학번으로 로그인해 1번부터 차례로 합니다. 앞 단계에서 잡은 좌석으로 다음 단계를 이어 가도록 짜여 있어서, 끝까지 가면 이용자 기능을 모두 써 보게 됩니다. 찍을 QR은 <a class="go" href="#seat-qr">좌석 QR 보기</a>에서 좌석을 골라 다른 화면에 띄워 놓고 찍으면 됩니다.</p>
+        <p>휴대폰에서 내 학번으로 로그인해 1번부터 차례로 합니다. 앞 단계에서 잡은 좌석으로 다음 단계를 이어 가도록 짜여 있어서, 끝까지 가면 이용자 기능을 모두 써 보게 됩니다. 찍을 QR은 <a class="go" href="#seat-qr">좌석 QR 보기</a>에서 좌석을 골라 다른 화면에 띄워 놓고 찍으면 됩니다.</p>
       </header>
       <div class="stack">
         <div class="step has-shot card">
           <div>
             <h3><span class="n">1</span>좌석을 예약합니다</h3>
-            <span class="path">홈 → 좌석 고르기</span>
+            <span class="path">홈 → 좌석 고르기</span> <a class="openapp" href="https://du-library-ruddy.vercel.app/rooms" target="_blank" rel="noopener">이 화면 열기</a>
+            <div class="viz">
+              <figure class="shot"><div class="shotbox"><img src="{{IMG:seat}}" alt="좌석 지도에서 W-003을 고른 화면. 이용 시간 1~4시간 중 4시간이 선택되어 있고 W-003 예약하기 버튼 아래에 15분 안에 체크인하라는 안내가 있다"><i class="hl" style="left:33.07%;top:56.77%;width:10.13%;height:4.68%"><b>1</b></i><i class="hl" style="left:7.47%;top:73.65%;width:85.33%;height:5.91%"><b>2</b></i><i class="hl" style="left:7.47%;top:80.54%;width:81.07%;height:6.90%"><b>3</b></i><i class="hl" style="left:7.47%;top:38.92%;width:26.13%;height:4.93%"><b>4</b></i></div><figcaption>좌석 고르기</figcaption></figure>
+              <ol class="legend">
+                <li><span>초록색 빈자리를 누릅니다</span></li>
+                <li><span>이용 시간을 고릅니다</span></li>
+                <li><span><b>예약하기</b>. 15분 안에 체크인해야 합니다</span></li>
+                <li><span>고르기 귀찮으면 <b>빠른 예약</b></span></li>
+              </ol>
+            </div>
+            <p class="note">예약하면 15분 안에 그 좌석의 QR을 찍어야 합니다. 늦으면 자동 취소되고 벌점 1점입니다.</p>
+                      <details class="more-d">
+              <summary>자세히</summary>
             <ul>
               <li>좌석 지도에서 초록색 빈자리를 누르고 이용 시간을 고른 뒤 <b>예약하기</b>를 누릅니다.</li>
               <li>고르기 귀찮으면 <b>빠른 예약</b>. 그 열람실의 빈 좌석 하나가 바로 잡힙니다.</li>
               <li>자리에 이미 와 있다면 빈 좌석의 QR을 바로 찍어도 됩니다. 예약과 체크인이 한 번에 됩니다.</li>
             </ul>
-            <p class="note">예약하면 15분 안에 그 좌석의 QR을 찍어야 합니다. 늦으면 자동 취소되고 벌점 1점입니다.</p>
+            </details>
           </div>
-          <figure class="shot"><img src="{{IMG:seat}}" alt="좌석 지도에서 W-003을 고른 화면. 이용 시간 1~4시간 중 4시간이 선택되어 있고 W-003 예약하기 버튼 아래에 15분 안에 체크인하라는 안내가 있다"><figcaption>좌석 고르기</figcaption></figure>
         </div>
 
         <div class="step has-shot card">
           <div>
             <h3><span class="n">2</span>QR을 찍어 체크인합니다</h3>
-            <span class="path">홈 → 내 자리 칸 누르기</span>
+            <span class="path">홈 → 내 자리 칸 누르기</span> <a class="openapp" href="https://du-library-ruddy.vercel.app/" target="_blank" rel="noopener">이 화면 열기</a>
+            <div class="viz">
+              <figure class="shot"><div class="shotbox"><img src="{{IMG:home}}" alt="홈 화면. 이름과 전공 옆에 체크인 대기 W-003, 14분 51초 남음이 표시된 초록색 칸이 있고 아래에 예약 취소와 내 좌석 버튼, 공지 줄, 열람실 카드가 있다"><i class="hl" style="left:50.13%;top:12.32%;width:36.80%;height:13.05%"><b>1</b></i><i class="hl" style="left:56.53%;top:1.48%;width:9.07%;height:4.19%"><b>2</b></i><i class="hl" style="left:9.87%;top:27.34%;width:35.73%;height:4.68%"><b>3</b></i></div><figcaption>홈 · 체크인 대기</figcaption></figure>
+              <ol class="legend">
+                <li><span>내 자리 칸. 누르면 QR 카메라가 켜집니다</span></li>
+                <li><span>여기서도 QR을 찍을 수 있습니다</span></li>
+                <li><span>마음이 바뀌면 <b>예약 취소</b></span></li>
+              </ol>
+            </div>
+            <p class="note">실제 운영에서는 도서관 안에서 찍은 QR만 처리됩니다. 위치를 확인해 반경 200m 밖이면 거절합니다. 지금은 테스트라 꺼 두었습니다.</p>
+                      <details class="more-d">
+              <summary>자세히</summary>
             <ul>
               <li>홈 위쪽의 초록색 내 자리 칸에 좌석 번호와 남은 시간이 나옵니다. 누르면 카메라가 켜집니다.</li>
               <li>내 좌석 QR을 찍으면 버튼을 더 누르지 않아도 바로 체크인됩니다. QR은 <a class="go" href="#seat-qr">좌석 QR 보기</a>에 있습니다.</li>
               <li>다른 좌석을 찍으면 "내 좌석이 아닙니다" 창이 뜹니다. 빈자리면 그 좌석으로 바꿔 체크인할 수 있습니다.</li>
               <li>마음이 바뀌면 <b>예약 취소</b>. 취소한 좌석은 10분 동안 다시 예약할 수 없습니다.</li>
             </ul>
-            <p class="note">실제 운영에서는 도서관 안에서 찍은 QR만 처리됩니다. 위치를 확인해 반경 200m 밖이면 거절합니다. 지금은 테스트라 꺼 두었습니다.</p>
+            </details>
           </div>
-          <figure class="shot"><img src="{{IMG:home}}" alt="홈 화면. 이름과 전공 옆에 체크인 대기 W-003, 14분 51초 남음이 표시된 초록색 칸이 있고 아래에 예약 취소와 내 좌석 버튼, 공지 줄, 열람실 카드가 있다"><figcaption>홈 · 체크인 대기</figcaption></figure>
         </div>
 
         <div class="step has-shot card">
           <div>
             <h3><span class="n">3</span>이용 중에 할 수 있는 일</h3>
-            <span class="path">내 좌석</span>
+            <span class="path">내 좌석</span> <a class="openapp" href="https://du-library-ruddy.vercel.app/me" target="_blank" rel="noopener">이 화면 열기</a>
+            <div class="viz">
+              <figure class="shot"><div class="shotbox"><img src="{{IMG:me}}" alt="내 좌석 화면. W-003 이용 중, 남은 이용 시간 3시간 59분, 연장 0회 제한 없음, 아래에 외출, 연장, 자리 이동, 반납 버튼과 벌점 0점"><i class="hl" style="left:7.47%;top:27.83%;width:80.00%;height:8.62%"><b>1</b></i><i class="hl" style="left:8.53%;top:47.78%;width:38.93%;height:5.67%"><b>2</b></i><i class="hl" style="left:49.07%;top:47.78%;width:38.93%;height:5.67%"><b>3</b></i><i class="hl" style="left:8.53%;top:54.19%;width:38.93%;height:5.67%"><b>4</b></i><i class="hl" style="left:49.07%;top:54.19%;width:38.93%;height:5.67%"><b>5</b></i></div><figcaption>내 좌석</figcaption></figure>
+              <ol class="legend">
+                <li><span>남은 이용 시간</span></li>
+                <li><span><b>외출</b>: 몇 분 안에 돌아와야 하는지 먼저 알려 줍니다</span></li>
+                <li><span><b>연장</b>: 종료 30분 전부터 2시간씩</span></li>
+                <li><span><b>자리 이동</b>: 옮길 좌석의 QR을 찍습니다</span></li>
+                <li><span><b>반납</b></span></li>
+              </ol>
+            </div>
+            <p class="note bad">외출 시간을 넘기면 자동 반납되고 벌점 1점입니다. 외출한 뒤에 혼잡도가 바뀌어도 이미 받은 시간은 그대로입니다.</p>
+                      <details class="more-d">
+              <summary>자세히</summary>
             <ul>
               <li><b>외출</b>: 누르면 지금 혼잡도에서 몇 분 안에 돌아와야 하는지 먼저 알려 줍니다. 돌아와서 좌석 QR을 찍으면 복귀입니다.</li>
               <li><b>연장</b>: 종료 30분 전부터 2시간씩. 한산할 때는 횟수 제한이 없고, 혼잡할 때는 2회까지입니다.</li>
               <li><b>자리 이동</b>: 옮길 좌석의 QR을 찍으면 남은 시간 그대로 옮겨집니다.</li>
               <li><b>반납</b>: 반납한 좌석은 10분 동안 다시 예약할 수 없습니다. 지금은 누르지 말고 좌석을 그대로 둡니다. 뒤 단계에서 씁니다.</li>
             </ul>
-            <p class="note bad">외출 시간을 넘기면 자동 반납되고 벌점 1점입니다. 외출한 뒤에 혼잡도가 바뀌어도 이미 받은 시간은 그대로입니다.</p>
+            </details>
           </div>
-          <figure class="shot"><img src="{{IMG:me}}" alt="내 좌석 화면. W-003 이용 중, 남은 이용 시간 3시간 59분, 연장 0회 제한 없음, 아래에 외출, 연장, 자리 이동, 반납 버튼과 벌점 0점"><figcaption>내 좌석</figcaption></figure>
         </div>
 
         <div class="step has-shot card">
           <div>
             <h3><span class="n">4</span>비어 있는 남의 좌석을 신고합니다</h3>
-            <span class="path">그 좌석의 QR 찍기</span>
+            <span class="path">그 좌석의 QR 찍기</span> <a class="openapp" href="#seat-qr">좌석 QR 보기</a>
+            <div class="viz">
+              <figure class="shot"><div class="shotbox"><img src="{{IMG:report}}" alt="사용 중인 A-054 좌석 화면. 남은 시간 3시간 36분, 이 좌석 빈자리 알림 버튼과 자리비움 신고 버튼"><i class="hl" style="left:8.53%;top:22.17%;width:83.20%;height:6.90%"><b>1</b></i><i class="hl" style="left:8.53%;top:30.79%;width:83.20%;height:5.17%"><b>2</b></i><i class="hl" style="left:8.53%;top:37.44%;width:83.20%;height:6.16%"><b>3</b></i></div><figcaption>남의 좌석 QR을 찍었을 때</figcaption></figure>
+              <ol class="legend">
+                <li><span>그 좌석의 남은 시간이 보입니다</span></li>
+                <li><span><b>빈자리 알림</b>: 이 좌석이 비면 알려 줍니다</span></li>
+                <li><span><b>자리비움 신고</b>: 사람이 없을 때 누릅니다</span></li>
+              </ol>
+            </div>
+            <p class="note bad">앉아 있는 좌석을 신고하면 허위 신고입니다. 3회면 7일간 신고할 수 없고 벌점 1점입니다.</p>
+                      <details class="more-d">
+              <summary>자세히</summary>
             <ul>
               <li>사용 중으로 표시됐는데 사람이 없는 좌석의 QR을 찍으면 남은 시간과 <b>자리비움 신고</b> 버튼이 나옵니다. 지금은 화면만 확인하고, 실제 신고는 <a href="#together">함께 해 보기</a>에서 합니다.</li>
               <li>신고하면 이용자에게 "자리 확인 요청"이 가고, 10~20분 안에 QR을 찍지 않으면 자동 반납됩니다.</li>
@@ -478,27 +593,37 @@
               <li>반납되면 신고자가 5분 동안 그 좌석을 먼저 예약할 수 있습니다.</li>
               <li><b>이 좌석 빈자리 알림</b>을 켜면 그 좌석이 비거나 종료 5분 전에 알려 줍니다.</li>
             </ul>
-            <p class="note bad">앉아 있는 좌석을 신고하면 허위 신고입니다. 3회면 7일간 신고할 수 없고 벌점 1점입니다.</p>
+            </details>
           </div>
-          <figure class="shot"><img src="{{IMG:report}}" alt="사용 중인 A-054 좌석 화면. 남은 시간 3시간 36분, 이 좌석 빈자리 알림 버튼과 자리비움 신고 버튼"><figcaption>남의 좌석 QR을 찍었을 때</figcaption></figure>
         </div>
 
         <div class="step has-shot card">
           <div>
             <h3><span class="n">5</span>언제 가면 한산한지 봅니다</h3>
-            <span class="path">혼잡도</span>
+            <span class="path">혼잡도</span> <a class="openapp" href="https://du-library-ruddy.vercel.app/stats" target="_blank" rel="noopener">이 화면 열기</a>
+            <div class="viz">
+              <figure class="shot"><div class="shotbox"><img src="{{IMG:stats}}" alt="혼잡도 화면. 목요일이 선택되어 있고 지금 31퍼센트 여유, 7시부터 22시까지 시간대별 막대 그래프"><i class="hl" style="left:4.27%;top:15.76%;width:53.33%;height:5.42%"><b>1</b></i><i class="hl" style="left:8.00%;top:24.88%;width:84.27%;height:5.42%"><b>2</b></i><i class="hl" style="left:8.00%;top:32.27%;width:35.20%;height:6.65%"><b>3</b></i><i class="hl" style="left:8.00%;top:42.49%;width:84.27%;height:18.72%"><b>4</b></i></div><figcaption>혼잡도</figcaption></figure>
+              <ol class="legend">
+                <li><span>열람실을 고릅니다</span></li>
+                <li><span>요일을 고릅니다</span></li>
+                <li><span>지금 이용률</span></li>
+                <li><span>시간대별 평균. 색이 여유·보통·혼잡입니다</span></li>
+              </ol>
+            </div>
+                      <details class="more-d">
+              <summary>자세히</summary>
             <ul>
               <li>요일을 고르면 시간대별 평균 이용률이 막대로 나옵니다. 색이 여유·보통·혼잡입니다.</li>
               <li>오늘은 지금 시각의 실제 이용률이 함께 보입니다.</li>
               <li>자리가 없으면 열람실 카드의 종 버튼으로 빈자리 알림을 켜 둘 수 있습니다.</li>
             </ul>
+            </details>
           </div>
-          <figure class="shot"><img src="{{IMG:stats}}" alt="혼잡도 화면. 목요일이 선택되어 있고 지금 31퍼센트 여유, 7시부터 22시까지 시간대별 막대 그래프"><figcaption>혼잡도</figcaption></figure>
         </div>
 
         <div class="step card">
           <h3><span class="n">6</span>문제가 생겼을 때</h3>
-          <span class="path">내 좌석 → 도움 요청 · 벌점</span>
+          <span class="path">내 좌석 → 도움 요청 · 벌점</span> <a class="openapp" href="https://du-library-ruddy.vercel.app/me" target="_blank" rel="noopener">이 화면 열기</a>
           <ul>
             <li><b>도움 요청</b>: QR이 안 찍히거나 좌석에 문제가 있으면 보냅니다. 보내는 순간부터 관리자가 처리할 때까지 자동 취소·반납·벌점이 멈춥니다. 다른 좌석 이야기면 QR을 찍거나 번호를 적어 지정합니다.</li>
             <li><b>관리자와 대화</b>: 관리자가 대화를 열면 그 자리에서 메시지를 주고받습니다.</li>
@@ -515,13 +640,24 @@
       <header>
         <span class="role admin">5단계 · 관리자</span>
         <h2>관리자 따라 하기</h2>
-        <p>이제 관리자 계정(a + 내 학번)으로 들어갑니다. 기기가 한 대면 로그아웃하고 다시 로그인합니다. 방금 학생으로 잡아 둔 내 좌석과 보내 둔 도움 요청이 그대로 보입니다.</p>
+        <p>이제 관리자 계정(a + 내 학번)으로 들어갑니다. PC와 휴대폰 모두 되지만 PC가 더 쉽습니다. 기기가 한 대면 로그아웃하고 다시 로그인합니다. 방금 학생으로 잡아 둔 내 좌석과 보내 둔 도움 요청이 그대로 보입니다.</p>
       </header>
       <div class="stack">
         <div class="step has-shot card">
           <div>
             <h3><span class="n">1</span>관제에서 전체를 봅니다</h3>
-            <span class="path">관제</span>
+            <span class="path">관제</span> <a class="openapp" href="https://du-library-ruddy.vercel.app/admin" target="_blank" rel="noopener">이 화면 열기</a>
+            <div class="viz">
+              <figure class="shot"><div class="shotbox"><img src="{{IMG:admin}}" alt="관제 화면. 처리 대기 2건 버튼, 지금 이용 중 169, 오늘 예약 838, 층별 이용률 탭과 좌석 지도"><i class="hl" style="left:4.27%;top:26.35%;width:36.27%;height:5.91%"><b>1</b></i><i class="hl" style="left:4.27%;top:34.24%;width:87.47%;height:25.12%"><b>2</b></i><i class="hl" style="left:4.27%;top:61.08%;width:72.00%;height:5.67%"><b>3</b></i><i class="hl" style="left:4.27%;top:68.47%;width:87.47%;height:23.40%"><b>4</b></i></div><figcaption>관제</figcaption></figure>
+              <ol class="legend">
+                <li><span>처리할 일이 있으면 빨간 버튼이 뜹니다</span></li>
+                <li><span>오늘 예약·노쇼·자동 회수·신고 건수</span></li>
+                <li><span>층을 고릅니다</span></li>
+                <li><span>좌석 지도. 좌석을 누르면 이용자와 할 수 있는 일이 나옵니다</span></li>
+              </ol>
+            </div>
+                      <details class="more-d">
+              <summary>자세히</summary>
             <ul>
               <li>오늘 예약·노쇼·자동 회수 건수와 층별 이용률이 위에 있습니다.</li>
               <li>좌석 지도에서 좌석을 누르면 이용자, 남은 시간, 벌점이 나옵니다. 방금 학생으로 잡은 내 좌석을 찾아 눌러 봅니다.</li>
@@ -529,14 +665,26 @@
               <li>빈 좌석에는 학번을 적어 대신 배정할 수 있습니다. 휴대폰이 고장 난 학생을 위한 기능입니다.</li>
               <li>맨 아래에서 그 좌석을 닫습니다. 이용 중이면 "이용이 끝나면 닫기"와 "지금 닫기" 중에 고릅니다.</li>
             </ul>
+            </details>
           </div>
-          <figure class="shot"><img src="{{IMG:admin}}" alt="관제 화면. 처리 대기 2건 버튼, 지금 이용 중 169, 오늘 예약 838, 층별 이용률 탭과 좌석 지도"><figcaption>관제</figcaption></figure>
         </div>
 
         <div class="step has-shot card">
           <div>
             <h3><span class="n">2</span>처리 대기를 비웁니다</h3>
-            <span class="path">처리 대기</span>
+            <span class="path">처리 대기</span> <a class="openapp" href="https://du-library-ruddy.vercel.app/admin/reports" target="_blank" rel="noopener">이 화면 열기</a>
+            <div class="viz">
+              <figure class="shot"><div class="shotbox"><img src="{{IMG:areports}}" alt="처리 대기 화면. 위에 전체, 자리비움 신고, 도움 요청 칩. 신고 카드에 자동 반납까지 남은 시간, 이용자와 신고자가 나란히 있다"><i class="hl" style="left:3.73%;top:27.59%;width:93.33%;height:5.67%"><b>1</b></i><i class="hl" style="left:8.00%;top:45.57%;width:31.47%;height:2.96%"><b>2</b></i><i class="hl" style="left:8.53%;top:51.72%;width:38.40%;height:20.69%"><b>3</b></i><i class="hl" style="left:49.07%;top:51.72%;width:38.40%;height:20.69%"><b>4</b></i><i class="hl" style="left:8.53%;top:74.14%;width:80.00%;height:5.67%"><b>5</b></i></div><figcaption>처리 대기 · 신고</figcaption></figure>
+              <ol class="legend">
+                <li><span>종류별로 골라 봅니다</span></li>
+                <li><span>자동 반납까지 남은 시간</span></li>
+                <li><span>이용자: 체크인 시각과 남은 시간</span></li>
+                <li><span>신고자: 신고 시각과 당시 이용률</span></li>
+                <li><span>신고자와 대화. 관리자가 먼저 보내야 열립니다</span></li>
+              </ol>
+            </div>
+                      <details class="more-d">
+              <summary>자세히</summary>
             <ul>
               <li>위쪽 칩으로 자리비움 신고, 도움 요청, 이의신청, 보관 중인 짐을 오갑니다. 건마다 접혀 있다가 누르면 펼쳐집니다.</li>
               <li><b>신고</b>: 이용자와 신고자가 나란히 보이고 이용자의 남은 시간이 나옵니다. 확인하러 가기 전에 <b>확인 시작</b>을 누르면 양쪽에 알림이 가고 자동 반납이 멈춥니다.</li>
@@ -544,14 +692,25 @@
               <li><b>이의신청</b>: 승인하면 벌점이 취소되고, 반려하면 답변이 학생에게 갑니다.</li>
               <li>끝난 건은 아래 "방금 끝난 건"에 한 시간 동안 남습니다. 관리자가 처리했으면 누가 했는지, 아니면 어떻게 끝났는지가 보입니다.</li>
             </ul>
+            </details>
           </div>
-          <figure class="shot"><img src="{{IMG:areports}}" alt="처리 대기 화면. 위에 전체, 자리비움 신고, 도움 요청 칩. 신고 카드에 자동 반납까지 남은 시간, 이용자와 신고자가 나란히 있다"><figcaption>처리 대기 · 신고</figcaption></figure>
         </div>
 
         <div class="step has-shot card">
           <div>
             <h3><span class="n">3</span>신고에 결론을 냅니다</h3>
-            <span class="path">처리 대기 → 신고 카드</span>
+            <span class="path">처리 대기 → 신고 카드</span> <a class="openapp" href="https://du-library-ruddy.vercel.app/admin/reports" target="_blank" rel="noopener">이 화면 열기</a>
+            <div class="viz">
+              <figure class="shot"><div class="shotbox"><img src="{{IMG:abuttons}}" alt="신고 카드 아래쪽. 확인 시작, 보관할 짐 입력칸, 반납 확정, 돌아옴, 반납 10분 연장, 허위 신고 버튼"><i class="hl" style="left:8.53%;top:40.52%;width:78.93%;height:5.67%"><b>1</b></i><i class="hl" style="left:8.53%;top:47.41%;width:78.93%;height:5.91%"><b>2</b></i><i class="hl" style="left:8.53%;top:54.31%;width:38.93%;height:5.67%"><b>3</b></i><i class="hl" style="left:49.07%;top:54.31%;width:38.93%;height:5.67%"><b>4</b></i><i class="hl" style="left:8.53%;top:60.71%;width:38.93%;height:5.67%"><b>5</b></i><i class="hl" style="left:49.07%;top:60.71%;width:38.93%;height:5.67%"><b>6</b></i></div><figcaption>신고 처리 버튼</figcaption></figure>
+              <ol class="legend">
+                <li><span><b>확인 시작</b>: 내가 맡고, 자동 반납을 멈춥니다</span></li>
+                <li><span>남은 짐이 있으면 적습니다</span></li>
+                <li><span><b>반납 확정</b></span></li>
+                <li><span><b>돌아옴</b></span></li>
+                <li><span><b>반납 10분 연장</b></span></li>
+                <li><span><b>허위 신고</b></span></li>
+              </ol>
+            </div>
             <div class="tablebox" style="margin-top:12px">
               <table>
                 <thead><tr><th>버튼</th><th>결과</th></tr></thead>
@@ -564,14 +723,24 @@
               </table>
             </div>
             <p>자리에 짐이 남아 있으면 "보관할 짐"에 적고 반납 확정을 누릅니다. 보관 번호가 만들어지고 이용자에게 찾는 곳과 기한이 갑니다.</p>
-          </div>
-          <figure class="shot"><img src="{{IMG:abuttons}}" alt="신고 카드 아래쪽. 확인 시작, 보관할 짐 입력칸, 반납 확정, 돌아옴, 반납 10분 연장, 허위 신고 버튼"><figcaption>신고 처리 버튼</figcaption></figure>
+                    </div>
         </div>
 
         <div class="step has-shot card" id="claim">
           <div>
           <h3><span class="n">4</span>관리자가 여러 명일 때</h3>
-          <span class="path">처리 대기 → 내가 맡기 · 넘겨받기</span>
+          <span class="path">처리 대기 → 내가 맡기 · 넘겨받기</span> <a class="openapp" href="https://du-library-ruddy.vercel.app/admin/reports" target="_blank" rel="noopener">이 화면 열기</a>
+            <div class="viz">
+              <figure class="shot"><div class="shotbox"><img src="{{IMG:claim}}" alt="처리 대기의 도움 요청 카드. 제목 옆에 이동욱 처리 중 표시가 있고, 아래 노란 줄에 이동욱 처리 중 7분째와 넘겨받기 버튼. 그 아래 대화와 버튼은 흐리게 잠겨 있다"><i class="hl" style="left:8.53%;top:25.00%;width:22.93%;height:2.71%"><b>1</b></i><i class="hl" style="left:8.53%;top:45.57%;width:52.27%;height:7.39%"><b>2</b></i><i class="hl" style="left:62.40%;top:46.55%;width:22.93%;height:5.42%"><b>3</b></i><i class="hl" style="left:8.53%;top:54.68%;width:78.93%;height:36.95%"><b>4</b></i></div><figcaption>다른 관리자가 맡은 건</figcaption></figure>
+              <ol class="legend">
+                <li><span>카드 제목 옆에 누가 맡았는지 보입니다</span></li>
+                <li><span>맡은 사람과 몇 분째인지</span></li>
+                <li><span><b>넘겨받기</b>: 원래 맡은 사람에게 알림이 갑니다</span></li>
+                <li><span>다른 관리자가 맡은 건은 잠깁니다</span></li>
+              </ol>
+            </div>
+                      <details class="more-d">
+              <summary>자세히</summary>
           <ul>
             <li>신고, 도움 요청, 이의신청은 모든 관리자에게 똑같이 들어옵니다.</li>
             <li>처리하려는 사람이 먼저 <b>내가 맡기</b>를 누릅니다. 신고는 <b>확인 시작</b>이 맡기입니다. 그 순간부터 모든 관리자의 카드에 "○○ 처리 중 · 몇 분째"가 보입니다.</li>
@@ -581,8 +750,8 @@
             <li>맡지 않고 바로 처리해도 처리한 사람이 남습니다. "방금 끝난 건"에 "○○ · 반납 확정"처럼 보입니다.</li>
             <li>도움 요청을 관리자가 맡으면 학생 화면에도 "관리자 확인 중"이 뜹니다.</li>
           </ul>
+            </details>
           </div>
-          <figure class="shot"><img src="{{IMG:claim}}" alt="처리 대기의 도움 요청 카드. 제목 옆에 이동욱 처리 중 표시가 있고, 아래 노란 줄에 이동욱 처리 중 7분째와 넘겨받기 버튼. 그 아래 대화와 버튼은 흐리게 잠겨 있다"><figcaption>다른 관리자가 맡은 건</figcaption></figure>
         </div>
 
         <div class="step card">
@@ -616,7 +785,7 @@
           <button type="button" data-dev="one" aria-pressed="false">기기 한 대</button>
         </div>
         <div class="devices">
-          <div class="dev-two"><b>기기 두 대</b><span>한 대는 학생(내 학번), 한 대는 관리자(a + 내 학번)로 로그인해 둡니다. 휴대폰 두 대나 휴대폰 + PC 모두 됩니다. 상대 화면이 바로 바뀌는 것을 볼 수 있습니다. 좌석 QR은 한쪽 화면에 띄우고 다른 쪽으로 찍습니다.</span></div>
+          <div class="dev-two"><b>기기 두 대</b><span>휴대폰은 학생(내 학번), PC는 관리자(a + 내 학번)로 로그인해 두는 것이 가장 쉽습니다. 휴대폰 두 대도 됩니다. 상대 화면이 바로 바뀌는 것을 볼 수 있습니다. 좌석 QR은 한쪽 화면에 띄우고 다른 쪽으로 찍습니다.</span></div>
           <div class="dev-one"><b>기기 한 대</b><span>아래 순서의 "전환" 줄마다 로그아웃하고 다른 계정으로 다시 로그인합니다. 화면이 바뀌는 순간은 볼 수 없고, 다시 들어가서 결과를 확인합니다. QR은 찍을 수 없으니 좌석 QR 화면의 "이 기기에서 좌석 열기"를 누릅니다. 아이폰은 사파리로 열리므로 사파리에서도 한 번 로그인해 둡니다.</span></div>
         </div>
       </header>
@@ -684,22 +853,43 @@
         <div class="step has-shot card">
           <div>
             <h3 style="display:block">5. 혼잡도를 바꿔 규칙이 달라지는 것 보기</h3>
-            <span class="path">관리자 → 시연</span>
+            <span class="path">관리자 → 시연</span> <a class="openapp" href="https://du-library-ruddy.vercel.app/admin/demo" target="_blank" rel="noopener">이 화면 열기</a>
+            <div class="viz">
+              <figure class="shot"><div class="shotbox"><img src="{{IMG:demo}}" alt="시연 탭의 학생 시나리오. 가상 학생과 열람실 선택, 현재 상태 줄, 예약·체크인과 이용 묶음의 상황 버튼들"><i class="hl" style="left:8.00%;top:21.43%;width:80.53%;height:5.91%"><b>1</b></i><i class="hl" style="left:4.27%;top:29.31%;width:88.53%;height:5.42%"><b>2</b></i><i class="hl" style="left:8.00%;top:39.90%;width:80.53%;height:19.21%"><b>3</b></i></div><figcaption>시연 · 학생 시나리오</figcaption></figure>
+              <ol class="legend">
+                <li><span>학생과 열람실을 고릅니다</span></li>
+                <li><span>그 학생의 지금 상태</span></li>
+                <li><span>누르면 그 학생이 바로 그 상황이 됩니다</span></li>
+              </ol>
+            </div>
+            <p class="note bad">전체 초기화는 모든 예약, 벌점, 신고, 알림을 지웁니다. 되돌릴 수 없습니다.</p>
+                      <details class="more-d">
+              <summary>자세히</summary>
             <ul>
               <li>층별 혼잡도를 여유 30%, 보통 65%, 혼잡 90%로 맞출 수 있습니다. 가상 학생으로 채웁니다. 자동 이용이 켜져 있으면 잠기므로 먼저 끕니다.</li>
               <li>혼잡으로 바꾼 뒤 이용자 화면에서 외출을 누르면 60분이던 안내가 20분으로 바뀝니다. 연장도 2회로 제한됩니다.</li>
               <li><b>학생 시나리오</b>의 버튼을 누르면 고른 학생이 바로 그 상황이 됩니다. 체크인 마감 1분 전, 외출 초과, 신고 접수 같은 것을 기다리지 않고 볼 수 있습니다.</li>
               <li><b>자동 시연</b>은 상황을 순서대로 담아 두고 몇 초 간격으로 실행합니다. 발표 때 손을 떼고 보여 줄 수 있습니다.</li>
             </ul>
-            <p class="note bad">전체 초기화는 모든 예약, 벌점, 신고, 알림을 지웁니다. 되돌릴 수 없습니다.</p>
+            </details>
           </div>
-          <figure class="shot"><img src="{{IMG:demo}}" alt="시연 탭의 학생 시나리오. 가상 학생과 열람실 선택, 현재 상태 줄, 예약·체크인과 이용 묶음의 상황 버튼들"><figcaption>시연 · 학생 시나리오</figcaption></figure>
         </div>
 
         <div class="step has-shot card" id="auto">
           <div>
             <h3 style="display:block">6. 가상 학생 자동 이용을 켜 두고 테스트하기</h3>
-            <span class="path">관리자 → 시연 → 가상 학생 자동 이용</span>
+            <span class="path">관리자 → 시연 → 가상 학생 자동 이용</span> <a class="openapp" href="https://du-library-ruddy.vercel.app/admin/demo" target="_blank" rel="noopener">이 화면 열기</a>
+            <div class="viz">
+              <figure class="shot"><div class="shotbox"><img src="{{IMG:auto}}" alt="시연 탭 맨 위. 가상 학생 자동 이용 스위치가 켜져 있고, 아래 층별 혼잡도의 여유·보통·혼잡 버튼과 전체 초기화가 흐리게 잠겨 있다"><i class="hl" style="left:4.27%;top:29.06%;width:87.47%;height:10.84%"><b>1</b></i><i class="hl" style="left:59.73%;top:19.46%;width:32.53%;height:5.67%"><b>2</b></i><i class="hl" style="left:8.53%;top:70.69%;width:78.93%;height:13.30%"><b>3</b></i></div><figcaption>시연 · 자동 이용 켜짐</figcaption></figure>
+              <ol class="legend">
+                <li><span>스위치로 켜고 끕니다</span></li>
+                <li><span>켜져 있으면 전체 초기화가 잠깁니다</span></li>
+                <li><span>혼잡도 조정도 잠깁니다</span></li>
+              </ol>
+            </div>
+            <p class="note">켜져 있는 동안 층별 혼잡도 조정과 전체 초기화는 잠깁니다. 끄면 좌석은 그 상태로 남고 다시 쓸 수 있습니다.</p>
+                      <details class="more-d">
+              <summary>자세히</summary>
             <ul>
               <li>켜 두면 가상 학생 440명이 매일 운영 시간에 스스로 예약, 체크인, 외출, 복귀, 연장, 자리 이동, 반납을 합니다. 실제 학생과 똑같은 규칙을 거치므로 미체크인 벌점이나 예약 정지도 생깁니다.</li>
               <li>오전에 차오르고 오후 3~5시에 가장 붐볐다가 저녁에 빠집니다. 5층은 혼잡(80% 이상)까지 올라가고 2층은 보통에 머뭅니다.</li>
@@ -708,9 +898,8 @@
               <li>팀원과 관리자 계정은 자동으로 움직이지 않습니다. 가상 학생으로 직접 로그인하면 그 학생은 3시간 동안 자동에서 빠집니다.</li>
               <li>관리자가 관제나 학생 시나리오로 손댄 좌석과 학생은 자동에서 빠집니다. 서로 덮어쓰지 않습니다.</li>
             </ul>
-            <p class="note">켜져 있는 동안 층별 혼잡도 조정과 전체 초기화는 잠깁니다. 끄면 좌석은 그 상태로 남고 다시 쓸 수 있습니다.</p>
+            </details>
           </div>
-          <figure class="shot"><img src="{{IMG:auto}}" alt="시연 탭 맨 위. 가상 학생 자동 이용 스위치가 켜져 있고, 아래 층별 혼잡도의 여유·보통·혼잡 버튼과 전체 초기화가 흐리게 잠겨 있다"><figcaption>시연 · 자동 이용 켜짐</figcaption></figure>
         </div>
 
         <div class="scn card">
@@ -784,36 +973,120 @@
 {{VIEWS}}
 
 <script>
-  // 화면에 보이는 구역을 목차에 표시한다
+  // 한 화면에 한 단계씩 보여 주고, 아래 막대·옆으로 밀기·방향키로 넘긴다
   (function () {
+    var guide = document.getElementById("view-guide");
+    var main = guide.querySelector("main");
+    var hero = guide.querySelector(".hero");
+    var secs = Array.prototype.slice.call(main.children).filter(function (e) { return e.tagName === "SECTION"; });
     var links = Array.prototype.slice.call(document.querySelectorAll("nav.toc li:not(.ext) a"));
     var list = document.querySelector("nav.toc ol");
-    var sections = links.map(function (a) { return document.getElementById(a.getAttribute("href").slice(1)); });
-    var current = null;
-    function mark() {
-      // 화면 위쪽 3분의 1 지점을 지난 구역 가운데 마지막 것이 지금 보는 구역
-      var line = window.innerHeight * 0.33;
-      var idx = 0;
-      for (var i = 0; i < sections.length; i++) {
-        if (sections[i] && sections[i].getBoundingClientRect().top <= line) idx = i;
-      }
-      // 맨 아래까지 내렸으면 마지막 구역
-      if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4) idx = sections.length - 1;
-      if (idx === current) return;
-      current = idx;
-      links.forEach(function (a, i) {
-        if (i === idx) a.setAttribute("aria-current", "true");
+    var slides = [];
+    secs.forEach(function (sec, si) {
+      var stack = null;
+      Array.prototype.forEach.call(sec.children, function (c) { if (c.classList.contains("stack")) stack = c; });
+      var items = stack ? Array.prototype.slice.call(stack.children) : Array.prototype.filter.call(sec.children, function (c) { return c.classList.contains("card"); });
+      items.forEach(function (el, k) { slides.push({ si: si, el: el, k: k, n: items.length, items: items }); });
+    });
+    if (!slides.length) return;
+    document.documentElement.classList.add("js-pager");
+
+    var bar = document.createElement("div");
+    bar.className = "pager";
+    bar.innerHTML = '<div class="pg-prog"><i></i></div><div class="pager-in"><button type="button" class="pg" data-prev>← 이전</button><div class="pg-mid" aria-live="polite"><b></b><span></span></div><button type="button" class="pg go" data-next>다음 →</button></div>';
+    guide.appendChild(bar);
+    var prev = bar.querySelector("[data-prev]");
+    var next = bar.querySelector("[data-next]");
+    var cur = -1;
+
+    function show(i, keepScroll) {
+      i = Math.max(0, Math.min(slides.length - 1, i));
+      var sl = slides[i];
+      secs.forEach(function (sec, si) { sec.hidden = si !== sl.si; });
+      sl.items.forEach(function (el) { el.hidden = el !== sl.el; });
+      secs[sl.si].classList.toggle("compact", sl.k > 0);
+      if (hero) hero.hidden = i !== 0;
+      links.forEach(function (a, li) {
+        if (li === sl.si) a.setAttribute("aria-current", "true");
         else a.removeAttribute("aria-current");
       });
-      // 좁은 화면의 가로 목차에서는 표시된 칩이 보이게 옆으로 옮긴다
-      var a = links[idx];
-      if (list && list.scrollWidth > list.clientWidth) {
-        list.scrollLeft = a.parentElement.offsetLeft - list.offsetLeft - (list.clientWidth - a.offsetWidth) / 2;
-      }
+      var a = links[sl.si];
+      if (a && list && list.scrollWidth > list.clientWidth) list.scrollLeft = a.parentElement.offsetLeft - (list.clientWidth - a.offsetWidth) / 2;
+      bar.querySelector(".pg-mid b").textContent = (sl.si + 1) + "단계 · " + (a ? a.textContent : "");
+      bar.querySelector(".pg-mid span").textContent = (sl.k + 1) + " / " + sl.n;
+      bar.querySelector(".pg-prog i").style.width = ((i + 1) / slides.length * 100) + "%";
+      prev.disabled = i === 0;
+      next.disabled = i === slides.length - 1;
+      next.textContent = i === slides.length - 1 ? "끝" : sl.k === sl.n - 1 ? "다음 단계 →" : "다음 →";
+      if (i !== cur && !keepScroll) window.scrollTo(0, 0);
+      cur = i;
+      try { localStorage.setItem("du-guide-at", String(i)); } catch (e) {}
     }
-    window.addEventListener("scroll", mark, { passive: true });
-    window.addEventListener("resize", mark);
-    mark();
+    function indexOfTarget(id) {
+      var el = id && document.getElementById(id);
+      if (!el || !main.contains(el)) return -1;
+      for (var i = 0; i < slides.length; i++) if (slides[i].el === el || slides[i].el.contains(el)) return i;
+      for (var j = 0; j < slides.length; j++) if (secs[slides[j].si] === el) return j;
+      return -1;
+    }
+    function fromHash() {
+      var i = indexOfTarget(location.hash.slice(1));
+      if (i >= 0) show(i);
+      return i >= 0;
+    }
+
+    prev.addEventListener("click", function () { show(cur - 1); });
+    next.addEventListener("click", function () { show(cur + 1); });
+    links.forEach(function (a) {
+      a.addEventListener("click", function (e) {
+        var i = indexOfTarget(a.getAttribute("href").slice(1));
+        if (i < 0) return;
+        e.preventDefault();
+        show(i);
+      });
+    });
+    // 본문 안에서 다른 단계를 가리키는 링크
+    main.addEventListener("click", function (e) {
+      var a = e.target.closest ? e.target.closest('a[href^="#"]') : null;
+      if (!a) return;
+      var i = indexOfTarget(a.getAttribute("href").slice(1));
+      if (i < 0) return;
+      e.preventDefault();
+      show(i);
+    });
+    window.addEventListener("hashchange", fromHash);
+    document.addEventListener("keydown", function (e) {
+      if (guide.hidden || e.altKey || e.ctrlKey || e.metaKey) return;
+      var t = e.target;
+      if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.tagName === "SELECT")) return;
+      if (e.key === "ArrowRight") show(cur + 1);
+      else if (e.key === "ArrowLeft") show(cur - 1);
+    });
+    // 옆으로 밀어 넘기기. 표처럼 옆으로 스크롤되는 곳에서 시작한 밀기는 건드리지 않는다
+    var sx = 0, sy = 0, ok = false;
+    main.addEventListener("touchstart", function (e) {
+      var t = e.target;
+      ok = e.touches.length === 1;
+      while (ok && t && t !== main) {
+        if (t.scrollWidth > t.clientWidth + 4 && getComputedStyle(t).overflowX !== "visible") ok = false;
+        t = t.parentElement;
+      }
+      sx = e.touches[0].clientX;
+      sy = e.touches[0].clientY;
+    }, { passive: true });
+    main.addEventListener("touchend", function (e) {
+      if (!ok) return;
+      var dx = e.changedTouches[0].clientX - sx;
+      var dy = e.changedTouches[0].clientY - sy;
+      if (Math.abs(dx) < 64 || Math.abs(dx) < Math.abs(dy) * 2) return;
+      show(cur + (dx < 0 ? 1 : -1));
+    }, { passive: true });
+
+    if (!fromHash()) {
+      var saved = 0;
+      try { saved = Number(localStorage.getItem("du-guide-at")) || 0; } catch (e) {}
+      show(saved, true);
+    }
   })();
 
   // 가상 학생 찾기: 학번, 이름, 학과
