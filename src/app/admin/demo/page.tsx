@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { ArrowDown, ArrowUp, Play, Plus, RotateCcw, Shuffle, Square, Trash2, X } from "lucide-react";
 import { OccupancyMeter } from "@/components/OccupancyMeter";
 import { useApp } from "@/components/Providers";
-import { Button, Confirm, Panel, Skeleton, Tag, TimeLeft, inputClass, useAction } from "@/components/ui";
+import { Button, Confirm, Hint, Panel, Skeleton, Tag, TimeLeft, inputClass, useAction } from "@/components/ui";
 import { useHome } from "@/lib/hooks";
 import { rpc, supabase } from "@/lib/supabase";
 import { MODE_LABEL, STATE_LABEL, type Mode, type RoomSummary } from "@/lib/types";
@@ -110,7 +110,7 @@ const SEQ_KEY = "du-demo-seq";
 let stepId = 1;
 const toSteps = (keys: string[], delay: number): Step[] => keys.map((key, i) => ({ id: stepId++, key, delay: i === 0 ? 0 : delay, who: "A" }));
 
-function RoomFill({ room, onDone }: { room: RoomSummary; onDone: () => void }) {
+function RoomFill({ room, onDone, locked }: { room: RoomSummary; onDone: () => void; locked: boolean }) {
   const { toast } = useApp();
   const { busy, run } = useAction((m) => toast(m, "error"));
   const [pct, setPct] = useState(room.pct);
@@ -144,7 +144,7 @@ function RoomFill({ room, onDone }: { room: RoomSummary; onDone: () => void }) {
 
       <div className="mt-4 grid grid-cols-3 gap-2">
         {PRESETS.map((p) => (
-          <Button key={p.pct} busy={busy === `f${p.pct}`} disabled={!!busy} onClick={() => fill(p.pct)}>
+          <Button key={p.pct} busy={busy === `f${p.pct}`} disabled={!!busy || locked} onClick={() => fill(p.pct)}>
             {p.label} {p.pct}%
           </Button>
         ))}
@@ -157,11 +157,12 @@ function RoomFill({ room, onDone }: { room: RoomSummary; onDone: () => void }) {
           step={5}
           value={pct}
           onChange={(e) => setPct(Number(e.target.value))}
+          disabled={locked}
           aria-label={`${room.name} 혼잡도`}
           className="h-11 min-w-0 flex-1 accent-[var(--color-du-deep,#00826f)]"
         />
         <span className="tabular w-11 text-right text-sm font-semibold">{pct}%</span>
-        <Button variant="primary" busy={!!busy && !PRESETS.some((p) => busy === `f${p.pct}`)} disabled={!!busy} onClick={() => fill(pct)}>
+        <Button variant="primary" busy={!!busy && !PRESETS.some((p) => busy === `f${p.pct}`)} disabled={!!busy || locked} onClick={() => fill(pct)}>
           적용
         </Button>
       </div>
@@ -200,13 +201,16 @@ export default function DemoPage() {
   const [state, setState] = useState<DemoState | null>(null);
   const [flags, setFlags] = useState<Record<string, boolean>>({});
   const [forced, setForced] = useState<Mode | "auto">("auto");
+  // 가상 학생 자동 이용: 켜져 있으면 혼잡도 조정과 전체 초기화를 잠근다
+  const [auto, setAuto] = useState(false);
 
   const loadOps = useCallback(async () => {
     const [{ data: st }, { data: per }] = await Promise.all([
-      supabase.from("settings").select("key,value").in("key", FLAGS.map((f) => f.key)),
+      supabase.from("settings").select("key,value").in("key", [...FLAGS.map((f) => f.key), "auto_sim"]),
       supabase.from("operating_periods").select("mode").eq("label", "시연").limit(1),
     ]);
     setFlags(Object.fromEntries((st ?? []).map((r) => [r.key, r.value === true])));
+    setAuto((st ?? []).some((r) => r.key === "auto_sim" && r.value === true));
     setForced(((per ?? [])[0]?.mode as Mode) ?? "auto");
   }, []);
 
@@ -250,6 +254,12 @@ export default function DemoPage() {
       .catch(() => setState(null));
   }, [sid]);
 
+  useEffect(() => {
+    if (!auto) return;
+    const t = setInterval(reload, 20000);
+    return () => clearInterval(t);
+  }, [auto, reload]);
+
   const rooms = home?.rooms ?? [];
   const room = roomId ?? rooms[0]?.id ?? null;
 
@@ -272,6 +282,14 @@ export default function DemoPage() {
       await rpc("admin_demo", { p_action: "setting", p_student: key, p_arg: String(on) });
       setFlags((f) => ({ ...f, [key]: on }));
       reload();
+    });
+
+  const toggleAuto = (on: boolean) =>
+    run("auto", async () => {
+      await rpc("admin_set_auto_sim", { p_on: on });
+      setAuto(on);
+      reload();
+      toast(on ? "가상 학생들이 스스로 움직이기 시작했습니다." : "자동 이용을 껐습니다. 좌석은 지금 상태로 남습니다.", "ok");
     });
 
   // 담아 둔 상황을 차례로 실행. 멈추면 지금 기다리던 상황부터 실행하지 않는다
@@ -337,7 +355,7 @@ export default function DemoPage() {
     <div className="space-y-8">
       <div className="flex items-center justify-between gap-3">
         <h1 className="text-[24px] font-bold leading-tight">시연</h1>
-        <Button variant="danger" disabled={!!busy || !!playing} onClick={() => setWipe(true)}>
+        <Button variant="danger" disabled={!!busy || !!playing || auto} onClick={() => setWipe(true)}>
           <Trash2 size={16} aria-hidden />
           전체 초기화
         </Button>
@@ -354,6 +372,27 @@ export default function DemoPage() {
         </Confirm>
       )}
 
+      <Panel className="p-4">
+        <div className="flex items-center justify-between gap-3">
+          <span className="flex min-w-0 items-center gap-2 text-[16px] font-bold">
+            가상 학생 자동 이용
+            {auto && <Tag tone="deep">켜짐</Tag>}
+          </span>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={auto}
+            aria-label="가상 학생 자동 이용"
+            disabled={!!busy || !!playing}
+            onClick={() => toggleAuto(!auto)}
+            className={cx("relative h-7 w-12 shrink-0 rounded-full transition-colors duration-150", auto ? "bg-du-deep" : "bg-[#c5cecb]")}
+          >
+            <span className={cx("absolute top-0.5 size-6 rounded-full bg-white shadow transition-[left] duration-150", auto ? "left-[22px]" : "left-0.5")} />
+          </button>
+        </div>
+        {auto && <Hint className="mt-2">켜져 있는 동안 혼잡도 조정과 전체 초기화는 잠깁니다.</Hint>}
+      </Panel>
+
       <section aria-labelledby="occ-h">
         <h2 id="occ-h" className="mb-3 border-l-4 border-du-deep pl-2.5 text-[18px] font-bold">
           층별 혼잡도
@@ -361,7 +400,7 @@ export default function DemoPage() {
         {home ? (
           <div className="grid grid-cols-[minmax(0,1fr)] gap-3 md:grid-cols-2">
             {rooms.map((r) => (
-              <RoomFill key={r.id} room={r} onDone={reload} />
+              <RoomFill key={r.id} room={r} onDone={reload} locked={auto} />
             ))}
           </div>
         ) : (
