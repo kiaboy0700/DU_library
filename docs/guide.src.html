@@ -271,8 +271,10 @@
   .js-pager section.compact > header > :not(.role):not(h2) { display: none; }
   .js-pager section.compact > header { margin-bottom: 12px; }
   .pager { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; background: var(--surface); border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom, 0px); box-shadow: 0 -6px 20px rgba(0, 0, 0, 0.06); }
-  .pg-prog { height: 3px; background: var(--line); }
-  .pg-prog i { display: block; height: 100%; width: 0; background: var(--deep); transition: width 0.2s; }
+  .pg-prog { display: flex; gap: 4px; padding: 6px max(16px, env(safe-area-inset-left, 0px)) 0; max-width: 880px; margin: 0 auto; }
+  .pg-prog span { flex: 1; height: 5px; border-radius: 3px; background: var(--line); overflow: hidden; }
+  .pg-prog i { display: block; height: 100%; width: 0; background: var(--deep); border-radius: 3px; transition: width 0.2s; }
+  .pg-prog span.on { outline: 1.5px solid var(--deep); outline-offset: 1px; }
   .pager-in { max-width: 880px; margin: 0 auto; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 10px max(16px, env(safe-area-inset-left, 0px)); }
   .pg { min-height: 48px; min-width: 84px; padding: 0 16px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: inherit; font-weight: 700; cursor: pointer; white-space: nowrap; }
   .pg.go { background: var(--deep); border-color: var(--deep); color: #fff; }
@@ -1129,8 +1131,17 @@
 
     var bar = document.createElement("div");
     bar.className = "pager";
-    bar.innerHTML = '<div class="pg-prog"><i></i></div><div class="pager-in"><button type="button" class="pg" data-prev>← 이전</button><div class="pg-mid" aria-live="polite"><b></b><span></span></div><button type="button" class="pg go" data-next>다음 →</button></div>';
+    bar.innerHTML = '<div class="pg-prog" aria-hidden="true"></div><div class="pager-in"><button type="button" class="pg" data-prev>← 이전</button><div class="pg-mid" aria-live="polite"><b></b><span></span></div><button type="button" class="pg go" data-next>다음 →</button></div>';
     guide.appendChild(bar);
+    // 단계마다 한 칸: 그 단계 안에서 넘길 때마다 칸이 차고, 다 차면 다음 단계로 넘어간다
+    var prog = bar.querySelector(".pg-prog");
+    var segs = secs.map(function () {
+      var sp = document.createElement("span");
+      var fill = document.createElement("i");
+      sp.appendChild(fill);
+      prog.appendChild(sp);
+      return sp;
+    });
     var prev = bar.querySelector("[data-prev]");
     var next = bar.querySelector("[data-next]");
     var cur = -1;
@@ -1150,7 +1161,10 @@
       if (a && list && list.scrollWidth > list.clientWidth) list.scrollLeft = a.parentElement.offsetLeft - (list.clientWidth - a.offsetWidth) / 2;
       bar.querySelector(".pg-mid b").textContent = (sl.si + 1) + "단계 · " + (a ? a.textContent : "");
       bar.querySelector(".pg-mid span").textContent = (sl.k + 1) + " / " + sl.n;
-      bar.querySelector(".pg-prog i").style.width = ((i + 1) / slides.length * 100) + "%";
+      segs.forEach(function (sp, j) {
+        sp.firstChild.style.width = (j < sl.si ? 100 : j === sl.si ? (sl.k + 1) / sl.n * 100 : 0) + "%";
+        sp.classList.toggle("on", j === sl.si);
+      });
       prev.disabled = i === 0;
       next.disabled = i === slides.length - 1;
       next.textContent = i === slides.length - 1 ? "끝" : sl.k === sl.n - 1 ? "다음 단계 →" : "다음 →";
